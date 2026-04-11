@@ -52,6 +52,35 @@ function classificationToStatus(classification: string): PublishStatus {
   return 'held'
 }
 
+export async function scoreDebate(input: {
+  conservative?: any
+  liberal?: any
+  rebuttal?: any
+  verdict?: any
+  context?: any
+  headline?: string
+}): Promise<QualityScore> {
+  const qualityInput = `HEADLINE: ${input.headline || '(synthetic test)'}
+
+CONTEXT:
+${JSON.stringify(input.context ?? {}, null, 2)}
+
+CONSERVATIVE POSITION:
+${JSON.stringify(input.conservative ?? {}, null, 2)}
+
+LIBERAL POSITION:
+${JSON.stringify(input.liberal ?? {}, null, 2)}
+
+REBUTTAL:
+${JSON.stringify(input.rebuttal ?? {}, null, 2)}
+
+VERDICT:
+${JSON.stringify(input.verdict ?? {}, null, 2)}`
+
+  const raw = await runAgent(QUALITY_SCORER_PROMPT, qualityInput, 1500)
+  return parseJSON(raw) as QualityScore
+}
+
 async function runAdvertising(debate: Partial<DebateOutput>): Promise<CampaignPackage | undefined> {
   try {
     const raw = await runAgent(

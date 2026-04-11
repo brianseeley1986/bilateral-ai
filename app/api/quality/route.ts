@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getAllDebates } from '@/lib/store'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
-  const debates = getAllDebates().filter((d) => d.qualityScore)
+  const debates = (await getAllDebates()).filter((d) => d.qualityScore)
   const total = debates.length
 
   if (total === 0) {

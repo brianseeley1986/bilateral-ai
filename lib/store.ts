@@ -1,32 +1,51 @@
+import {
+  saveDebate as dbSave,
+  getDebate as dbGet,
+  getRecentDebates as dbGetRecent,
+  hasRecentHeadline as dbHasRecent,
+  initDb,
+} from './db'
 import type { DebateOutput } from '@/types/debate'
 
-const g = globalThis as unknown as { __bilateralStore?: Map<string, DebateOutput> }
-const store: Map<string, DebateOutput> = g.__bilateralStore ?? (g.__bilateralStore = new Map())
+let initialized = false
+let initPromise: Promise<void> | null = null
 
-export function saveDebate(debate: DebateOutput) {
-  store.set(debate.id, debate)
-}
-
-export function getDebate(id: string): DebateOutput | undefined {
-  return store.get(id)
-}
-
-export function getAllDebates(): DebateOutput[] {
-  return Array.from(store.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
-}
-
-export function hasRecentDebate(headline: string, withinMs = 24 * 60 * 60 * 1000): boolean {
-  const norm = headline.trim().toLowerCase()
-  const cutoff = Date.now() - withinMs
-  for (const d of store.values()) {
-    if (
-      d.headline.trim().toLowerCase() === norm &&
-      new Date(d.createdAt).getTime() > cutoff
-    ) {
-      return true
-    }
+async function ensureInit() {
+  if (initialized) return
+  if (!initPromise) {
+    initPromise = initDb().then(() => {
+      initialized = true
+    })
   }
-  return false
+  await initPromise
+}
+
+export async function saveDebate(debate: DebateOutput): Promise<void> {
+  await ensureInit()
+  await dbSave(debate)
+}
+
+export async function getDebate(id: string): Promise<DebateOutput | undefined> {
+  await ensureInit()
+  const result = await dbGet(id)
+  return result || undefined
+}
+
+export async function getRecentDebates(limit: number = 20): Promise<DebateOutput[]> {
+  await ensureInit()
+  return dbGetRecent(limit)
+}
+
+export async function getAllDebates(): Promise<DebateOutput[]> {
+  await ensureInit()
+  return dbGetRecent(1000)
+}
+
+export async function hasRecentDebate(
+  headline: string,
+  withinMs = 24 * 60 * 60 * 1000
+): Promise<boolean> {
+  await ensureInit()
+  const hours = Math.max(1, Math.round(withinMs / (60 * 60 * 1000)))
+  return dbHasRecent(headline, hours)
 }

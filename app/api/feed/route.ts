@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getAllDebates } from '@/lib/store'
 
+export const dynamic = 'force-dynamic'
+
 function firstSentence(text?: string): string {
   if (!text) return ''
   const match = text.trim().match(/^[^.!?]+[.!?]/)
@@ -8,7 +10,7 @@ function firstSentence(text?: string): string {
 }
 
 export async function GET() {
-  const debates = getAllDebates()
+  const debates = await getAllDebates()
   const cards = debates.map((d) => ({
     id: d.id,
     headline: d.headline,

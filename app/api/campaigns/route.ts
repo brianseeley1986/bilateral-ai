@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllDebates, getDebate, saveDebate } from '@/lib/store'
+
+export const dynamic = 'force-dynamic'
 import {
   postToX,
   postToLinkedIn,
@@ -12,7 +14,7 @@ import type { CampaignStatus } from '@/types/debate'
 const VALID_STATUSES: CampaignStatus[] = ['pending', 'approved', 'posted', 'skipped']
 
 export async function GET() {
-  const debates = getAllDebates()
+  const debates = await getAllDebates()
   const items = debates
     .filter((d) => d.campaign)
     .map((d) => ({
@@ -34,7 +36,7 @@ export async function PATCH(req: NextRequest) {
   if (!debateId) {
     return NextResponse.json({ error: 'debateId required' }, { status: 400 })
   }
-  const debate = getDebate(debateId)
+  const debate = await getDebate(debateId)
   if (!debate || !debate.campaign) {
     return NextResponse.json({ error: 'debate or campaign not found' }, { status: 404 })
   }
@@ -50,7 +52,7 @@ export async function PATCH(req: NextRequest) {
   if (typeof autoPost === 'boolean') {
     debate.campaign.autoPost = autoPost
   }
-  saveDebate(debate)
+  await saveDebate(debate)
   return NextResponse.json({ ok: true, campaign: debate.campaign })
 }
 
@@ -59,7 +61,7 @@ export async function POST(req: NextRequest) {
   if (!debateId || !platform) {
     return NextResponse.json({ error: 'debateId and platform required' }, { status: 400 })
   }
-  const debate = getDebate(debateId)
+  const debate = await getDebate(debateId)
   if (!debate || !debate.campaign) {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
     debate.campaign.postedAt = new Date().toISOString()
     debate.campaign.status = 'posted'
-    saveDebate(debate)
+    await saveDebate(debate)
     return NextResponse.json({ posted: true, platform })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'post failed' }, { status: 500 })

@@ -3,8 +3,8 @@ import { StoryExchange } from '@/components/StoryExchange'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-export default function DebatePage({ params }: { params: { id: string } }) {
-  const debate = getDebate(params.id)
+export default async function DebatePage({ params }: { params: { id: string } }) {
+  const debate = await getDebate(params.id)
   if (!debate) notFound()
 
   return (

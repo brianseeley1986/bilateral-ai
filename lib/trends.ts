@@ -35,13 +35,13 @@ export async function ingestTrends(): Promise<TrendsTickResult> {
   }
 
   for (const term of terms) {
-    if (hasRecentDebate(term)) {
+    if (await hasRecentDebate(term)) {
       result.skipped++
       continue
     }
     try {
       const debate = await runDebatePipeline(term)
-      saveDebate(debate)
+      await saveDebate(debate)
       result.processed++
     } catch (e: any) {
       result.errors.push(`${term}: ${e?.message || 'unknown'}`)

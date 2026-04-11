@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       debate.campaign.approvedAt = new Date().toISOString()
     }
 
-    saveDebate(debate)
+    await saveDebate(debate)
     registerStory(headline, debate.id, dedup.hash)
 
     if (debate.campaign) {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id')
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-  const debate = getDebate(id)
+  const debate = await getDebate(id)
   if (!debate) return NextResponse.json({ error: 'not found' }, { status: 404 })
   return NextResponse.json(debate)
 }
