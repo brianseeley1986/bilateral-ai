@@ -4,6 +4,8 @@ import { saveDebate, getDebate } from '@/lib/store'
 import { queueCampaign, getAutoPostToggle } from '@/lib/autopost'
 import { checkDuplicate, registerStory } from '@/lib/deduplication'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     const { headline } = await req.json()

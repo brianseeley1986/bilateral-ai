@@ -6,6 +6,8 @@ import {
   clearStoryIndex,
 } from '@/lib/deduplication'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   return NextResponse.json({
     stats: getDeduplicationStats(),
