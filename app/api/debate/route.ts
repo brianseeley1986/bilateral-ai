@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runDebatePipeline } from '@/lib/pipeline'
 import { saveDebate, getDebate } from '@/lib/store'
-import { queueCampaign, getAutoPostToggle } from '@/lib/autopost'
 import { checkDuplicate, registerStory } from '@/lib/deduplication'
 
 export const dynamic = 'force-dynamic'
@@ -28,18 +27,8 @@ export async function POST(req: NextRequest) {
 
     const debate = await runDebatePipeline(headline)
 
-    if (debate.campaign && getAutoPostToggle()) {
-      debate.campaign.autoPost = true
-      debate.campaign.status = 'approved'
-      debate.campaign.approvedAt = new Date().toISOString()
-    }
-
     await saveDebate(debate)
     registerStory(headline, debate.id, dedup.hash)
-
-    if (debate.campaign) {
-      await queueCampaign(debate.campaign, debate.id)
-    }
 
     return NextResponse.json({
       id: debate.id,

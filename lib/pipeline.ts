@@ -163,12 +163,9 @@ export async function runDebatePipeline(headline: string): Promise<DebateOutput>
       satireCloser: satire.closer,
     }
 
-    const campaign = await runAdvertising(partial)
-
     return {
       ...partial,
       sources: research.sources || [],
-      campaign,
       publishStatus: 'published',
     }
   }
@@ -242,12 +239,9 @@ ${JSON.stringify(verdict, null, 2)}`
     exchanges: lbl.exchanges,
   }
 
-  const campaign = await runAdvertising(partial)
-
   return {
     ...partial,
     sources: research.sources || [],
-    campaign,
     qualityScore,
     publishStatus,
   }

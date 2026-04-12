@@ -10,15 +10,13 @@ const placeholders = [
 ]
 
 const statuses = [
-  'Classifying the story...',
-  'Briefing the researcher...',
-  'Pulling historical context...',
+  'Analyzing the story...',
+  'Researching context...',
   'Building the Conservative case...',
   'Building the Liberal case...',
   'Running the rebuttal round...',
-  'Mapping the fault lines...',
-  'Structuring the exchange...',
-  'Drafting the social package...',
+  'Mapping where they agree and disagree...',
+  'Finalizing the debate...',
 ]
 
 export function HeadlineInput() {
