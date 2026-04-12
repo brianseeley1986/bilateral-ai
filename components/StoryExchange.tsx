@@ -3,10 +3,15 @@ import { useState } from 'react'
 import type { DebateOutput, LineByLineExchange, SatireExchange } from '@/types/debate'
 import { DebateViewer } from './DebateViewer'
 
-const trackBadge: Record<DebateOutput['track'], { label: string; bg: string; text: string }> = {
-  serious: { label: 'BREAKING', bg: '#fee2e2', text: '#C1121F' },
-  local: { label: 'LOCAL', bg: '#dbeafe', text: '#1B4FBE' },
-  satire: { label: 'SATIRE', bg: '#fef3c7', text: '#b45309' },
+function resolveBadge(
+  track: string,
+  sourceType?: string,
+  geoScope?: string,
+): { label: string; bg: string; text: string } {
+  if (track === 'satire') return { label: 'SATIRE', bg: '#fef3c7', text: '#b45309' }
+  if (track === 'local' || geoScope === 'local') return { label: 'LOCAL', bg: '#dbeafe', text: '#1B4FBE' }
+  if (sourceType === 'trending' || sourceType === 'rss') return { label: 'BREAKING', bg: '#fee2e2', text: '#C1121F' }
+  return { label: 'ANALYSIS', bg: '#f1f1ef', text: '#444444' }
 }
 
 function compressToTwoSentences(text: string): { display: string; truncated: boolean } {
@@ -20,7 +25,7 @@ function compressToTwoSentences(text: string): { display: string; truncated: boo
 
 export function StoryExchange({ debate }: { debate: DebateOutput }) {
   const [deep, setDeep] = useState(false)
-  const badge = trackBadge[debate.track]
+  const badge = resolveBadge(debate.track, debate.sourceType, debate.geographicScope)
   const isSatire = debate.track === 'satire'
 
   return (

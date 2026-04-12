@@ -53,13 +53,17 @@ export function HeadlineInput() {
         body: JSON.stringify({ headline }),
       })
       clearInterval(interval)
+      const data = await res.json()
+      if (res.status === 409 && data.existingDebateId) {
+        router.push(`/debate/${data.existingDebateId}`)
+        return
+      }
       if (!res.ok) {
         setStatus('Pipeline failed. Check server logs and try again.')
         setLoading(false)
         return
       }
-      const { id } = await res.json()
-      router.push(`/debate/${id}`)
+      router.push(`/debate/${data.id}`)
     } catch {
       clearInterval(interval)
       setStatus('Something went wrong. Try again.')

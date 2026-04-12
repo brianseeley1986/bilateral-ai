@@ -48,7 +48,7 @@ export async function saveDebate(debate: any): Promise<void> {
     ) VALUES (
       ${debate.id},
       ${debate.headline},
-      ${debate.track || 'serious'},
+      ${(debate.track || 'serious').toLowerCase()},
       ${debate.geographicScope || 'national'},
       ${debate.publishStatus || 'published'},
       ${debate.createdAt},

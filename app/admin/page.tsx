@@ -405,7 +405,7 @@ function CampaignCard({
   const [variant, setVariant] = useState<'A' | 'B'>('A')
   const [copied, setCopied] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const badge = trackBadges[item.track]
+  const badge = trackBadges[item.track?.toLowerCase() as CampaignItem['track']] || trackBadges.serious
   const { campaign } = item
 
   const empty = { text: '', platformKey: '' }

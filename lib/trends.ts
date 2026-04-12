@@ -40,7 +40,7 @@ export async function ingestTrends(): Promise<TrendsTickResult> {
       continue
     }
     try {
-      const debate = await runDebatePipeline(term)
+      const debate = await runDebatePipeline(term, 'trending')
       await saveDebate(debate)
       result.processed++
     } catch (e: any) {

@@ -6,16 +6,23 @@ interface FeedCard {
   id: string
   headline: string
   track: 'serious' | 'local' | 'satire'
+  sourceType?: string
+  geographicScope?: string
   createdAt: string
   conservativeOneLine: string
   liberalOneLine: string
   suggestedHook: string
 }
 
-const badges: Record<FeedCard['track'], { label: string; bg: string; text: string }> = {
-  serious: { label: 'BREAKING', bg: '#fee2e2', text: '#C1121F' },
-  local: { label: 'LOCAL', bg: '#dbeafe', text: '#1B4FBE' },
-  satire: { label: 'SATIRE', bg: '#fef3c7', text: '#b45309' },
+function resolveBadge(
+  track: string,
+  sourceType?: string,
+  geoScope?: string,
+): { label: string; bg: string; text: string } {
+  if (track === 'satire') return { label: 'SATIRE', bg: '#fef3c7', text: '#b45309' }
+  if (track === 'local' || geoScope === 'local') return { label: 'LOCAL', bg: '#dbeafe', text: '#1B4FBE' }
+  if (sourceType === 'trending' || sourceType === 'rss') return { label: 'BREAKING', bg: '#fee2e2', text: '#C1121F' }
+  return { label: 'ANALYSIS', bg: '#f1f1ef', text: '#444444' }
 }
 
 function timeSince(iso: string): string {
@@ -109,8 +116,9 @@ export function NewsFeed() {
       ) : (
         <div style={{ borderTop: '0.5px solid #d0d0d0' }}>
           {cards.map((card) => {
-            const b = badges[card.track]
-            const isSatire = card.track === 'satire'
+            const normalizedTrack = (card.track?.toLowerCase() || 'serious') as FeedCard['track']
+            const b = resolveBadge(normalizedTrack, card.sourceType, card.geographicScope)
+            const isSatire = normalizedTrack === 'satire'
             return (
               <div
                 key={card.id}

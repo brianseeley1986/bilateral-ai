@@ -121,7 +121,10 @@ export async function runAdvertising(debate: Partial<DebateOutput>): Promise<Cam
   }
 }
 
-export async function runDebatePipeline(headline: string): Promise<DebateOutput> {
+export async function runDebatePipeline(
+  headline: string,
+  sourceType: 'user_submitted' | 'trending' | 'rss' = 'user_submitted',
+): Promise<DebateOutput> {
   const id = Date.now().toString()
   const createdAt = new Date().toISOString()
 
@@ -157,6 +160,7 @@ export async function runDebatePipeline(headline: string): Promise<DebateOutput>
       track,
       geographicScope,
       suggestedHook,
+      sourceType,
       context: research.context,
       timeline: research.timeline || [],
       satireExchanges: satire.exchanges,

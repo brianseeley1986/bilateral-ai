@@ -115,6 +115,7 @@ export interface DebateOutput {
   exchanges?: LineByLineExchange[]
   satireExchanges?: SatireExchange[]
   satireCloser?: string
+  sourceType?: 'user_submitted' | 'trending' | 'rss'
   sources: string[]
   campaign?: CampaignPackage
   qualityScore?: QualityScore

@@ -15,6 +15,8 @@ export async function GET() {
     id: d.id,
     headline: d.headline,
     track: d.track,
+    sourceType: d.sourceType,
+    geographicScope: d.geographicScope,
     createdAt: d.createdAt,
     conservativeOneLine:
       firstSentence(d.conservative?.argument) ||
