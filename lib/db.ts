@@ -25,25 +25,11 @@ export async function initDb() {
     )
   `
 
-  await sql()`
-    CREATE INDEX IF NOT EXISTS subscribers_email_idx ON subscribers (email)
-  `
-
-  await sql()`
-    CREATE INDEX IF NOT EXISTS subscribers_confirmed_idx ON subscribers (confirmed)
-  `
-
-  await sql()`
-    CREATE INDEX IF NOT EXISTS subscribers_topics_idx ON subscribers USING GIN (topics)
-  `
-
-  await sql()`
-    CREATE INDEX IF NOT EXISTS subscribers_zip_idx ON subscribers (zip)
-  `
-
-  await sql()`
-    ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS county TEXT
-  `
+  try { await sql()`CREATE INDEX IF NOT EXISTS subscribers_email_idx ON subscribers (email)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS subscribers_confirmed_idx ON subscribers (confirmed)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS subscribers_topics_idx ON subscribers USING GIN (topics)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS subscribers_zip_idx ON subscribers (zip)` } catch {}
+  try { await sql()`ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS county TEXT` } catch {}
 
   await sql()`
     CREATE TABLE IF NOT EXISTS debates (
@@ -57,20 +43,9 @@ export async function initDb() {
     )
   `
 
-  await sql()`
-    CREATE INDEX IF NOT EXISTS debates_created_at_idx
-    ON debates (created_at DESC)
-  `
-
-  await sql()`
-    CREATE INDEX IF NOT EXISTS debates_track_idx
-    ON debates (track)
-  `
-
-  await sql()`
-    CREATE INDEX IF NOT EXISTS debates_publish_status_idx
-    ON debates (publish_status)
-  `
+  try { await sql()`CREATE INDEX IF NOT EXISTS debates_created_at_idx ON debates (created_at DESC)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS debates_track_idx ON debates (track)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS debates_publish_status_idx ON debates (publish_status)` } catch {}
 
   await sql()`
     CREATE TABLE IF NOT EXISTS journalists (
@@ -93,10 +68,22 @@ export async function initDb() {
     )
   `
 
-  await sql()`CREATE UNIQUE INDEX IF NOT EXISTS journalists_name_idx ON journalists (name)`
-  await sql()`CREATE INDEX IF NOT EXISTS journalists_beats_idx ON journalists USING GIN (beats)`
-  await sql()`CREATE INDEX IF NOT EXISTS journalists_tier_idx ON journalists (tier)`
-  await sql()`CREATE INDEX IF NOT EXISTS journalists_active_idx ON journalists (active)`
+  // Clean up duplicate journalist names (keep newest)
+  try {
+    await sql()`
+      DELETE FROM journalists a USING journalists b
+      WHERE a.id > b.id AND a.name = b.name
+    `
+  } catch (e) {
+    console.warn('journalist dedup warning:', (e as Error).message)
+  }
+
+  // Drop the old unique index if it exists, replace with non-unique
+  try { await sql()`DROP INDEX IF EXISTS journalists_name_idx` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS journalists_name_nonuniq_idx ON journalists (name)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS journalists_beats_idx ON journalists USING GIN (beats)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS journalists_tier_idx ON journalists (tier)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS journalists_active_idx ON journalists (active)` } catch {}
 }
 
 export async function saveDebate(debate: any): Promise<void> {
@@ -295,6 +282,8 @@ export async function addJournalist(data: {
   tier?: number
   notes?: string
 }): Promise<string> {
+  // Remove existing entry with same name before inserting
+  await sql()`DELETE FROM journalists WHERE name = ${data.name}`
   const rows = await sql()`
     INSERT INTO journalists (
       name, handle, substack_url, twitter_handle,
