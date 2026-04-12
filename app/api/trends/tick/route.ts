@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { ingestTrends } from '@/lib/trends'
+import { ingestTrendingStories } from '@/lib/trends'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
 export async function POST() {
   try {
-    const result = await ingestTrends()
+    const result = await ingestTrendingStories()
     return NextResponse.json(result)
   } catch (err: any) {
     console.error('trends tick failed', err)

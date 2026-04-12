@@ -234,6 +234,7 @@ ${JSON.stringify(verdict, null, 2)}`
     track,
     geographicScope,
     suggestedHook,
+    sourceType,
     context: research.context,
     timeline: research.timeline || [],
     conservative,

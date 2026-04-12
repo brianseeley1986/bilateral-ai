@@ -132,7 +132,7 @@ export function HeadlineInput() {
           minHeight: '18px',
         }}
       >
-        {loading ? status : 'Two minds. Every story. You decide.'}
+        {loading ? status : ''}
       </div>
     </div>
   )

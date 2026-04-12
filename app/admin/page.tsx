@@ -181,6 +181,7 @@ export default function AdminPage() {
         </div>
       )}
 
+      <IngestionPanel />
       <SubscriberStatsBlock />
 
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -265,6 +266,203 @@ export default function AdminPage() {
         }
       `}</style>
     </main>
+  )
+}
+
+function IngestionPanel() {
+  const [maxStories, setMaxStories] = useState(5)
+  const [running, setRunning] = useState(false)
+  const [result, setResult] = useState<any>(null)
+  const [localRunning, setLocalRunning] = useState(false)
+  const [localResult, setLocalResult] = useState<any>(null)
+
+  async function runIngestion() {
+    setRunning(true)
+    setResult(null)
+    try {
+      const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+      const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ingest-token': token,
+        },
+        body: JSON.stringify({ maxStories }),
+      })
+      const data = await res.json()
+      setResult(data)
+    } catch {
+      setResult({ error: 'Request failed' })
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <div
+      style={{
+        maxWidth: '900px',
+        margin: '0 auto 28px',
+        background: '#fff',
+        border: '0.5px solid #d0d0d0',
+        borderRadius: '12px',
+        padding: '20px 24px',
+      }}
+    >
+      <div
+        style={{
+          fontSize: '10px',
+          fontWeight: 700,
+          color: '#6B6B6B',
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          marginBottom: '16px',
+        }}
+      >
+        Feed Ingestion
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '12px', color: '#6B6B6B' }}>Max stories:</span>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={maxStories}
+            onChange={(e) => setMaxStories(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+            style={{
+              width: '48px',
+              padding: '6px 8px',
+              border: '0.5px solid #d0d0d0',
+              borderRadius: '6px',
+              fontSize: '13px',
+              textAlign: 'center',
+              fontFamily: 'inherit',
+            }}
+          />
+        </div>
+        <button
+          onClick={runIngestion}
+          disabled={running}
+          style={{
+            padding: '8px 18px',
+            background: running ? '#e5e5e5' : '#0A0A0A',
+            color: '#F5F5F0',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 500,
+            cursor: running ? 'default' : 'pointer',
+          }}
+        >
+          {running ? 'Ingesting...' : 'Run Ingestion Now'}
+        </button>
+        <button
+          onClick={async () => {
+            setLocalRunning(true)
+            setLocalResult(null)
+            try {
+              const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+              const res = await fetch('/api/ingest/local', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-ingest-token': token },
+                body: JSON.stringify({ maxPerLocation: 2 }),
+              })
+              setLocalResult(await res.json())
+            } catch {
+              setLocalResult({ error: 'Request failed' })
+            } finally {
+              setLocalRunning(false)
+            }
+          }}
+          disabled={localRunning}
+          style={{
+            padding: '8px 18px',
+            background: localRunning ? '#e5e5e5' : '#1B4FBE',
+            color: '#F5F5F0',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 500,
+            cursor: localRunning ? 'default' : 'pointer',
+          }}
+        >
+          {localRunning ? 'Ingesting local...' : 'Run Local Ingestion'}
+        </button>
+        <div style={{ fontSize: '11px', color: '#9B9B9B' }}>
+          Sources: Google Trends, Reuters, BBC, NPR, AP + local feeds
+        </div>
+      </div>
+
+      {localResult && (
+        <div style={{ marginTop: '12px', padding: '10px 14px', background: '#f0f4ff', borderRadius: '8px', fontSize: '13px' }}>
+          {localResult.error ? (
+            <span style={{ color: '#C1121F' }}>{localResult.error}</span>
+          ) : localResult.stats ? (
+            <span style={{ color: '#1B4FBE' }}>
+              Local: {localResult.stats.locations ?? localResult.stats.found ?? 0} locations, {localResult.stats.totalDebated ?? localResult.stats.debated ?? 0} debated
+            </span>
+          ) : null}
+        </div>
+      )}
+
+      {result && (
+        <div style={{ marginTop: '16px', borderTop: '0.5px solid #e5e5e5', paddingTop: '14px' }}>
+          {result.error ? (
+            <div style={{ fontSize: '13px', color: '#C1121F' }}>{result.error}</div>
+          ) : result.stats ? (
+            <div>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {[
+                  { label: 'Processed', value: result.stats.processed, color: '#6B6B6B' },
+                  { label: 'Debated', value: result.stats.debated, color: '#15803d' },
+                  { label: 'Skipped', value: result.stats.skipped, color: '#a16207' },
+                  { label: 'Duplicates', value: result.stats.duplicates, color: '#6B6B6B' },
+                  { label: 'Errors', value: result.stats.errors, color: result.stats.errors > 0 ? '#b91c1c' : '#6B6B6B' },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <div style={{ fontSize: '18px', fontWeight: 600, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: '10px', color: '#9B9B9B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {result.stats.stories?.length > 0 && (
+                <div>
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: '#6B6B6B',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Stories debated
+                  </div>
+                  {result.stats.stories.map((s: string, i: number) => (
+                    <div
+                      key={i}
+                      style={{
+                        fontSize: '13px',
+                        color: '#0A0A0A',
+                        lineHeight: 1.5,
+                        padding: '4px 0',
+                        borderBottom: i < result.stats.stories.length - 1 ? '0.5px solid #ebebeb' : 'none',
+                      }}
+                    >
+                      {s}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
   )
 }
 

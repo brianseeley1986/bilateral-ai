@@ -42,6 +42,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json()
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+  const { deleteDebate } = await import('@/lib/db')
+  await deleteDebate(id)
+  return NextResponse.json({ deleted: id })
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
 

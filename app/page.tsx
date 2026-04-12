@@ -176,7 +176,11 @@ export default function Home() {
   }, [])
 
   const seriousNational = debates.filter(
-    (d) => d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope !== 'local'
+    (d) =>
+      d.track !== 'satire' &&
+      d.publishStatus === 'published' &&
+      d.geographicScope !== 'local' &&
+      d.geographicScope !== 'international'
   )
   const localDebates = debates.filter(
     (d) => d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'local'

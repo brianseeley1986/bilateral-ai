@@ -2,6 +2,27 @@ import { getDebate } from '@/lib/store'
 import { StoryExchange } from '@/components/StoryExchange'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const debate = await getDebate(params.id)
+  if (!debate) return {}
+  return {
+    title: `${debate.headline} — Bilateral`,
+    description: debate.suggestedHook || 'Liberal. Conservative. You decide.',
+    openGraph: {
+      title: debate.headline,
+      description: debate.suggestedHook || 'Liberal. Conservative. You decide.',
+      siteName: 'Bilateral',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: debate.headline,
+      description: debate.suggestedHook || 'Liberal. Conservative. You decide.',
+    },
+  }
+}
 
 export default async function DebatePage({ params }: { params: { id: string } }) {
   const debate = await getDebate(params.id)

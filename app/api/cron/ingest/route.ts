@@ -1,0 +1,22 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { ingestTrendingStories } from '@/lib/trends'
+
+export const dynamic = 'force-dynamic'
+export const maxDuration = 300
+
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    console.log('Cron ingestion starting...')
+    const stats = await ingestTrendingStories(5)
+    console.log('Cron ingestion complete:', stats)
+    return NextResponse.json({ success: true, stats })
+  } catch (err) {
+    console.error('Cron ingestion error:', err)
+    return NextResponse.json({ error: 'Cron failed' }, { status: 500 })
+  }
+}
