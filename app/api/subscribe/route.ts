@@ -18,11 +18,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Select at least one topic' }, { status: 400 })
     }
 
+    let resolvedCity = city
+    let resolvedRegion = region
+
+    if (zip && (!city || !region)) {
+      try {
+        const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`)
+        if (zipRes.ok) {
+          const zipData = await zipRes.json()
+          const place = zipData.places?.[0]
+          if (place) {
+            resolvedCity = resolvedCity || place['place name']
+            resolvedRegion = resolvedRegion || place['state']
+          }
+        }
+      } catch {}
+    }
+
     const { confirmationToken } = await createSubscriber({
       email,
       topics,
-      city,
-      region,
+      city: resolvedCity,
+      region: resolvedRegion,
       zip,
       latitude,
       longitude,
