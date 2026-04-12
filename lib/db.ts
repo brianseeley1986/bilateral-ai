@@ -71,6 +71,32 @@ export async function initDb() {
     CREATE INDEX IF NOT EXISTS debates_publish_status_idx
     ON debates (publish_status)
   `
+
+  await sql()`
+    CREATE TABLE IF NOT EXISTS journalists (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      name TEXT NOT NULL,
+      handle TEXT,
+      substack_url TEXT,
+      twitter_handle TEXT,
+      rss_url TEXT,
+      beats TEXT[] NOT NULL DEFAULT '{}',
+      geographic_focus TEXT[] NOT NULL DEFAULT '{}',
+      credibility_score DECIMAL(3,2) DEFAULT 0.00,
+      subscriber_count INTEGER,
+      former_outlet TEXT,
+      tier INTEGER DEFAULT 2,
+      active BOOLEAN DEFAULT true,
+      last_fetched_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      notes TEXT
+    )
+  `
+
+  await sql()`CREATE UNIQUE INDEX IF NOT EXISTS journalists_name_idx ON journalists (name)`
+  await sql()`CREATE INDEX IF NOT EXISTS journalists_beats_idx ON journalists USING GIN (beats)`
+  await sql()`CREATE INDEX IF NOT EXISTS journalists_tier_idx ON journalists (tier)`
+  await sql()`CREATE INDEX IF NOT EXISTS journalists_active_idx ON journalists (active)`
 }
 
 export async function saveDebate(debate: any): Promise<void> {
@@ -249,6 +275,91 @@ export async function getSubscriberStats(): Promise<any> {
       COUNT(*) FILTER (WHERE confirmed = true AND 'satire' = ANY(topics)) as satire,
       COUNT(*) FILTER (WHERE confirmed = true AND zip IS NOT NULL) as with_location
     FROM subscribers
+  `
+  return rows[0]
+}
+
+// ---- JOURNALISTS ----
+
+export async function addJournalist(data: {
+  name: string
+  handle?: string
+  substack_url?: string
+  twitter_handle?: string
+  rss_url?: string
+  beats: string[]
+  geographic_focus: string[]
+  credibility_score?: number
+  subscriber_count?: number
+  former_outlet?: string
+  tier?: number
+  notes?: string
+}): Promise<string> {
+  const rows = await sql()`
+    INSERT INTO journalists (
+      name, handle, substack_url, twitter_handle,
+      rss_url, beats, geographic_focus,
+      credibility_score, subscriber_count,
+      former_outlet, tier, notes
+    ) VALUES (
+      ${data.name},
+      ${data.handle || null},
+      ${data.substack_url || null},
+      ${data.twitter_handle || null},
+      ${data.rss_url || null},
+      ${data.beats},
+      ${data.geographic_focus},
+      ${data.credibility_score || 0.75},
+      ${data.subscriber_count || null},
+      ${data.former_outlet || null},
+      ${data.tier || 2},
+      ${data.notes || null}
+    )
+    RETURNING id
+  `
+  return rows[0]?.id
+}
+
+export async function getJournalistsByBeat(beat: string, tier: number = 2): Promise<any[]> {
+  return sql()`
+    SELECT * FROM journalists
+    WHERE ${beat} = ANY(beats)
+    AND tier <= ${tier}
+    AND active = true
+    ORDER BY credibility_score DESC
+  `
+}
+
+export async function getJournalistsByGeo(location: string): Promise<any[]> {
+  const locationLower = location.toLowerCase()
+  return sql()`
+    SELECT * FROM journalists
+    WHERE active = true
+    AND EXISTS (
+      SELECT 1 FROM unnest(geographic_focus) g
+      WHERE lower(g) LIKE ${'%' + locationLower + '%'}
+    )
+    ORDER BY credibility_score DESC
+  `
+}
+
+export async function updateJournalistFetched(id: string): Promise<void> {
+  await sql()`UPDATE journalists SET last_fetched_at = NOW() WHERE id = ${id}`
+}
+
+export async function getAllJournalists(): Promise<any[]> {
+  return sql()`SELECT * FROM journalists ORDER BY tier ASC, credibility_score DESC`
+}
+
+export async function getJournalistStats(): Promise<any> {
+  const rows = await sql()`
+    SELECT
+      COUNT(*) as total,
+      COUNT(*) FILTER (WHERE tier = 1) as tier1,
+      COUNT(*) FILTER (WHERE tier = 2) as tier2,
+      COUNT(*) FILTER (WHERE active = true) as active,
+      AVG(credibility_score)::numeric(3,2) as avg_score
+    FROM journalists
   `
   return rows[0]
 }

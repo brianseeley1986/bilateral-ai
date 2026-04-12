@@ -27,7 +27,7 @@ interface TrendingStory {
   state?: string
 }
 
-async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<Response> {
+export async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<Response> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -52,7 +52,7 @@ function extractTextContent(xml: string, tag: string): string {
   return ''
 }
 
-function parseRSSItems(xml: string): string[] {
+export function parseRSSItems(xml: string): string[] {
   const items: string[] = []
   const itemPattern = /<item[^>]*>([\s\S]*?)<\/item>/gi
   let match

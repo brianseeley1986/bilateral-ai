@@ -45,7 +45,7 @@ export function NewsFeed() {
 
     const load = async () => {
       try {
-        const res = await fetch('/api/feed', { cache: 'no-store' })
+        const res = await fetch('/api/debate?feed=true', { cache: 'no-store' })
         if (!res.ok) return
         const data: FeedCard[] = await res.json()
         if (cancelled) return

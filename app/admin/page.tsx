@@ -182,6 +182,7 @@ export default function AdminPage() {
       )}
 
       <IngestionPanel />
+      <JournalistPanel />
       <SubscriberStatsBlock />
 
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -460,6 +461,191 @@ function IngestionPanel() {
               )}
             </div>
           ) : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function JournalistPanel() {
+  const [stats, setStats] = useState<any>(null)
+  const [journalists, setJournalists] = useState<any[]>([])
+  const [running, setRunning] = useState(false)
+  const [seeding, setSeeding] = useState(false)
+  const [result, setResult] = useState<any>(null)
+
+  useEffect(() => {
+    const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+    fetch(`/api/ingest/journalists?token=${token}`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.registry) setStats(d.registry)
+        if (d.journalists) setJournalists(d.journalists)
+      })
+      .catch(() => {})
+  }, [])
+
+  async function seed() {
+    setSeeding(true)
+    try {
+      const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+      const res = await fetch('/api/ingest/journalists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ingest-token': token },
+        body: JSON.stringify({ seed: true }),
+      })
+      const data = await res.json()
+      setResult({ type: 'seed', ...data })
+      // Refresh list
+      const list = await fetch(`/api/ingest/journalists?token=${token}`).then((r) => r.json())
+      if (list.registry) setStats(list.registry)
+      if (list.journalists) setJournalists(list.journalists)
+    } catch {
+      setResult({ error: 'Seed failed' })
+    } finally {
+      setSeeding(false)
+    }
+  }
+
+  async function runIngestion() {
+    setRunning(true)
+    setResult(null)
+    try {
+      const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+      const res = await fetch('/api/ingest/journalists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ingest-token': token },
+        body: JSON.stringify({ maxDebates: 3 }),
+      })
+      setResult(await res.json())
+    } catch {
+      setResult({ error: 'Ingestion failed' })
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <div
+      style={{
+        maxWidth: '900px',
+        margin: '0 auto 28px',
+        background: '#fff',
+        border: '0.5px solid #d0d0d0',
+        borderRadius: '12px',
+        padding: '20px 24px',
+      }}
+    >
+      <div
+        style={{
+          fontSize: '10px',
+          fontWeight: 700,
+          color: '#6B6B6B',
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          marginBottom: '16px',
+        }}
+      >
+        Journalist Registry
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
+        {stats && (
+          <div style={{ display: 'flex', gap: '16px', marginRight: '12px' }}>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#0A0A0A' }}>{stats.total}</div>
+              <div style={{ fontSize: '10px', color: '#9B9B9B' }}>total</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#15803d' }}>{stats.tier1}</div>
+              <div style={{ fontSize: '10px', color: '#9B9B9B' }}>tier 1</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#6B6B6B' }}>{stats.active}</div>
+              <div style={{ fontSize: '10px', color: '#9B9B9B' }}>active</div>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={seed}
+          disabled={seeding}
+          style={{
+            padding: '8px 16px',
+            background: seeding ? '#e5e5e5' : '#fff',
+            color: '#0A0A0A',
+            border: '0.5px solid #d0d0d0',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 500,
+            cursor: seeding ? 'default' : 'pointer',
+          }}
+        >
+          {seeding ? 'Seeding...' : 'Seed Registry'}
+        </button>
+        <button
+          onClick={runIngestion}
+          disabled={running}
+          style={{
+            padding: '8px 16px',
+            background: running ? '#e5e5e5' : '#0A0A0A',
+            color: '#F5F5F0',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 500,
+            cursor: running ? 'default' : 'pointer',
+          }}
+        >
+          {running ? 'Ingesting...' : 'Run Journalist Ingestion'}
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ marginBottom: '14px', padding: '10px 14px', background: '#f8f8f6', borderRadius: '8px', fontSize: '13px' }}>
+          {result.error ? (
+            <span style={{ color: '#C1121F' }}>{result.error}</span>
+          ) : result.seeded !== undefined ? (
+            <span style={{ color: '#15803d' }}>Seeded {result.seeded} journalists</span>
+          ) : result.stats ? (
+            <div>
+              <span style={{ color: '#0A0A0A' }}>
+                {result.stats.journalists} checked, {result.stats.stories} stories found, {result.stats.debated} debated, {result.stats.skipped} skipped
+              </span>
+              {result.stats.debatedTitles?.length > 0 && (
+                <div style={{ marginTop: '8px' }}>
+                  {result.stats.debatedTitles.map((t: string, i: number) => (
+                    <div key={i} style={{ fontSize: '12px', color: '#6B6B6B', padding: '2px 0' }}>{t}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {journalists.length > 0 && (
+        <div style={{ maxHeight: '240px', overflowY: 'auto', borderTop: '0.5px solid #e5e5e5', paddingTop: '10px' }}>
+          {journalists.map((j: any) => (
+            <div
+              key={j.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '6px 0',
+                borderBottom: '0.5px solid #f0f0f0',
+                fontSize: '12px',
+              }}
+            >
+              <div style={{ fontWeight: 500, color: '#0A0A0A', minWidth: '130px' }}>{j.name}</div>
+              <div style={{ color: '#6B6B6B', flex: 1 }}>{j.beats?.slice(0, 3).join(', ')}</div>
+              <div style={{ color: j.tier === 1 ? '#15803d' : '#6B6B6B', fontWeight: 600, fontSize: '10px' }}>T{j.tier}</div>
+              <div style={{ color: '#6B6B6B', fontSize: '11px', minWidth: '32px', textAlign: 'right' }}>{j.credibility_score}</div>
+              <div style={{ color: '#9B9B9B', fontSize: '10px', minWidth: '60px', textAlign: 'right' }}>
+                {j.last_fetched_at ? new Date(j.last_fetched_at).toLocaleDateString() : 'never'}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

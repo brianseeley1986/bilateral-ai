@@ -60,9 +60,13 @@ export async function GET(req: NextRequest) {
         id: d.id,
         headline: d.headline,
         track: d.track,
+        sourceType: d.sourceType,
         geographicScope: d.geographicScope,
         createdAt: d.createdAt,
         publishStatus: d.publishStatus || 'published',
+        conservativeOneLine: d.conservative?.previewLine || d.satireExchanges?.[0]?.a || '',
+        liberalOneLine: d.liberal?.previewLine || d.satireExchanges?.[0]?.b || '',
+        suggestedHook: d.suggestedHook,
         exchanges: d.exchanges?.slice(0, 1),
         satireExchanges: d.satireExchanges?.slice(0, 1),
       }))
