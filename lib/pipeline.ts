@@ -163,6 +163,8 @@ export async function runAdvertising(debate: Partial<DebateOutput>): Promise<Cam
 export async function runDebatePipeline(
   headline: string,
   sourceType: 'user_submitted' | 'trending' | 'rss' = 'user_submitted',
+  city?: string,
+  state?: string,
 ): Promise<DebateOutput> {
   const id = Date.now().toString()
   const createdAt = new Date().toISOString()
@@ -214,6 +216,8 @@ Build the full verified briefing based on these search results. If the search re
       geographicScope,
       suggestedHook,
       sourceType,
+      city,
+      state,
       context: research.context,
       timeline: research.timeline || [],
       satireExchanges: satire.exchanges,

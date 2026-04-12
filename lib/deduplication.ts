@@ -1,5 +1,53 @@
 import crypto from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
+import { neon } from '@neondatabase/serverless'
+
+async function hasRecentDebateInDB(
+  headline: string
+): Promise<{ found: boolean; id?: string }> {
+  const sql = neon(process.env.DATABASE_URL!)
+  const normalizedHeadline = headline.toLowerCase().trim()
+
+  // Exact-ish headline match in last 48 hours
+  const rows = await sql`
+    SELECT id, headline FROM debates
+    WHERE created_at > NOW() - INTERVAL '48 hours'
+    AND LOWER(TRIM(headline)) = ${normalizedHeadline}
+    LIMIT 1
+  `
+  if (rows.length > 0) {
+    return { found: true, id: rows[0].id }
+  }
+
+  // Similarity match using pg_trgm
+  try {
+    const similar = await sql`
+      SELECT id, headline FROM debates
+      WHERE created_at > NOW() - INTERVAL '48 hours'
+      AND similarity(LOWER(headline), ${normalizedHeadline}) > 0.6
+      ORDER BY similarity(LOWER(headline), ${normalizedHeadline}) DESC
+      LIMIT 1
+    `
+    if (similar.length > 0) {
+      return { found: true, id: similar[0].id }
+    }
+  } catch {
+    // pg_trgm not enabled yet; fall through
+  }
+
+  return { found: false }
+}
+
+async function getRecentHeadlines(): Promise<string[]> {
+  const sql = neon(process.env.DATABASE_URL!)
+  const rows = await sql`
+    SELECT headline FROM debates
+    WHERE created_at > NOW() - INTERVAL '24 hours'
+    ORDER BY created_at DESC
+    LIMIT 30
+  `
+  return rows.map((r) => r.headline as string)
+}
 
 interface StoryRecord {
   hash: string
@@ -122,7 +170,7 @@ ${existingRecords.map((r, i) => `${i + 1}. "${r.headline}"${r.context ? `\n   Co
 
 export interface DeduplicationResult {
   isDuplicate: boolean
-  reason?: 'exact_match' | 'jaccard_similarity' | 'semantic_similarity'
+  reason?: 'db_match' | 'exact_match' | 'jaccard_similarity' | 'semantic_similarity'
   existingDebateId?: string
   similarityScore?: number
   hash: string
@@ -135,7 +183,23 @@ export async function checkDuplicate(headline: string): Promise<DeduplicationRes
   const JACCARD_SHORTCIRCUIT = 0.4
   const now = new Date()
 
-  // Layer 1: exact hash match
+  // LAYER 0: DB check — survives across all serverless instances
+  try {
+    const dbCheck = await hasRecentDebateInDB(headline)
+    if (dbCheck.found) {
+      return {
+        isDuplicate: true,
+        reason: 'db_match',
+        existingDebateId: dbCheck.id,
+        similarityScore: 1.0,
+        hash,
+      }
+    }
+  } catch (e) {
+    console.error('DB dedup check failed, falling through:', e)
+  }
+
+  // Layer 1: exact hash match (in-memory, same instance)
   if (storyIndex.has(hash)) {
     const existing = storyIndex.get(hash)!
     const hoursAgo =
@@ -174,28 +238,25 @@ export async function checkDuplicate(headline: string): Promise<DeduplicationRes
     }
   }
 
-  // Layer 3: semantic check via Claude — only runs for headlines Jaccard couldn't catch
-  const recentRecords = [...storyIndex.values()].filter(
-    (r) => new Date(r.firstSeenAt) > cutoff
-  )
+  // Layer 3: semantic check via Claude — cross-instance, pulls headlines from DB
+  try {
+    const recentFromDB = await getRecentHeadlines()
+    if (recentFromDB.length > 0) {
+      const recordsWithContext = recentFromDB.map((h) => ({ headline: h }))
+      const semantic = await checkSemanticSimilarity(headline, recordsWithContext)
 
-  if (recentRecords.length > 0) {
-    const recordsWithContext = recentRecords.map((r) => ({
-      headline: r.headline,
-      context: r.firstExchangeC,
-    }))
-    const semantic = await checkSemanticSimilarity(headline, recordsWithContext)
-
-    if (semantic.isDuplicate) {
-      const matched = recentRecords.find((r) => r.headline === semantic.matchedHeadline)
-      return {
-        isDuplicate: true,
-        reason: 'semantic_similarity',
-        existingDebateId: matched?.debateId,
-        similarityScore: semantic.confidence,
-        hash,
+      if (semantic.isDuplicate) {
+        return {
+          isDuplicate: true,
+          reason: 'semantic_similarity',
+          existingDebateId: undefined,
+          similarityScore: semantic.confidence,
+          hash,
+        }
       }
     }
+  } catch (e) {
+    console.error('Semantic dedup check failed:', e)
   }
 
   return { isDuplicate: false, hash }

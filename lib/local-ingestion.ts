@@ -60,7 +60,7 @@ export async function ingestLocalStoriesForSubscriber(subscriberId: string): Pro
         continue
       }
 
-      const debate = await runDebatePipeline(story.title, 'rss')
+      const debate = await runDebatePipeline(story.title, 'rss', story.city, story.state)
       await saveDebate(debate)
       registerStory(story.title, debate.id, dupCheck.hash)
 
@@ -117,7 +117,7 @@ async function ingestForLocation(
     const score = await scoreStoryForDebate(story.title)
     if (!score.shouldDebate) continue
 
-    const debate = await runDebatePipeline(story.title, 'rss')
+    const debate = await runDebatePipeline(story.title, 'rss', story.city, story.state)
     await saveDebate(debate)
     registerStory(story.title, debate.id, dupCheck.hash)
     debated++

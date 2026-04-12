@@ -54,7 +54,34 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
 
   if (searchParams.get('feed') === 'true') {
-    const debates = await getAllDebates()
+    const state = searchParams.get('state')
+    let debates: any[]
+
+    if (state) {
+      const { neon } = await import('@neondatabase/serverless')
+      const sql = neon(process.env.DATABASE_URL!)
+      const rows = await sql`
+        SELECT data FROM debates
+        WHERE publish_status = 'published'
+        AND (
+          geographic_scope IN ('national', 'international')
+          OR track = 'satire'
+          OR (
+            geographic_scope IN ('local', 'state')
+            AND (
+              state = ${state}
+              OR data->>'state' = ${state}
+            )
+          )
+        )
+        ORDER BY created_at DESC
+        LIMIT 20
+      `
+      debates = rows.map((r: any) => r.data)
+    } else {
+      debates = await getAllDebates()
+    }
+
     return NextResponse.json(
       debates.map((d: any) => ({
         id: d.id,

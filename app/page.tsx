@@ -157,13 +157,16 @@ export default function Home() {
   const location = useLocation()
 
   useEffect(() => {
-    fetch('/api/debate?feed=true')
+    const url = location.state
+      ? `/api/debate?feed=true&state=${encodeURIComponent(location.state)}`
+      : '/api/debate?feed=true'
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setDebates(data)
       })
       .catch(() => {})
-  }, [])
+  }, [location.state])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -292,14 +295,22 @@ export default function Home() {
           </div>
         )}
 
-        {localDebates.length > 0 && (
+        {(localDebates.length > 0 || location.detected) && (
           <div style={{ marginBottom: '36px' }}>
             <div style={ZONE_STYLES.label}>
-              {location.detected ? 'Near you' : 'Local & community'}
+              {location.city
+                ? `Near ${location.city}`
+                : location.state
+                ? `In ${location.state}`
+                : 'Local & community'}
             </div>
-            {localDebates.slice(0, 3).map((d) => (
-              <FeedCard key={d.id} debate={d} />
-            ))}
+            {localDebates.length === 0 ? (
+              <div style={{ fontSize: '12px', color: '#9B9B9B', marginBottom: '16px' }}>
+                No local debates yet for your area. Check back soon.
+              </div>
+            ) : (
+              localDebates.slice(0, 3).map((d) => <FeedCard key={d.id} debate={d} />)
+            )}
           </div>
         )}
 

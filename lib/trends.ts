@@ -325,7 +325,7 @@ export async function ingestTrendingStories(maxStories = 5): Promise<{
       }
 
       console.log(`Debating: ${story.title}`)
-      const debate = await runDebatePipeline(story.title, story.sourceType)
+      const debate = await runDebatePipeline(story.title, story.sourceType, story.city, story.state)
       await saveDebate(debate)
 
       const firstC = debate.exchanges?.[0]?.c || debate.conservative?.previewLine

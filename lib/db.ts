@@ -7,6 +7,8 @@ function sql() {
 }
 
 export async function initDb() {
+  try { await sql()`CREATE EXTENSION IF NOT EXISTS pg_trgm` } catch {}
+
   await sql()`
     CREATE TABLE IF NOT EXISTS subscribers (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -43,9 +45,12 @@ export async function initDb() {
     )
   `
 
+  try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS city TEXT` } catch {}
+  try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS state TEXT` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_created_at_idx ON debates (created_at DESC)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_track_idx ON debates (track)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_publish_status_idx ON debates (publish_status)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS debates_state_idx ON debates (state)` } catch {}
 
   await sql()`
     CREATE TABLE IF NOT EXISTS journalists (
@@ -138,6 +143,8 @@ export async function saveDebate(debate: any): Promise<void> {
       geographic_scope,
       publish_status,
       created_at,
+      city,
+      state,
       data
     ) VALUES (
       ${debate.id},
@@ -146,11 +153,15 @@ export async function saveDebate(debate: any): Promise<void> {
       ${debate.geographicScope || 'national'},
       ${debate.publishStatus || 'published'},
       ${debate.createdAt},
+      ${debate.city || null},
+      ${debate.state || null},
       ${JSON.stringify(debate)}
     )
     ON CONFLICT (id) DO UPDATE SET
       data = EXCLUDED.data,
-      publish_status = EXCLUDED.publish_status
+      publish_status = EXCLUDED.publish_status,
+      city = EXCLUDED.city,
+      state = EXCLUDED.state
   `
 }
 
