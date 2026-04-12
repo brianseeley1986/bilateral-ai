@@ -10,6 +10,7 @@ export interface Evidence {
 
 export interface Position {
   argument: string
+  previewLine: string
   evidence: Evidence[]
   weakestPoint: string
 }

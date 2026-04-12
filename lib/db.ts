@@ -8,6 +8,40 @@ function sql() {
 
 export async function initDb() {
   await sql()`
+    CREATE TABLE IF NOT EXISTS subscribers (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      email TEXT UNIQUE NOT NULL,
+      topics TEXT[] NOT NULL DEFAULT '{}',
+      city TEXT,
+      region TEXT,
+      zip TEXT,
+      latitude DOUBLE PRECISION,
+      longitude DOUBLE PRECISION,
+      confirmed BOOLEAN NOT NULL DEFAULT false,
+      confirmation_token TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_digest_at TIMESTAMPTZ,
+      unsubscribed_at TIMESTAMPTZ
+    )
+  `
+
+  await sql()`
+    CREATE INDEX IF NOT EXISTS subscribers_email_idx ON subscribers (email)
+  `
+
+  await sql()`
+    CREATE INDEX IF NOT EXISTS subscribers_confirmed_idx ON subscribers (confirmed)
+  `
+
+  await sql()`
+    CREATE INDEX IF NOT EXISTS subscribers_topics_idx ON subscribers USING GIN (topics)
+  `
+
+  await sql()`
+    CREATE INDEX IF NOT EXISTS subscribers_zip_idx ON subscribers (zip)
+  `
+
+  await sql()`
     CREATE TABLE IF NOT EXISTS debates (
       id TEXT PRIMARY KEY,
       headline TEXT NOT NULL,
@@ -116,6 +150,103 @@ export async function getDebateCount(): Promise<number> {
 
 export async function deleteDebate(id: string): Promise<void> {
   await sql()`DELETE FROM debates WHERE id = ${id}`
+}
+
+// ---- SUBSCRIBERS ----
+
+export async function createSubscriber(data: {
+  email: string
+  topics: string[]
+  city?: string
+  region?: string
+  zip?: string
+  latitude?: number
+  longitude?: number
+}): Promise<{ id: string; confirmationToken: string }> {
+  const token = crypto.randomUUID()
+  const rows = await sql()`
+    INSERT INTO subscribers (
+      email, topics, city, region, zip,
+      latitude, longitude, confirmation_token
+    ) VALUES (
+      ${data.email},
+      ${data.topics},
+      ${data.city || null},
+      ${data.region || null},
+      ${data.zip || null},
+      ${data.latitude || null},
+      ${data.longitude || null},
+      ${token}
+    )
+    ON CONFLICT (email) DO UPDATE SET
+      topics = EXCLUDED.topics,
+      city = EXCLUDED.city,
+      region = EXCLUDED.region,
+      zip = EXCLUDED.zip,
+      confirmation_token = ${token},
+      unsubscribed_at = NULL
+    RETURNING id
+  `
+  return { id: rows[0].id, confirmationToken: token }
+}
+
+export async function confirmSubscriber(token: string): Promise<boolean> {
+  const rows = await sql()`
+    UPDATE subscribers
+    SET confirmed = true, confirmation_token = NULL
+    WHERE confirmation_token = ${token}
+    RETURNING id
+  `
+  return rows.length > 0
+}
+
+export async function getSubscribersByTopics(topics: string[]): Promise<any[]> {
+  return sql()`
+    SELECT * FROM subscribers
+    WHERE confirmed = true
+    AND unsubscribed_at IS NULL
+    AND topics && ${topics}
+  `
+}
+
+export async function getSubscribersByZip(zip: string): Promise<any[]> {
+  return sql()`
+    SELECT * FROM subscribers
+    WHERE confirmed = true
+    AND unsubscribed_at IS NULL
+    AND zip = ${zip}
+  `
+}
+
+export async function unsubscribe(email: string): Promise<void> {
+  await sql()`
+    UPDATE subscribers
+    SET unsubscribed_at = NOW()
+    WHERE email = ${email}
+  `
+}
+
+export async function getSubscriberStats(): Promise<any> {
+  const rows = await sql()`
+    SELECT
+      COUNT(*) FILTER (WHERE confirmed = true) as confirmed,
+      COUNT(*) FILTER (WHERE confirmed = false) as pending,
+      COUNT(*) FILTER (WHERE confirmed = true AND unsubscribed_at IS NOT NULL) as unsubscribed,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'economics' = ANY(topics)) as economics,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'education' = ANY(topics)) as education,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'foreign_policy' = ANY(topics)) as foreign_policy,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'healthcare' = ANY(topics)) as healthcare,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'technology' = ANY(topics)) as technology,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'immigration' = ANY(topics)) as immigration,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'climate' = ANY(topics)) as climate,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'legal' = ANY(topics)) as legal,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'local' = ANY(topics)) as local_topic,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'politics' = ANY(topics)) as politics,
+      COUNT(*) FILTER (WHERE confirmed = true AND 'satire' = ANY(topics)) as satire,
+      COUNT(*) FILTER (WHERE confirmed = true AND zip IS NOT NULL) as with_location
+    FROM subscribers
+  `
+  return rows[0]
 }
 
 export async function hasRecentHeadline(

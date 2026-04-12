@@ -76,6 +76,7 @@ Rules you must never violate:
 Return ONLY valid JSON:
 {
   "argument": "3-4 paragraph argument in clear prose",
+  "previewLine": "one punchy sentence that works as a standalone hook on a news feed card — the most interesting, opinionated, scroll-stopping version of this position in under 20 words",
   "evidence": [
     { "tag": "hist|data|prec|econ", "text": "one sentence evidence item" }
   ],
@@ -101,6 +102,7 @@ Rules you must never violate:
 Return ONLY valid JSON:
 {
   "argument": "3-4 paragraph argument in clear prose",
+  "previewLine": "one punchy sentence that works as a standalone hook on a news feed card — the most interesting, opinionated, scroll-stopping version of this position in under 20 words",
   "evidence": [
     { "tag": "hist|data|prec|econ", "text": "one sentence evidence item" }
   ],

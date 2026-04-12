@@ -181,6 +181,8 @@ export default function AdminPage() {
         </div>
       )}
 
+      <SubscriberStatsBlock />
+
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         {!loaded ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#6B6B6B', fontSize: '13px' }}>
@@ -263,6 +265,106 @@ export default function AdminPage() {
         }
       `}</style>
     </main>
+  )
+}
+
+function SubscriberStatsBlock() {
+  const [stats, setStats] = useState<any>(null)
+  useEffect(() => {
+    fetch('/api/subscribers/stats', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then(setStats)
+      .catch(() => {})
+  }, [])
+  if (!stats || stats.error) return null
+
+  const topTopics = [
+    { name: 'Economics', count: parseInt(stats.economics) || 0 },
+    { name: 'Politics', count: parseInt(stats.politics) || 0 },
+    { name: 'Technology', count: parseInt(stats.technology) || 0 },
+    { name: 'Foreign Policy', count: parseInt(stats.foreign_policy) || 0 },
+    { name: 'Healthcare', count: parseInt(stats.healthcare) || 0 },
+    { name: 'Education', count: parseInt(stats.education) || 0 },
+    { name: 'Climate', count: parseInt(stats.climate) || 0 },
+    { name: 'Immigration', count: parseInt(stats.immigration) || 0 },
+    { name: 'Legal', count: parseInt(stats.legal) || 0 },
+    { name: 'Local', count: parseInt(stats.local_topic) || 0 },
+    { name: 'Satire', count: parseInt(stats.satire) || 0 },
+  ]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3)
+
+  const confirmed = parseInt(stats.confirmed) || 0
+  const pending = parseInt(stats.pending) || 0
+  const withLocation = parseInt(stats.with_location) || 0
+
+  return (
+    <div
+      style={{
+        maxWidth: '900px',
+        margin: '0 auto 28px',
+        background: '#fff',
+        border: '0.5px solid #d0d0d0',
+        borderRadius: '12px',
+        padding: '20px 24px',
+      }}
+    >
+      <div
+        style={{
+          fontSize: '10px',
+          fontWeight: 700,
+          color: '#6B6B6B',
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          marginBottom: '16px',
+        }}
+      >
+        Subscribers
+      </div>
+      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontSize: '36px', fontWeight: 600, color: '#0A0A0A', lineHeight: 1 }}>
+            {confirmed}
+          </div>
+          <div style={{ fontSize: '11px', color: '#6B6B6B', marginTop: '4px' }}>confirmed</div>
+        </div>
+        <div>
+          <div style={{ fontSize: '20px', fontWeight: 500, color: '#6B6B6B', lineHeight: 1 }}>
+            {pending}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9B9B9B', marginTop: '4px' }}>pending</div>
+        </div>
+        <div>
+          <div style={{ fontSize: '20px', fontWeight: 500, color: '#6B6B6B', lineHeight: 1 }}>
+            {withLocation}
+          </div>
+          <div style={{ fontSize: '11px', color: '#9B9B9B', marginTop: '4px' }}>with location</div>
+        </div>
+        {topTopics.some((t) => t.count > 0) && (
+          <div style={{ marginLeft: 'auto' }}>
+            <div style={{ fontSize: '11px', color: '#9B9B9B', marginBottom: '6px' }}>Top topics</div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {topTopics
+                .filter((t) => t.count > 0)
+                .map((t) => (
+                  <span
+                    key={t.name}
+                    style={{
+                      fontSize: '11px',
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      background: '#f1f1ef',
+                      color: '#444',
+                    }}
+                  >
+                    {t.name} ({t.count})
+                  </span>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
