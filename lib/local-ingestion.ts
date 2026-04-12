@@ -37,9 +37,17 @@ export async function ingestLocalStoriesForSubscriber(subscriberId: string): Pro
   console.log(`[local] subscriber ${subscriberId}: resolved=${result.resolvedLevel} (${result.resolvedLocation})`)
 
   stats.found = result.stories.length
+  const processedThisRun = new Set<string>()
 
   for (const story of result.stories) {
     try {
+      const key = story.title.toLowerCase().trim()
+      if (processedThisRun.has(key)) {
+        stats.skipped++
+        continue
+      }
+      processedThisRun.add(key)
+
       const dupCheck = await checkDuplicate(story.title)
       if (dupCheck.isDuplicate) {
         stats.skipped++
@@ -82,7 +90,8 @@ const DEFAULT_CITIES = [
 
 async function ingestForLocation(
   loc: { zip?: string; city?: string; region?: string; county?: string },
-  maxDebates: number
+  maxDebates: number,
+  processedThisRun: Set<string>
 ): Promise<number> {
   let debated = 0
   const result = await fetchLocalStoriesForLocation(
@@ -95,6 +104,13 @@ async function ingestForLocation(
   console.log(`[local] ${loc.city || loc.zip}: resolved=${result.resolvedLevel} (${result.resolvedLocation}), stories=${result.stories.length}`)
 
   for (const story of result.stories.slice(0, maxDebates)) {
+    const key = story.title.toLowerCase().trim()
+    if (processedThisRun.has(key)) {
+      console.log(`Session dedup hit (local): ${story.title}`)
+      continue
+    }
+    processedThisRun.add(key)
+
     const dupCheck = await checkDuplicate(story.title)
     if (dupCheck.isDuplicate) continue
 
@@ -116,12 +132,13 @@ export async function ingestLocalStoriesForAllSubscribers(
 ): Promise<{ locations: number; totalDebated: number; defaultCities: number }> {
   let totalDebated = 0
   let defaultCityDebates = 0
+  const processedThisRun = new Set<string>()
 
   // Process default cities first (1 debate each)
   console.log(`[local] Processing ${DEFAULT_CITIES.length} default cities...`)
   for (const loc of DEFAULT_CITIES) {
     try {
-      const count = await ingestForLocation(loc, 1)
+      const count = await ingestForLocation(loc, 1, processedThisRun)
       defaultCityDebates += count
       totalDebated += count
     } catch (err) {
@@ -143,7 +160,7 @@ export async function ingestLocalStoriesForAllSubscribers(
 
   for (const location of rows) {
     try {
-      const count = await ingestForLocation(location, maxDebatesPerLocation)
+      const count = await ingestForLocation(location, maxDebatesPerLocation, processedThisRun)
       totalDebated += count
     } catch (err) {
       console.error('Error ingesting for location:', location, err)

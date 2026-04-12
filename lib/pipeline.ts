@@ -36,6 +36,45 @@ async function runAgent(systemPrompt: string, userMessage: string, maxTokens = 4
   return content.text
 }
 
+async function searchForStory(headline: string): Promise<string> {
+  try {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2500,
+      tools: [
+        {
+          type: 'web_search_20250305',
+          name: 'web_search',
+        } as any,
+      ],
+      system: `You are a research assistant. Search the web for the most recent and relevant information about this news story or topic. Find:
+1. What actually happened — specific facts, names, dates, locations, quotes
+2. Who the key people and organizations are
+3. What the actual dispute or decision is
+4. Any recent developments in the last 30 days
+5. Local context if this is a local story
+
+Return a factual summary of what you found. If this is a local story, prioritize local news sources. If search returns nothing relevant, say so clearly.`,
+      messages: [
+        {
+          role: 'user',
+          content: `Search for current information about: "${headline}"`,
+        },
+      ],
+    })
+
+    const textContent = response.content
+      .filter((b: any) => b.type === 'text')
+      .map((b: any) => (b.type === 'text' ? b.text : ''))
+      .join('\n')
+
+    return textContent || 'No additional web search results found.'
+  } catch (err) {
+    console.error('Web search failed:', err)
+    return 'Web search unavailable — proceeding with background knowledge only.'
+  }
+}
+
 function parseJSON(raw: string): any {
   const cleaned = raw.replace(/```json|```/g, '').trim()
   const start = cleaned.indexOf('{')
@@ -132,15 +171,29 @@ export async function runDebatePipeline(
   const classification = parseJSON(
     await runAgent(CLASSIFIER_PROMPT, `Headline: ${headline}`, 512)
   )
+  // Normalize casing — the classifier sometimes returns uppercase values
+  classification.track = (classification.track?.toLowerCase() || 'serious')
+  classification.geographicScope = (classification.geographicScope?.toLowerCase() || 'national')
   const track = classification.track as Track
   const geographicScope = classification.geographicScope as GeoScope
   const suggestedHook = classification.suggestedHook as string
 
-  // 2. Researcher
+  // 2. Web search (primary source material for researcher)
+  console.log(`[pipeline] Searching web for: ${headline}`)
+  const searchResults = await searchForStory(headline)
+  console.log(`[pipeline] Search returned ${searchResults.length} chars`)
+
+  // 3. Researcher (grounded in search results)
   const research = parseJSON(
     await runAgent(
       RESEARCHER_PROMPT,
-      `Headline: ${headline}\n\nBuild the full verified briefing.`
+      `Headline: ${headline}
+
+WEB SEARCH RESULTS (use these as primary source material — this is what is actually happening right now):
+${searchResults}
+
+Build the full verified briefing based on these search results. If the search results contain specific facts, names, quotes, and events use them. Do not invent details not found in the search results.`,
+      5000
     )
   )
 

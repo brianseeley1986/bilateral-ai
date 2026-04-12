@@ -295,12 +295,21 @@ export async function ingestTrendingStories(maxStories = 5): Promise<{
 
   const shuffled = allStories.sort(() => Math.random() - 0.5)
   let debatedCount = 0
+  const processedThisRun = new Set<string>()
 
   for (const story of shuffled) {
     if (debatedCount >= maxStories) break
     stats.processed++
 
     try {
+      const key = story.title.toLowerCase().trim()
+      if (processedThisRun.has(key)) {
+        stats.duplicates++
+        console.log(`Session dedup hit: ${story.title}`)
+        continue
+      }
+      processedThisRun.add(key)
+
       const dupCheck = await checkDuplicate(story.title)
       if (dupCheck.isDuplicate) {
         stats.duplicates++

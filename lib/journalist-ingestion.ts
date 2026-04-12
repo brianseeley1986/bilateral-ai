@@ -69,6 +69,7 @@ export async function ingestJournalistContent(
   stats.journalists = journalists.length
   console.log(`[journalists] checking ${journalists.length} journalists`)
   let debatedCount = 0
+  const processedThisRun = new Set<string>()
 
   for (const journalist of journalists) {
     if (debatedCount >= maxDebates) break
@@ -80,6 +81,14 @@ export async function ingestJournalistContent(
 
       for (const story of stories) {
         if (debatedCount >= maxDebates) break
+
+        const key = story.toLowerCase().trim()
+        if (processedThisRun.has(key)) {
+          stats.skipped++
+          console.log(`Session dedup hit (journalist): ${story}`)
+          continue
+        }
+        processedThisRun.add(key)
 
         const dupCheck = await checkDuplicate(story)
         if (dupCheck.isDuplicate) {

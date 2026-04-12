@@ -84,6 +84,49 @@ export async function initDb() {
   try { await sql()`CREATE INDEX IF NOT EXISTS journalists_beats_idx ON journalists USING GIN (beats)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS journalists_tier_idx ON journalists (tier)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS journalists_active_idx ON journalists (active)` } catch {}
+
+  try {
+    await sql()`
+      CREATE TABLE IF NOT EXISTS ingestion_locks (
+        key TEXT PRIMARY KEY,
+        locked_at TIMESTAMPTZ NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL
+      )
+    `
+  } catch {}
+}
+
+// ---- INGESTION LOCKS ----
+
+export async function acquireIngestionLock(
+  key: string,
+  ttlMinutes: number = 10
+): Promise<boolean> {
+  try {
+    // First clean expired locks so we don't stay blocked indefinitely
+    await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW()`
+    const result = await sql()`
+      INSERT INTO ingestion_locks (key, locked_at, expires_at)
+      VALUES (${key}, NOW(), NOW() + (${ttlMinutes} || ' minutes')::interval)
+      ON CONFLICT (key) DO NOTHING
+      RETURNING key
+    `
+    return result.length > 0
+  } catch {
+    return false
+  }
+}
+
+export async function releaseIngestionLock(key: string): Promise<void> {
+  try {
+    await sql()`DELETE FROM ingestion_locks WHERE key = ${key}`
+  } catch {}
+}
+
+export async function cleanExpiredLocks(): Promise<void> {
+  try {
+    await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW()`
+  } catch {}
 }
 
 export async function saveDebate(debate: any): Promise<void> {
