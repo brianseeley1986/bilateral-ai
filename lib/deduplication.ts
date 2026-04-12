@@ -7,6 +7,7 @@ interface StoryRecord {
   normalizedText: string
   firstSeenAt: string
   debateId: string
+  firstExchangeC?: string
 }
 
 const g = globalThis as unknown as { __bilateralStoryIndex?: Map<string, StoryRecord> }
@@ -58,14 +59,14 @@ function robustJSONParse(raw: string): any {
 
 async function checkSemanticSimilarity(
   newHeadline: string,
-  existingHeadlines: string[]
+  existingRecords: Array<{ headline: string; context?: string }>
 ): Promise<{
   isDuplicate: boolean
   matchedHeadline?: string
   confidence: number
   reasoning?: string
 }> {
-  if (existingHeadlines.length === 0) {
+  if (existingRecords.length === 0) {
     return { isDuplicate: false, confidence: 0 }
   }
 
@@ -77,6 +78,8 @@ async function checkSemanticSimilarity(
 Same story means: same event, same subject, same core news — even if worded completely differently.
 "Fed holds rates" and "Federal Reserve keeps rates unchanged" are the same story.
 "Fed holds rates" and "Fed cuts rates" are different stories.
+
+You will receive headlines and optionally the first debate exchange line for additional context.
 
 Return ONLY valid JSON:
 {
@@ -92,8 +95,8 @@ No preamble. No markdown. Only JSON.`,
         role: 'user',
         content: `New headline: "${newHeadline}"
 
-Existing headlines from last 24 hours:
-${existingHeadlines.map((h, i) => `${i + 1}. "${h}"`).join('\n')}`,
+Existing stories from last 24 hours:
+${existingRecords.map((r, i) => `${i + 1}. "${r.headline}"${r.context ? `\n   Context: ${r.context}` : ''}`).join('\n')}`,
       },
     ],
   })
@@ -106,7 +109,7 @@ ${existingHeadlines.map((h, i) => `${i + 1}. "${h}"`).join('\n')}`,
   try {
     const result = robustJSONParse(content.text)
     return {
-      isDuplicate: !!result.isDuplicate && result.confidence >= 0.85,
+      isDuplicate: !!result.isDuplicate && result.confidence >= 0.80,
       matchedHeadline: result.matchedHeadline || undefined,
       confidence: typeof result.confidence === 'number' ? result.confidence : 0,
       reasoning: result.reasoning,
@@ -177,8 +180,11 @@ export async function checkDuplicate(headline: string): Promise<DeduplicationRes
   )
 
   if (recentRecords.length > 0) {
-    const recentHeadlines = recentRecords.map((r) => r.headline)
-    const semantic = await checkSemanticSimilarity(headline, recentHeadlines)
+    const recordsWithContext = recentRecords.map((r) => ({
+      headline: r.headline,
+      context: r.firstExchangeC,
+    }))
+    const semantic = await checkSemanticSimilarity(headline, recordsWithContext)
 
     if (semantic.isDuplicate) {
       const matched = recentRecords.find((r) => r.headline === semantic.matchedHeadline)
@@ -195,7 +201,7 @@ export async function checkDuplicate(headline: string): Promise<DeduplicationRes
   return { isDuplicate: false, hash }
 }
 
-export function registerStory(headline: string, debateId: string, hash: string): void {
+export function registerStory(headline: string, debateId: string, hash: string, firstExchangeC?: string): void {
   const normalized = normalizeText(headline)
   storyIndex.set(hash, {
     hash,
@@ -203,6 +209,7 @@ export function registerStory(headline: string, debateId: string, hash: string):
     normalizedText: normalized,
     firstSeenAt: new Date().toISOString(),
     debateId,
+    firstExchangeC,
   })
 }
 

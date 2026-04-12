@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
     const debate = await runDebatePipeline(headline)
 
     await saveDebate(debate)
-    registerStory(headline, debate.id, dedup.hash)
+    const firstC = debate.exchanges?.[0]?.c || debate.conservative?.previewLine
+    registerStory(headline, debate.id, dedup.hash, firstC)
 
     return NextResponse.json({
       id: debate.id,
