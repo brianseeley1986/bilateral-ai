@@ -180,7 +180,11 @@ export default function Home() {
       d.track !== 'satire' &&
       d.publishStatus === 'published' &&
       d.geographicScope !== 'local' &&
+      d.geographicScope !== 'state' &&
       d.geographicScope !== 'international'
+  )
+  const stateDebates = debates.filter(
+    (d) => d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'state'
   )
   const localDebates = debates.filter(
     (d) => d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'local'
@@ -274,6 +278,15 @@ export default function Home() {
           <div style={{ marginBottom: '36px' }}>
             <div style={ZONE_STYLES.label}>Today&apos;s debates</div>
             {seriousNational.slice(0, 6).map((d) => (
+              <FeedCard key={d.id} debate={d} />
+            ))}
+          </div>
+        )}
+
+        {stateDebates.length > 0 && (
+          <div style={{ marginBottom: '36px' }}>
+            <div style={ZONE_STYLES.label}>State &amp; regional</div>
+            {stateDebates.slice(0, 3).map((d) => (
               <FeedCard key={d.id} debate={d} />
             ))}
           </div>

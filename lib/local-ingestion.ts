@@ -67,11 +67,70 @@ export async function ingestLocalStoriesForSubscriber(subscriberId: string): Pro
   return stats
 }
 
+const DEFAULT_CITIES = [
+  { city: 'Lakeland', region: 'Florida' },
+  { city: 'Tampa', region: 'Florida' },
+  { city: 'Orlando', region: 'Florida' },
+  { city: 'Miami', region: 'Florida' },
+  { city: 'Jacksonville', region: 'Florida' },
+  { city: 'Atlanta', region: 'Georgia' },
+  { city: 'Charlotte', region: 'North Carolina' },
+  { city: 'Nashville', region: 'Tennessee' },
+  { city: 'Phoenix', region: 'Arizona' },
+  { city: 'Denver', region: 'Colorado' },
+]
+
+async function ingestForLocation(
+  loc: { zip?: string; city?: string; region?: string; county?: string },
+  maxDebates: number
+): Promise<number> {
+  let debated = 0
+  const result = await fetchLocalStoriesForLocation(
+    loc.zip || undefined,
+    loc.city || undefined,
+    loc.region || undefined,
+    loc.county || undefined,
+    maxDebates
+  )
+  console.log(`[local] ${loc.city || loc.zip}: resolved=${result.resolvedLevel} (${result.resolvedLocation}), stories=${result.stories.length}`)
+
+  for (const story of result.stories.slice(0, maxDebates)) {
+    const dupCheck = await checkDuplicate(story.title)
+    if (dupCheck.isDuplicate) continue
+
+    const score = await scoreStoryForDebate(story.title)
+    if (!score.shouldDebate) continue
+
+    const debate = await runDebatePipeline(story.title, 'rss')
+    await saveDebate(debate)
+    registerStory(story.title, debate.id, dupCheck.hash)
+    debated++
+
+    await new Promise((r) => setTimeout(r, 1500))
+  }
+  return debated
+}
+
 export async function ingestLocalStoriesForAllSubscribers(
   maxDebatesPerLocation = 2
-): Promise<{ locations: number; totalDebated: number }> {
-  const sql = getSql()
+): Promise<{ locations: number; totalDebated: number; defaultCities: number }> {
+  let totalDebated = 0
+  let defaultCityDebates = 0
 
+  // Process default cities first (1 debate each)
+  console.log(`[local] Processing ${DEFAULT_CITIES.length} default cities...`)
+  for (const loc of DEFAULT_CITIES) {
+    try {
+      const count = await ingestForLocation(loc, 1)
+      defaultCityDebates += count
+      totalDebated += count
+    } catch (err) {
+      console.error(`Error ingesting default city ${loc.city}:`, err)
+    }
+  }
+
+  // Then process subscriber locations (up to maxDebatesPerLocation each)
+  const sql = getSql()
   const rows = await sql`
     SELECT DISTINCT zip, region, city, county
     FROM subscribers
@@ -80,40 +139,16 @@ export async function ingestLocalStoriesForAllSubscribers(
     AND 'local' = ANY(topics)
     AND (zip IS NOT NULL OR latitude IS NOT NULL)
   `
-
-  console.log(`Found ${rows.length} unique subscriber locations for local ingestion`)
-
-  let totalDebated = 0
+  console.log(`[local] Found ${rows.length} subscriber locations`)
 
   for (const location of rows) {
     try {
-      const result = await fetchLocalStoriesForLocation(
-        location.zip || undefined,
-        location.city || undefined,
-        location.region || undefined,
-        location.county || undefined,
-        maxDebatesPerLocation
-      )
-      console.log(`[local] location ${location.city || location.zip}: resolved=${result.resolvedLevel} (${result.resolvedLocation})`)
-
-      for (const story of result.stories.slice(0, maxDebatesPerLocation)) {
-        const dupCheck = await checkDuplicate(story.title)
-        if (dupCheck.isDuplicate) continue
-
-        const score = await scoreStoryForDebate(story.title)
-        if (!score.shouldDebate) continue
-
-        const debate = await runDebatePipeline(story.title, 'rss')
-        await saveDebate(debate)
-        registerStory(story.title, debate.id, dupCheck.hash)
-        totalDebated++
-
-        await new Promise((r) => setTimeout(r, 1500))
-      }
+      const count = await ingestForLocation(location, maxDebatesPerLocation)
+      totalDebated += count
     } catch (err) {
       console.error('Error ingesting for location:', location, err)
     }
   }
 
-  return { locations: rows.length, totalDebated }
+  return { locations: rows.length + DEFAULT_CITIES.length, totalDebated, defaultCities: defaultCityDebates }
 }
