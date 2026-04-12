@@ -9,7 +9,7 @@ interface CampaignItem {
   track: 'serious' | 'local' | 'satire'
   geographicScope: string
   createdAt: string
-  campaign: CampaignPackage
+  campaign?: CampaignPackage
   publishStatus?: PublishStatus
   qualityScore?: QualityScore
 }
@@ -86,6 +86,15 @@ export default function AdminPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ debateId, platform }),
+    })
+    load()
+  }
+
+  async function generateCampaign(debateId: string) {
+    await fetch('/api/campaigns/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ debateId }),
     })
     load()
   }
@@ -188,7 +197,7 @@ export default function AdminPage() {
               borderRadius: '12px',
             }}
           >
-            No campaigns yet. Run a debate from the homepage to generate one.
+            No debates yet. Run a debate from the homepage to get started.
           </div>
         ) : (
           (() => {
@@ -237,6 +246,7 @@ export default function AdminPage() {
                       onApprove={() => patchCampaign(item.debateId, 'approved')}
                       onSkip={() => patchCampaign(item.debateId, 'skipped')}
                       onPostNow={(platform) => postNow(item.debateId, platform)}
+                      onGenerate={() => generateCampaign(item.debateId)}
                     />
                   ))
                 )}
@@ -383,27 +393,36 @@ function CampaignCard({
   onApprove,
   onSkip,
   onPostNow,
+  onGenerate,
 }: {
   item: CampaignItem
   onApprove: () => void
   onSkip: () => void
   onPostNow: (platform: string) => void
+  onGenerate: () => void
 }) {
   const [tab, setTab] = useState<Tab>('X A')
   const [variant, setVariant] = useState<'A' | 'B'>('A')
   const [copied, setCopied] = useState(false)
+  const [generating, setGenerating] = useState(false)
   const badge = trackBadges[item.track]
   const { campaign } = item
 
-  const tabContent: Record<Tab, { text: string; platformKey: string }> = {
-    'X A': { text: campaign.posts.xA, platformKey: 'xA' },
-    'X B': { text: campaign.posts.xB, platformKey: 'xB' },
-    Thread: { text: (campaign.posts.xThread || []).join('\n\n'), platformKey: 'xThread' },
-    LinkedIn: { text: campaign.posts.linkedin, platformKey: 'linkedin' },
-    Facebook: { text: campaign.posts.facebook, platformKey: 'facebook' },
-    Reddit: { text: campaign.posts.reddit, platformKey: 'reddit' },
-    Instagram: { text: campaign.posts.instagram, platformKey: 'instagram' },
-  }
+  const empty = { text: '', platformKey: '' }
+  const tabContent: Record<Tab, { text: string; platformKey: string }> = campaign
+    ? {
+        'X A': { text: campaign.posts.xA, platformKey: 'xA' },
+        'X B': { text: campaign.posts.xB, platformKey: 'xB' },
+        Thread: { text: (campaign.posts.xThread || []).join('\n\n'), platformKey: 'xThread' },
+        LinkedIn: { text: campaign.posts.linkedin, platformKey: 'linkedin' },
+        Facebook: { text: campaign.posts.facebook, platformKey: 'facebook' },
+        Reddit: { text: campaign.posts.reddit, platformKey: 'reddit' },
+        Instagram: { text: campaign.posts.instagram, platformKey: 'instagram' },
+      }
+    : {
+        'X A': empty, 'X B': empty, Thread: empty, LinkedIn: empty,
+        Facebook: empty, Reddit: empty, Instagram: empty,
+      }
 
   function copy(text: string) {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -449,7 +468,7 @@ function CampaignCard({
           {badge.label}
         </span>
         <span style={{ fontSize: '11px', color: '#6B6B6B' }}>{item.geographicScope}</span>
-        <span style={{ fontSize: '11px', color: '#6B6B6B' }}>· {campaign.timing}</span>
+        {campaign && <span style={{ fontSize: '11px', color: '#6B6B6B' }}>· {campaign.timing}</span>}
         <Link
           href={`/debate/${item.debateId}`}
           style={{
@@ -461,18 +480,20 @@ function CampaignCard({
         >
           · view story →
         </Link>
-        <span
-          style={{
-            marginLeft: 'auto',
-            fontSize: '10px',
-            fontWeight: 700,
-            color: statusColor[campaign.status],
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-          }}
-        >
-          {campaign.status}
-        </span>
+        {campaign && (
+          <span
+            style={{
+              marginLeft: 'auto',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: statusColor[campaign.status],
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+            }}
+          >
+            {campaign.status}
+          </span>
+        )}
       </div>
 
       <h3
@@ -489,6 +510,41 @@ function CampaignCard({
 
       {item.qualityScore && <QualityBlock quality={item.qualityScore} />}
 
+      {!campaign ? (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '32px 0',
+            border: '0.5px dashed #d0d0d0',
+            borderRadius: '10px',
+          }}
+        >
+          <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '14px' }}>
+            No campaign generated yet
+          </div>
+          <button
+            onClick={async () => {
+              setGenerating(true)
+              await onGenerate()
+              setGenerating(false)
+            }}
+            disabled={generating}
+            style={{
+              background: generating ? '#e5e5e5' : '#0A0A0A',
+              color: '#F5F5F0',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '10px 24px',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: generating ? 'default' : 'pointer',
+            }}
+          >
+            {generating ? 'Generating...' : 'Generate Campaign'}
+          </button>
+        </div>
+      ) : (
+      <>
       <div
         style={{
           background: '#f8f8f6',
@@ -773,6 +829,8 @@ function CampaignCard({
           Post Now
         </button>
       </div>
+      </>
+      )}
     </div>
   )
 }

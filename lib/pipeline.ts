@@ -81,7 +81,7 @@ ${JSON.stringify(input.verdict ?? {}, null, 2)}`
   return parseJSON(raw) as QualityScore
 }
 
-async function runAdvertising(debate: Partial<DebateOutput>): Promise<CampaignPackage | undefined> {
+export async function runAdvertising(debate: Partial<DebateOutput>): Promise<CampaignPackage | undefined> {
   try {
     const raw = await runAgent(
       ADVERTISING_AGENT_PROMPT,

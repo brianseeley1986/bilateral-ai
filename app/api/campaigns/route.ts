@@ -16,7 +16,6 @@ const VALID_STATUSES: CampaignStatus[] = ['pending', 'approved', 'posted', 'skip
 export async function GET() {
   const debates = await getAllDebates()
   const items = debates
-    .filter((d) => d.campaign)
     .map((d) => ({
       debateId: d.id,
       headline: d.headline,
