@@ -9,17 +9,17 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!debate) return {}
   return {
     title: `${debate.headline} — Bilateral`,
-    description: debate.suggestedHook || 'Liberal. Conservative. You decide.',
+    description: debate.suggestedHook || 'The argument behind every headline.',
     openGraph: {
       title: debate.headline,
-      description: debate.suggestedHook || 'Liberal. Conservative. You decide.',
+      description: debate.suggestedHook || 'The argument behind every headline.',
       siteName: 'Bilateral',
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title: debate.headline,
-      description: debate.suggestedHook || 'Liberal. Conservative. You decide.',
+      description: debate.suggestedHook || 'The argument behind every headline.',
     },
   }
 }

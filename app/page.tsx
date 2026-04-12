@@ -203,7 +203,7 @@ export default function Home() {
           <div
             style={{ fontSize: '13px', color: '#6B6B6B', letterSpacing: '0.02em', marginBottom: '28px' }}
           >
-            Two minds. Every story. You decide.
+            The argument behind every headline.
           </div>
           <HeadlineInput />
         </div>

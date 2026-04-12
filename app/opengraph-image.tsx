@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'Bilateral — Liberal. Conservative. You decide.'
+export const alt = 'Bilateral — The argument behind every headline.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -64,7 +64,7 @@ export default async function Image() {
             fontWeight: 500,
           }}
         >
-          Liberal. Conservative. You decide.
+          The argument behind every headline.
         </div>
         <div
           style={{

@@ -10,7 +10,7 @@ An AI news debate platform. User inputs a headline. Four agents fire in sequence
 
 ## Brand
 - Name: Bilateral
-- Tagline: Liberal. Conservative. You decide.
+- Tagline: The argument behind every headline.
 - Colors: #0A0A0A near-black, #F5F5F0 off-white, #C1121F Conservative red, #1B4FBE Liberal blue, #6B6B6B neutral gray
 
 ## Agent rules — never violate

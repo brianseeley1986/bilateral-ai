@@ -17,7 +17,7 @@ export async function ingestLocalStoriesForSubscriber(subscriberId: string): Pro
   const sql = getSql()
 
   const rows = await sql`
-    SELECT zip, latitude, longitude, city, region
+    SELECT zip, latitude, longitude, city, region, county
     FROM subscribers
     WHERE id = ${subscriberId}
     AND confirmed = true
@@ -25,17 +25,20 @@ export async function ingestLocalStoriesForSubscriber(subscriberId: string): Pro
 
   if (rows.length === 0) return stats
   const subscriber = rows[0]
-  if (!subscriber.zip && !subscriber.latitude) return stats
+  if (!subscriber.city && !subscriber.region && !subscriber.zip) return stats
 
-  const localStories = await fetchLocalStoriesForLocation(
+  const result = await fetchLocalStoriesForLocation(
     subscriber.zip || undefined,
+    subscriber.city || undefined,
     subscriber.region || undefined,
+    subscriber.county || undefined,
     3
   )
+  console.log(`[local] subscriber ${subscriberId}: resolved=${result.resolvedLevel} (${result.resolvedLocation})`)
 
-  stats.found = localStories.length
+  stats.found = result.stories.length
 
-  for (const story of localStories) {
+  for (const story of result.stories) {
     try {
       const dupCheck = await checkDuplicate(story.title)
       if (dupCheck.isDuplicate) {
@@ -70,7 +73,7 @@ export async function ingestLocalStoriesForAllSubscribers(
   const sql = getSql()
 
   const rows = await sql`
-    SELECT DISTINCT zip, region, city
+    SELECT DISTINCT zip, region, city, county
     FROM subscribers
     WHERE confirmed = true
     AND unsubscribed_at IS NULL
@@ -84,13 +87,16 @@ export async function ingestLocalStoriesForAllSubscribers(
 
   for (const location of rows) {
     try {
-      const stories = await fetchLocalStoriesForLocation(
+      const result = await fetchLocalStoriesForLocation(
         location.zip || undefined,
+        location.city || undefined,
         location.region || undefined,
+        location.county || undefined,
         maxDebatesPerLocation
       )
+      console.log(`[local] location ${location.city || location.zip}: resolved=${result.resolvedLevel} (${result.resolvedLocation})`)
 
-      for (const story of stories.slice(0, maxDebatesPerLocation)) {
+      for (const story of result.stories.slice(0, maxDebatesPerLocation)) {
         const dupCheck = await checkDuplicate(story.title)
         if (dupCheck.isDuplicate) continue
 

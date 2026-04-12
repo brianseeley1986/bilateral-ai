@@ -42,6 +42,10 @@ export async function initDb() {
   `
 
   await sql()`
+    ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS county TEXT
+  `
+
+  await sql()`
     CREATE TABLE IF NOT EXISTS debates (
       id TEXT PRIMARY KEY,
       headline TEXT NOT NULL,

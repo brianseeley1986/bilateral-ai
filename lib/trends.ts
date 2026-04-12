@@ -13,37 +13,9 @@ const RSS_FEEDS = [
   { url: 'https://rss.apnews.com/apf-topnews', name: 'AP Top News', scope: 'national' },
 ]
 
-const LOCAL_RSS_FEEDS: Record<
-  string,
-  { url: string; name: string; city: string; state: string; stateAbbr: string; zip_prefixes: string[] }[]
-> = {
-  florida: [
-    { url: 'https://www.tampabay.com/feed/', name: 'Tampa Bay Times', city: 'Tampa', state: 'Florida', stateAbbr: 'FL', zip_prefixes: ['33', '34'] },
-    { url: 'https://www.orlandosentinel.com/feed/', name: 'Orlando Sentinel', city: 'Orlando', state: 'Florida', stateAbbr: 'FL', zip_prefixes: ['32'] },
-    { url: 'https://www.miamiherald.com/news/local/?outputType=rss', name: 'Miami Herald', city: 'Miami', state: 'Florida', stateAbbr: 'FL', zip_prefixes: ['33', '34'] },
-    { url: 'https://www.theledger.com/feed/', name: 'The Ledger', city: 'Lakeland', state: 'Florida', stateAbbr: 'FL', zip_prefixes: ['338'] },
-    { url: 'https://www.sun-sentinel.com/feed/', name: 'Sun Sentinel', city: 'Fort Lauderdale', state: 'Florida', stateAbbr: 'FL', zip_prefixes: ['333'] },
-  ],
-  texas: [
-    { url: 'https://www.houstonchronicle.com/feed/', name: 'Houston Chronicle', city: 'Houston', state: 'Texas', stateAbbr: 'TX', zip_prefixes: ['77'] },
-    { url: 'https://www.dallasnews.com/arc/outboundfeeds/rss/', name: 'Dallas Morning News', city: 'Dallas', state: 'Texas', stateAbbr: 'TX', zip_prefixes: ['75', '76'] },
-  ],
-  new_york: [
-    { url: 'https://gothamist.com/feed', name: 'Gothamist', city: 'New York City', state: 'New York', stateAbbr: 'NY', zip_prefixes: ['10', '11'] },
-  ],
-  california: [
-    { url: 'https://www.latimes.com/local/rss2.0.xml', name: 'LA Times Local', city: 'Los Angeles', state: 'California', stateAbbr: 'CA', zip_prefixes: ['90', '91'] },
-    { url: 'https://www.sfchronicle.com/feed/', name: 'SF Chronicle', city: 'San Francisco', state: 'California', stateAbbr: 'CA', zip_prefixes: ['94'] },
-  ],
-  illinois: [
-    { url: 'https://www.chicagotribune.com/feed/', name: 'Chicago Tribune', city: 'Chicago', state: 'Illinois', stateAbbr: 'IL', zip_prefixes: ['60'] },
-  ],
-  georgia: [
-    { url: 'https://www.ajc.com/feed/', name: 'Atlanta Journal-Constitution', city: 'Atlanta', state: 'Georgia', stateAbbr: 'GA', zip_prefixes: ['30', '31'] },
-  ],
-  washington: [
-    { url: 'https://www.seattletimes.com/feed/', name: 'Seattle Times', city: 'Seattle', state: 'Washington', stateAbbr: 'WA', zip_prefixes: ['98'] },
-  ],
+function buildGoogleNewsLocalUrl(city: string, state: string): string {
+  const q = encodeURIComponent(`${city} ${state} local news`)
+  return `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`
 }
 
 interface TrendingStory {
@@ -127,62 +99,123 @@ export async function fetchRSSFeeds(): Promise<TrendingStory[]> {
   return stories
 }
 
-export function getLocalFeedsForZip(zip: string) {
-  const results: (typeof LOCAL_RSS_FEEDS)[string] = []
-  for (const feeds of Object.values(LOCAL_RSS_FEEDS)) {
-    for (const feed of feeds) {
-      if (feed.zip_prefixes.some((prefix) => zip.startsWith(prefix))) {
-        results.push(feed)
-      }
-    }
-  }
-  return results
+const FLORIDA_METRO_FALLBACKS: Record<string, string> = {
+  'haines city': 'lakeland',
+  'winter haven': 'lakeland',
+  'auburndale': 'lakeland',
+  'bartow': 'lakeland',
+  'plant city': 'tampa',
+  'brandon': 'tampa',
+  'clearwater': 'tampa',
+  'st pete': 'tampa',
+  'kissimmee': 'orlando',
+  'sanford': 'orlando',
+  'deltona': 'orlando',
+  'daytona beach': 'orlando',
+  'cape coral': 'fort-myers',
+  'fort myers': 'fort-myers',
+  'naples': 'fort-myers',
+  'boca raton': 'miami',
+  'fort lauderdale': 'miami',
+  'pompano beach': 'miami',
+  'hollywood': 'miami',
+  'hialeah': 'miami',
+  'pensacola': 'tallahassee',
+  'gainesville': 'tallahassee',
+  'tallahassee': 'tallahassee',
 }
 
-export function getLocalFeedsForState(state: string) {
-  const lower = state.toLowerCase()
-  const results: (typeof LOCAL_RSS_FEEDS)[string] = []
-  for (const feeds of Object.values(LOCAL_RSS_FEEDS)) {
-    for (const feed of feeds) {
-      if (feed.state.toLowerCase().includes(lower) || feed.stateAbbr.toLowerCase() === lower) {
-        results.push(feed)
-      }
-    }
+async function tryGoogleNewsRSS(url: string): Promise<string[]> {
+  try {
+    console.log(`[local] trying: ${url}`)
+    const response = await fetchWithTimeout(url, 10000)
+    if (!response.ok) return []
+    const xml = await response.text()
+    const titles = parseRSSItems(xml)
+    if (titles.length > 0) console.log(`[local] hit: ${titles.length} stories`)
+    return titles
+  } catch {
+    return []
   }
-  return results
+}
+
+function makeStories(
+  titles: string[],
+  source: string,
+  max: number,
+  city?: string,
+  state?: string
+): TrendingStory[] {
+  return titles.slice(0, max).map((title) => ({
+    title,
+    source,
+    scope: 'local',
+    sourceType: 'rss' as const,
+    city,
+    state,
+  }))
+}
+
+export interface LocalFetchResult {
+  stories: TrendingStory[]
+  resolvedLevel: 'city' | 'county' | 'metro' | 'state' | 'none'
+  resolvedLocation: string
 }
 
 export async function fetchLocalStoriesForLocation(
   zip?: string,
+  city?: string,
   state?: string,
-  maxPerFeed = 5
-): Promise<TrendingStory[]> {
-  const feeds = zip ? getLocalFeedsForZip(zip) : state ? getLocalFeedsForState(state) : []
-  if (feeds.length === 0) return []
+  county?: string,
+  maxStories = 5
+): Promise<LocalFetchResult> {
+  const none: LocalFetchResult = { stories: [], resolvedLevel: 'none', resolvedLocation: '' }
+  if (!state) return none
 
-  const stories: TrendingStory[] = []
-  await Promise.allSettled(
-    feeds.map(async (feed) => {
-      try {
-        const response = await fetchWithTimeout(feed.url)
-        if (!response.ok) return
-        const xml = await response.text()
-        for (const title of parseRSSItems(xml).slice(0, maxPerFeed)) {
-          stories.push({
-            title,
-            source: feed.name,
-            scope: 'local',
-            sourceType: 'rss',
-            city: feed.city,
-            state: feed.state,
-          })
-        }
-      } catch (err) {
-        console.error(`Local RSS fetch failed for ${feed.name}:`, err)
+  const cityLower = (city || '').toLowerCase()
+
+  // Level 1: Exact city
+  if (city && state) {
+    console.log(`[local] L1 city: ${city}, ${state}`)
+    const titles = await tryGoogleNewsRSS(buildGoogleNewsLocalUrl(city, state))
+    if (titles.length > 0) {
+      return { stories: makeStories(titles, `${city} Local`, maxStories, city, state), resolvedLevel: 'city', resolvedLocation: city }
+    }
+  }
+
+  // Level 2: County
+  if (county && state) {
+    console.log(`[local] L2 county: ${county}, ${state}`)
+    const titles = await tryGoogleNewsRSS(buildGoogleNewsLocalUrl(`${county} County`, state))
+    if (titles.length > 0) {
+      return { stories: makeStories(titles, `${county} County Local`, maxStories, city, state), resolvedLevel: 'county', resolvedLocation: `${county} County` }
+    }
+  }
+
+  // Level 3: Metro fallback (Florida only for now)
+  if (state.toLowerCase() === 'florida' && cityLower) {
+    const metro = FLORIDA_METRO_FALLBACKS[cityLower]
+    if (metro) {
+      console.log(`[local] L3 metro: ${cityLower} → ${metro}`)
+      const titles = await tryGoogleNewsRSS(buildGoogleNewsLocalUrl(metro, state))
+      if (titles.length > 0) {
+        return { stories: makeStories(titles, `${metro} Local`, maxStories, city, state), resolvedLevel: 'metro', resolvedLocation: metro }
       }
-    })
-  )
-  return stories
+    }
+  }
+
+  // Level 4: State-level
+  if (state) {
+    console.log(`[local] L4 state: ${state}`)
+    const titles = await tryGoogleNewsRSS(buildGoogleNewsLocalUrl('', state))
+    if (titles.length > 0) {
+      return { stories: makeStories(titles, `${state} News`, maxStories, city, state), resolvedLevel: 'state', resolvedLocation: state }
+    }
+  }
+
+  // Level 5: None
+  console.log(`[local] L5 none — no coverage for ${city || ''}, ${state}`)
+  return none
 }
 
 export async function scoreStoryForDebate(
