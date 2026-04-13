@@ -3,6 +3,14 @@ import { useState, useEffect } from 'react'
 import { HeadlineInput } from '@/components/HeadlineInput'
 import { EmailCapture } from '@/components/EmailCapture'
 import { useLocation } from '@/components/LocationDetector'
+import { cleanHeadline } from '@/lib/headline'
+
+const clamp2: React.CSSProperties = {
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+}
 
 interface DebateCard {
   id: string
@@ -49,12 +57,6 @@ const ZONE_STYLES = {
     textAlign: 'right' as const,
     marginTop: '8px',
   },
-}
-
-function truncateSentence(text: string): string {
-  if (!text) return ''
-  const sentences = text.split('. ')
-  return sentences[0] + (sentences.length > 1 ? '.' : '')
 }
 
 function timeAgo(dateStr: string): string {
@@ -148,7 +150,7 @@ function FeedCard({ debate }: { debate: DebateCard }) {
         <span style={{ fontSize: '11px', color: '#9B9B9B' }}>{timeAgo(debate.createdAt)}</span>
       </div>
 
-      <div style={ZONE_STYLES.headline}>{debate.headline}</div>
+      <div style={ZONE_STYLES.headline}>{cleanHeadline(debate.headline)}</div>
 
       {cLine && (
         <div
@@ -156,7 +158,7 @@ function FeedCard({ debate }: { debate: DebateCard }) {
             ...ZONE_STYLES.preview,
             color: '#444',
             display: 'flex',
-            alignItems: 'baseline',
+            alignItems: 'flex-start',
             gap: '8px',
           }}
         >
@@ -171,11 +173,12 @@ function FeedCard({ debate }: { debate: DebateCard }) {
               padding: '2px 6px',
               borderRadius: '4px',
               flexShrink: 0,
+              marginTop: '2px',
             }}
           >
             {isSatire ? 'A' : 'C'}
           </span>
-          <span>{truncateSentence(cLine)}</span>
+          <span style={clamp2}>{cLine}</span>
         </div>
       )}
       {lLine && (
@@ -184,7 +187,7 @@ function FeedCard({ debate }: { debate: DebateCard }) {
             ...ZONE_STYLES.preview,
             color: '#444',
             display: 'flex',
-            alignItems: 'baseline',
+            alignItems: 'flex-start',
             gap: '8px',
           }}
         >
@@ -199,11 +202,12 @@ function FeedCard({ debate }: { debate: DebateCard }) {
               padding: '2px 6px',
               borderRadius: '4px',
               flexShrink: 0,
+              marginTop: '2px',
             }}
           >
             {isSatire ? 'B' : 'L'}
           </span>
-          <span>{truncateSentence(lLine)}</span>
+          <span style={clamp2}>{lLine}</span>
         </div>
       )}
 
@@ -253,6 +257,8 @@ interface LibraryFeatured {
   category: string
   slug: string
   hook?: string
+  conservativePreview?: string
+  liberalPreview?: string
 }
 
 function LibraryFeaturedSection() {
@@ -271,9 +277,9 @@ function LibraryFeaturedSection() {
 
   return (
     <div style={{ marginBottom: '36px' }}>
-      <div style={ZONE_STYLES.label}>From the library</div>
+      <div style={ZONE_STYLES.label}>The Fault Lines</div>
       <div style={{ fontSize: '12px', color: '#9B9B9B', marginTop: '-6px', marginBottom: '14px' }}>
-        The most contested questions in America
+        The questions America keeps fighting about.
       </div>
       {items.map((item) => (
         <a
@@ -311,15 +317,68 @@ function LibraryFeaturedSection() {
               {item.category?.replace(/_/g, ' ')}
             </span>
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 500, lineHeight: 1.4, color: '#0A0A0A', marginBottom: '6px' }}>
-            {item.question}
+          <div style={{ fontSize: '16px', fontWeight: 500, lineHeight: 1.4, color: '#0A0A0A', marginBottom: '8px' }}>
+            {cleanHeadline(item.question)}
           </div>
-          {item.hook && (
-            <div style={{ fontSize: '13px', color: '#6B6B6B', lineHeight: 1.55, marginBottom: '6px' }}>
-              {item.hook}
+          {item.conservativePreview && (
+            <div
+              style={{
+                ...ZONE_STYLES.preview,
+                color: '#444',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: '#fee2e2',
+                  color: '#7f1d1d',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  flexShrink: 0,
+                  marginTop: '2px',
+                }}
+              >
+                C
+              </span>
+              <span style={clamp2}>{item.conservativePreview}</span>
             </div>
           )}
-          <div style={{ fontSize: '12px', color: '#6B6B6B', textAlign: 'right' }}>Read the debate →</div>
+          {item.liberalPreview && (
+            <div
+              style={{
+                ...ZONE_STYLES.preview,
+                color: '#444',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: '#dbeafe',
+                  color: '#1e3a5f',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  flexShrink: 0,
+                  marginTop: '2px',
+                }}
+              >
+                L
+              </span>
+              <span style={clamp2}>{item.liberalPreview}</span>
+            </div>
+          )}
+          <div style={{ fontSize: '12px', color: '#6B6B6B', textAlign: 'right', marginTop: '8px' }}>Read the debate →</div>
         </a>
       ))}
     </div>
