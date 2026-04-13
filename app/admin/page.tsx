@@ -367,14 +367,10 @@ export default function AdminPage() {
     const stored = sessionStorage.getItem('bilateral_admin_key')
     if (stored) setAdminKey(stored)
     setAuthReady(true)
-    // strip key from URL if someone visits with old ?key= link
     if (window.location.search.includes('key=')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
-
-  if (!authReady) return null
-  if (!adminKey) return <LoginGate onLogin={key => setAdminKey(key)} />
 
   async function load() {
     try {
@@ -393,6 +389,9 @@ export default function AdminPage() {
     const t = setInterval(load, 30000)
     return () => clearInterval(t)
   }, [])
+
+  if (!authReady) return null
+  if (!adminKey) return <LoginGate onLogin={key => setAdminKey(key)} />
 
   async function toggleAutoPost() {
     const next = !autoPost
