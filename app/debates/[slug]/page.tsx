@@ -34,7 +34,7 @@ export async function generateMetadata({
   params: { slug: string }
 }): Promise<Metadata> {
   const sql = neon(process.env.DATABASE_URL!)
-  const rows = await sql`SELECT * FROM library_questions WHERE slug = ${params.slug} LIMIT 1`
+  const rows = await sql`SELECT id, slug, question, category, hook, status, debate_id, search_volume_tier FROM library_questions WHERE slug = ${params.slug} LIMIT 1`
   const row = rows[0] ?? null
   if (!row) return {}
   const title = `${row.question} — Bilateral`
@@ -66,7 +66,7 @@ export default async function LibraryQuestionPage({
   params: { slug: string }
 }) {
   const sql = neon(process.env.DATABASE_URL!)
-  const lqRows = await sql`SELECT * FROM library_questions WHERE slug = ${params.slug} LIMIT 1`
+  const lqRows = await sql`SELECT id, slug, question, category, hook, status, debate_id, search_volume_tier FROM library_questions WHERE slug = ${params.slug} LIMIT 1`
   const row = lqRows[0] ?? null
   if (!row) notFound()
 

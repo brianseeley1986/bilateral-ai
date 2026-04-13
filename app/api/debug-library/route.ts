@@ -11,17 +11,20 @@ export async function GET(req: NextRequest) {
 
   const sql = neon(process.env.DATABASE_URL!)
 
-  // Direct neon query
   const directRows = await sql`SELECT id, slug, status, debate_id FROM library_questions WHERE slug = ${slug} LIMIT 1`
   const direct = directRows[0] ?? null
 
-  // Via db.ts (same as the library page)
+  const allRows = await sql`SELECT id, status, debate_id, created_at FROM library_questions WHERE slug = ${slug} ORDER BY created_at DESC`
+
+  const statusCounts = await sql`SELECT status, COUNT(*) FROM library_questions GROUP BY status`
+
   await initDb()
   const viaDbTs = await getLibraryQuestionBySlug(slug)
 
   return NextResponse.json({
-    DATABASE_URL_SET: !!process.env.DATABASE_URL,
     direct_query: direct,
-    via_db_ts: viaDbTs ? { id: viaDbTs.id, slug: viaDbTs.slug, status: viaDbTs.status, debate_id: viaDbTs.debate_id } : null,
+    all_rows_count: allRows.length,
+    status_counts: statusCounts,
+    via_db_ts: viaDbTs ? { status: viaDbTs.status, debate_id: viaDbTs.debate_id } : null,
   })
 }
