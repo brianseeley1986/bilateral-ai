@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   ingestLocalStoriesForAllSubscribers,
-  ingestLocalStoriesForSubscriber,
+  generateSignupLocalDebates,
   ingestNextDefaultCity,
   ingestSpecificCity,
 } from '@/lib/local-ingestion'
+import { neon } from '@neondatabase/serverless'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -23,7 +24,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}))
 
     if (body.subscriberId) {
-      const stats = await ingestLocalStoriesForSubscriber(body.subscriberId)
+      const sql = neon(process.env.DATABASE_URL!)
+      const rows = await sql`
+        SELECT id, city, region, zip, county FROM subscribers
+        WHERE id = ${body.subscriberId} AND confirmed = true LIMIT 1
+      `
+      if (rows.length === 0) return NextResponse.json({ error: 'Subscriber not found' }, { status: 404 })
+      const stats = await generateSignupLocalDebates({ id: rows[0].id, city: rows[0].city, region: rows[0].region, zip: rows[0].zip, county: rows[0].county })
       return NextResponse.json({ success: true, stats })
     }
 

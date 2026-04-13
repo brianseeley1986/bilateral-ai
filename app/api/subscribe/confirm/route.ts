@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { confirmSubscriber } from '@/lib/db'
 import { neon } from '@neondatabase/serverless'
-import { ingestLocalStoriesForSubscriber } from '@/lib/local-ingestion'
+import { generateSignupLocalDebates } from '@/lib/local-ingestion'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     try {
       const sql = neon(process.env.DATABASE_URL!)
       const rows = await sql`
-        SELECT id, topics, zip, latitude
+        SELECT id, topics, zip, latitude, city, region, county
         FROM subscribers
         WHERE confirmation_token IS NULL
         AND confirmed = true
@@ -28,10 +28,16 @@ export async function GET(req: NextRequest) {
       if (rows.length > 0) {
         const sub = rows[0]
         const hasLocal = Array.isArray(sub.topics) && sub.topics.includes('local')
-        const hasLocation = sub.zip || sub.latitude
+        const hasLocation = sub.zip || sub.latitude || sub.city || sub.region
 
         if (hasLocal && hasLocation) {
-          ingestLocalStoriesForSubscriber(sub.id)
+          generateSignupLocalDebates({
+            id: sub.id,
+            city: sub.city,
+            region: sub.region,
+            zip: sub.zip,
+            county: sub.county,
+          })
             .then((stats) => console.log('Local ingestion for new subscriber:', stats))
             .catch((err) => console.error('Local ingestion error:', err))
         }

@@ -110,7 +110,7 @@ export function HeadlineInput() {
           disabled={loading || !headline.trim()}
           style={{
             background: loading || !headline.trim() ? '#e5e5e5' : '#0A0A0A',
-            color: '#F5F5F0',
+            color: loading || !headline.trim() ? '#9B9B9B' : '#F5F5F0',
             border: 'none',
             borderRadius: '20px',
             padding: '8px 18px',

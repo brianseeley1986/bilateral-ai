@@ -1,7 +1,272 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { CampaignPackage, QualityScore, PublishStatus } from '@/types/debate'
+
+// ---- ADMIN STATS DASHBOARD ----
+
+function statCard(label: string, value: string | number, sub?: string, color?: string) {
+  return (
+    <div key={label} style={{ minWidth: '90px' }}>
+      <div style={{ fontSize: '26px', fontWeight: 600, color: color || '#0A0A0A', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: '11px', color: '#6B6B6B', marginTop: '3px' }}>{label}</div>
+      {sub && <div style={{ fontSize: '10px', color: '#9B9B9B', marginTop: '1px' }}>{sub}</div>}
+    </div>
+  )
+}
+
+function AdminDashboard({ adminKey }: { adminKey: string }) {
+  const [data, setData] = useState<any>(null)
+  const [error, setError] = useState('')
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+  const [showSubs, setShowSubs] = useState(false)
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/stats?key=${encodeURIComponent(adminKey)}`, { cache: 'no-store' })
+      if (res.status === 401) { setError('Invalid admin key'); return }
+      const d = await res.json()
+      setData(d)
+      setLastRefresh(new Date())
+    } catch {
+      setError('Failed to load stats')
+    }
+  }, [adminKey])
+
+  useEffect(() => {
+    if (!adminKey) return
+    load()
+    const t = setInterval(load, 60000)
+    return () => clearInterval(t)
+  }, [adminKey, load])
+
+  if (!adminKey) return null
+  if (error) return (
+    <div style={{ maxWidth: '900px', margin: '0 auto 28px', padding: '20px', background: '#fef2f2', border: '0.5px solid #fca5a5', borderRadius: '12px', color: '#b91c1c', fontSize: '13px' }}>
+      {error}
+    </div>
+  )
+  if (!data) return (
+    <div style={{ maxWidth: '900px', margin: '0 auto 28px', padding: '20px', color: '#6B6B6B', fontSize: '13px', textAlign: 'center' }}>
+      Loading dashboard…
+    </div>
+  )
+
+  const { topLine, bySource, mostViewed, recentUserSubmitted, qualityDist, subscribers, byGeo, dailyVolume, factionStats, needsReview } = data
+
+  const panel = (title: string, children: React.ReactNode) => (
+    <div style={{ maxWidth: '900px', margin: '0 auto 24px', background: '#fff', border: '0.5px solid #d0d0d0', borderRadius: '12px', padding: '20px 24px' }}>
+      <div style={{ fontSize: '10px', fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px' }}>{title}</div>
+      {children}
+    </div>
+  )
+
+  // Sparkline-style bar chart for daily volume
+  const maxVol = Math.max(...dailyVolume.map((d: any) => d.count), 1)
+  const dayLabels = ['S','M','T','W','T','F','S']
+
+  return (
+    <>
+      {/* 1. Top-line metrics */}
+      {panel('Overview', (
+        <div>
+          <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            {statCard('Total debates', topLine.total.toLocaleString())}
+            {statCard('Published', topLine.published.toLocaleString(), undefined, '#15803d')}
+            {statCard('Today', topLine.today)}
+            {statCard('This week', topLine.thisWeek)}
+            {statCard('Total views', topLine.totalViews.toLocaleString())}
+            <div style={{ width: '1px', background: '#e5e5e5', alignSelf: 'stretch', margin: '0 4px' }} />
+            {statCard('Active subs', topLine.activeSubscribers, undefined, '#1B4FBE')}
+            {statCard('Pending', topLine.pendingSubscribers)}
+            {statCard('Unsubscribed', topLine.unsubscribed)}
+          </div>
+          {lastRefresh && (
+            <div style={{ fontSize: '10px', color: '#9B9B9B' }}>
+              Last refreshed {lastRefresh.toLocaleTimeString()} · auto-refreshes every 60s
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* 8. Daily volume */}
+      {panel('Daily volume — last 14 days', (
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '64px' }}>
+          {dailyVolume.map((d: any, i: number) => {
+            const date = new Date(d.day)
+            const pct = Math.max(4, Math.round((d.count / maxVol) * 100))
+            return (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', height: '100%', justifyContent: 'flex-end' }}>
+                <div style={{ fontSize: '9px', color: '#9B9B9B' }}>{d.count}</div>
+                <div style={{ width: '100%', background: '#0A0A0A', borderRadius: '2px', height: `${pct}%`, minHeight: '4px' }} title={`${date.toLocaleDateString()}: ${d.count}`} />
+                <div style={{ fontSize: '9px', color: '#9B9B9B' }}>{dayLabels[date.getDay()]}</div>
+              </div>
+            )
+          })}
+          {dailyVolume.length === 0 && <div style={{ fontSize: '13px', color: '#9B9B9B' }}>No data yet</div>}
+        </div>
+      ))}
+
+      {/* 2 & 7. By source and by geography side by side */}
+      <div style={{ maxWidth: '900px', margin: '0 auto 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ background: '#fff', border: '0.5px solid #d0d0d0', borderRadius: '12px', padding: '20px 24px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '14px' }}>By source</div>
+          {bySource.map((r: any) => (
+            <div key={r.source_type} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '5px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+              <span style={{ color: '#444' }}>{r.source_type || 'unknown'}</span>
+              <span style={{ fontWeight: 600, color: '#0A0A0A' }}>{r.count}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: '#fff', border: '0.5px solid #d0d0d0', borderRadius: '12px', padding: '20px 24px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '14px' }}>By geography</div>
+          {byGeo.map((r: any) => (
+            <div key={r.geographic_scope} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '5px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+              <span style={{ color: '#444', textTransform: 'capitalize' }}>{r.geographic_scope}</span>
+              <span style={{ fontWeight: 600, color: '#0A0A0A' }}>{r.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 5. Quality distribution */}
+      {panel('Quality distribution', (
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          {qualityDist.map((r: any) => {
+            const colors: Record<string, { bg: string; text: string }> = {
+              PUBLISH: { bg: '#dcfce7', text: '#15803d' },
+              REVIEW: { bg: '#fef3c7', text: '#a16207' },
+              HOLD: { bg: '#fee2e2', text: '#b91c1c' },
+            }
+            const c = colors[r.classification] || { bg: '#f1f1ef', text: '#444' }
+            return (
+              <div key={r.classification} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', fontWeight: 600, color: c.text }}>{r.count}</div>
+                <div style={{ background: c.bg, color: c.text, fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.08em', marginTop: '4px' }}>
+                  {r.classification}
+                </div>
+                <div style={{ fontSize: '11px', color: '#9B9B9B', marginTop: '4px' }}>avg {r.avg_score}</div>
+              </div>
+            )
+          })}
+        </div>
+      ))}
+
+      {/* 9. Faction detection */}
+      {panel('Faction detection', (
+        <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
+          {statCard('Detected', factionStats.detected, `of ${factionStats.totalChecked} checked`, '#a16207')}
+          {statCard('Right divided', factionStats.conservativeDivided)}
+          {statCard('Left divided', factionStats.liberalDivided)}
+          {statCard('Both divided', factionStats.bothDivided)}
+          {factionStats.totalChecked > 0 && (
+            <div style={{ alignSelf: 'flex-end', fontSize: '12px', color: '#9B9B9B', marginLeft: 'auto' }}>
+              {Math.round((factionStats.detected / factionStats.totalChecked) * 100)}% detection rate
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* 3. Most viewed */}
+      {panel('Most viewed debates', (
+        <div>
+          {mostViewed.filter((d: any) => d.view_count > 0).slice(0, 8).map((d: any, i: number) => (
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#9B9B9B', minWidth: '20px' }}>{i + 1}</div>
+              <div style={{ flex: 1, fontSize: '13px', color: '#0A0A0A', lineHeight: 1.4 }}>
+                <a href={`/debate/${d.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>{d.headline}</a>
+              </div>
+              <div style={{ fontSize: '12px', color: '#6B6B6B', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {parseInt(d.view_count).toLocaleString()} views
+              </div>
+            </div>
+          ))}
+          {mostViewed.filter((d: any) => d.view_count > 0).length === 0 && (
+            <div style={{ fontSize: '13px', color: '#9B9B9B' }}>No views yet</div>
+          )}
+        </div>
+      ))}
+
+      {/* 4. Recent user-submitted */}
+      {recentUserSubmitted.length > 0 && panel('Recent user-submitted', (
+        <div>
+          {recentUserSubmitted.map((d: any) => {
+            const statusColors: Record<string, string> = { published: '#15803d', review: '#a16207', held: '#b91c1c' }
+            return (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+                <div style={{ flex: 1, fontSize: '13px', color: '#0A0A0A' }}>
+                  <a href={`/debate/${d.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>{d.headline}</a>
+                </div>
+                {d.score && <div style={{ fontSize: '12px', fontWeight: 600, color: '#6B6B6B' }}>{parseFloat(d.score).toFixed(1)}</div>}
+                <div style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', background: '#f1f1ef', color: statusColors[d.publish_status] || '#6B6B6B' }}>
+                  {(d.publish_status || 'published').toUpperCase()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#9B9B9B', minWidth: '52px', textAlign: 'right' }}>
+                  {new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ))}
+
+      {/* 10. Needs review */}
+      {needsReview.length > 0 && panel(`Needs review / held (${needsReview.length})`, (
+        <div>
+          {needsReview.map((d: any) => (
+            <div key={d.id} style={{ padding: '10px 0', borderBottom: '0.5px solid #f0f0f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', background: d.publish_status === 'held' ? '#fee2e2' : '#fef3c7', color: d.publish_status === 'held' ? '#b91c1c' : '#a16207' }}>
+                  {d.publish_status?.toUpperCase()}
+                </span>
+                {d.classification && (
+                  <span style={{ fontSize: '10px', color: '#9B9B9B' }}>{d.classification}</span>
+                )}
+                {d.score && <span style={{ fontSize: '11px', fontWeight: 600, color: '#6B6B6B' }}>{parseFloat(d.score).toFixed(1)}</span>}
+                <span style={{ fontSize: '11px', color: '#9B9B9B', marginLeft: 'auto' }}>
+                  {new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+              <div style={{ fontSize: '13px', color: '#0A0A0A', lineHeight: 1.4, marginBottom: d.notes ? '4px' : 0 }}>
+                <a href={`/debate/${d.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>{d.headline}</a>
+              </div>
+              {d.notes && <div style={{ fontSize: '12px', color: '#6B6B6B', fontStyle: 'italic' }}>{d.notes}</div>}
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* 6. Subscribers table */}
+      {panel(`Subscribers (${topLine.activeSubscribers} active)`, (
+        <div>
+          <button onClick={() => setShowSubs(s => !s)} style={{ fontSize: '12px', color: '#1B4FBE', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: '12px' }}>
+            {showSubs ? 'Hide list ↑' : 'Show full list ↓'}
+          </button>
+          {showSubs && (
+            <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 80px', gap: '8px', fontSize: '10px', fontWeight: 700, color: '#9B9B9B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', paddingBottom: '6px', borderBottom: '0.5px solid #e5e5e5' }}>
+                <span>Email</span><span>Location</span><span>Topics</span><span>Digests</span><span>Status</span>
+              </div>
+              {subscribers.map((s: any) => (
+                <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 80px', gap: '8px', fontSize: '12px', padding: '6px 0', borderBottom: '0.5px solid #f5f5f5', alignItems: 'center' }}>
+                  <span style={{ color: s.unsubscribed_at ? '#9B9B9B' : '#0A0A0A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</span>
+                  <span style={{ color: '#6B6B6B', fontSize: '11px' }}>{[s.city, s.region].filter(Boolean).join(', ') || '—'}</span>
+                  <span style={{ color: '#6B6B6B', fontSize: '11px' }}>{(s.topics || []).slice(0, 2).join(', ') || '—'}</span>
+                  <span style={{ color: '#6B6B6B', fontSize: '11px' }}>{s.last_digest_at ? new Date(s.last_digest_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</span>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: s.unsubscribed_at ? '#b91c1c' : s.confirmed ? '#15803d' : '#a16207' }}>
+                    {s.unsubscribed_at ? 'UNSUB' : s.confirmed ? 'ACTIVE' : 'PENDING'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{ maxWidth: '900px', margin: '0 auto 32px', borderBottom: '0.5px solid #e0e0e0' }} />
+    </>
+  )
+}
 
 interface CampaignItem {
   debateId: string
@@ -43,6 +308,12 @@ export default function AdminPage() {
   const [autoPost, setAutoPost] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [filter, setFilter] = useState<FilterValue>('all')
+  const [adminKey, setAdminKey] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setAdminKey(params.get('key') || '')
+  }, [])
 
   async function load() {
     try {
@@ -181,9 +452,11 @@ export default function AdminPage() {
         </div>
       )}
 
+      {adminKey && <AdminDashboard adminKey={adminKey} />}
       <IngestionPanel />
       <JournalistPanel />
       <LibraryPanel />
+      <XPanel />
       <SubscriberStatsBlock />
 
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -1600,6 +1873,141 @@ function LibraryPanel() {
           </tbody>
         </table>
       </div>
+    </section>
+  )
+}
+
+function XPanel() {
+  const [stats, setStats] = useState<{ posted: number; readyToPost: number; lastPostedAt: string | null } | null>(null)
+  const [recentPosts, setRecentPosts] = useState<any[]>([])
+  const [posting, setPosting] = useState(false)
+  const [lastResult, setLastResult] = useState<any>(null)
+
+  async function load() {
+    try {
+      const res = await fetch('/api/x-post/stats', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data.stats)
+        setRecentPosts(data.recent || [])
+      }
+    } catch {}
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function triggerPost(mock: boolean) {
+    setPosting(true)
+    setLastResult(null)
+    try {
+      const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+      const res = await fetch('/api/x-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ingest-token': token },
+        body: JSON.stringify({ mock }),
+      })
+      const data = await res.json()
+      setLastResult(data)
+      await load()
+    } catch (e) {
+      setLastResult({ error: String(e) })
+    } finally {
+      setPosting(false)
+    }
+  }
+
+  return (
+    <section style={{ marginBottom: '40px', padding: '24px', background: '#FFF', borderRadius: '10px', border: '1px solid #E5E5DD' }}>
+      <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0A0A0A', margin: '0 0 16px', letterSpacing: '-0.01em' }}>
+        X / Twitter Posting
+      </h2>
+
+      {stats && (
+        <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '11px', color: '#9B9B9B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Posted (all time)</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: '#0A0A0A' }}>{stats.posted}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '11px', color: '#9B9B9B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Ready to post</div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: stats.readyToPost > 0 ? '#1B4FBE' : '#6B6B6B' }}>{stats.readyToPost}</div>
+          </div>
+          {stats.lastPostedAt && (
+            <div>
+              <div style={{ fontSize: '11px', color: '#9B9B9B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Last posted</div>
+              <div style={{ fontSize: '13px', color: '#0A0A0A', marginTop: '4px' }}>
+                {new Date(stats.lastPostedAt).toLocaleString()}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <button
+          onClick={() => triggerPost(true)}
+          disabled={posting}
+          style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 500, borderRadius: '6px', border: '1px solid #E5E5DD', background: '#FFF', cursor: posting ? 'not-allowed' : 'pointer', color: '#0A0A0A' }}
+        >
+          {posting ? 'Working…' : 'Test (mock)'}
+        </button>
+        <button
+          onClick={() => triggerPost(false)}
+          disabled={posting}
+          style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 500, borderRadius: '6px', border: 'none', background: '#0A0A0A', cursor: posting ? 'not-allowed' : 'pointer', color: '#F5F5F0' }}
+        >
+          {posting ? 'Working…' : 'Post now'}
+        </button>
+      </div>
+
+      {lastResult && (
+        <div style={{ padding: '12px 14px', borderRadius: '6px', background: lastResult.error ? '#fee2e2' : '#f0fdf4', marginBottom: '16px', fontSize: '13px' }}>
+          {lastResult.error ? (
+            <span style={{ color: '#b91c1c' }}>Error: {lastResult.error}</span>
+          ) : (
+            <>
+              <div style={{ fontWeight: 600, marginBottom: '6px', color: lastResult.mock ? '#92400e' : '#15803d' }}>
+                {lastResult.mock ? 'Mock result' : `Posted — tweet ID: ${lastResult.tweetId}`}
+              </div>
+              {lastResult.tweetText && (
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit', color: '#0A0A0A' }}>{lastResult.tweetText}</pre>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {recentPosts.length > 0 && (
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#9B9B9B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            Recent posts
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Headline</th>
+                <th style={thStyle}>Posted at</th>
+                <th style={thStyle}>Tweet ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentPosts.map((p, i) => (
+                <tr key={i} style={{ borderTop: '1px solid #E5E5DD' }}>
+                  <td style={tdStyle}>{p.headline}</td>
+                  <td style={tdStyle}>{p.x_posted_at ? new Date(p.x_posted_at).toLocaleString() : '—'}</td>
+                  <td style={tdStyle}>
+                    {p.tweet_id ? (
+                      <a href={`https://x.com/bilateralnews/status/${p.tweet_id}`} target="_blank" rel="noopener noreferrer" style={{ color: '#1B4FBE' }}>
+                        {p.tweet_id}
+                      </a>
+                    ) : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   )
 }

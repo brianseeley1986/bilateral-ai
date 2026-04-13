@@ -19,10 +19,11 @@ export default function AboutPage() {
         }}>
           <a href="/" style={{
             display: 'flex',
-            alignItems: 'baseline',
-            gap: '10px',
+            alignItems: 'center',
+            gap: '8px',
             textDecoration: 'none'
           }}>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }} />
             <span style={{
               fontSize: '17px',
               fontWeight: 700,
@@ -31,15 +32,16 @@ export default function AboutPage() {
             }}>
               bilateral
             </span>
-            <span style={{ fontSize: '12px', color: '#6B6B6B' }}>bilateral.news</span>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
           </a>
-          <a href="/" style={{
-            fontSize: '12px',
-            color: '#6B6B6B',
-            textDecoration: 'none'
-          }}>
-            ← Back to feed
-          </a>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <a href="/debates" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+              Debates
+            </a>
+            <a href="/" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+              ← Home
+            </a>
+          </div>
         </header>
 
         <h1 style={{

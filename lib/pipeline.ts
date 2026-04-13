@@ -275,7 +275,9 @@ ${JSON.stringify(rebuttal, null, 2)}
 VERDICT:
 ${JSON.stringify(verdict, null, 2)}`
 
-  const lblInput = `HEADLINE: ${headline}\n\nCONSERVATIVE:\n${JSON.stringify(conservative, null, 2)}\n\nLIBERAL:\n${JSON.stringify(liberal, null, 2)}\n\nREBUTTALS:\n${JSON.stringify(rebuttal, null, 2)}`
+  const leadingSide: 'conservative' | 'liberal' = Math.random() > 0.5 ? 'conservative' : 'liberal'
+
+  const lblInput = `LEADING_SIDE: ${leadingSide}\n\nHEADLINE: ${headline}\n\nCONSERVATIVE:\n${JSON.stringify(conservative, null, 2)}\n\nLIBERAL:\n${JSON.stringify(liberal, null, 2)}\n\nREBUTTALS:\n${JSON.stringify(rebuttal, null, 2)}`
 
   const [lblRaw, qualityRaw] = await Promise.all([
     runAgent(LINE_BY_LINE_PROMPT, lblInput),
@@ -303,6 +305,7 @@ ${JSON.stringify(verdict, null, 2)}`
     rebuttal,
     verdict,
     exchanges: lbl.exchanges,
+    leadingSide,
   }
 
   return {

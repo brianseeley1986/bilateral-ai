@@ -121,4 +121,20 @@ export interface DebateOutput {
   campaign?: CampaignPackage
   qualityScore?: QualityScore
   publishStatus?: PublishStatus
+  factionAlert?: {
+    detected: boolean
+    dividedSide: 'conservative' | 'liberal' | 'both' | null
+    summary?: string
+    dominantPosition?: { conservative?: string | null; liberal?: string | null }
+    conservativeFactions?: { detected: boolean; faction1?: any; faction2?: any }
+    liberalFactions?: { detected: boolean; faction1?: any; faction2?: any }
+  }
+  divideCard?: {
+    introLine?: string
+    conservativeDivide?: { show: boolean; faction1: any; faction2: any }
+    liberalDivide?: { show: boolean; faction1: any; faction2: any }
+  }
+  conservativeFeedHook?: string | null
+  liberalFeedHook?: string | null
+  leadingSide?: 'conservative' | 'liberal' | null
 }

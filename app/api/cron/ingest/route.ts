@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ingestTrendingStories } from '@/lib/trends'
-import { acquireIngestionLock, releaseIngestionLock } from '@/lib/db'
+import { acquireIngestionLock, releaseIngestionLock, cleanExpiredResearchCache } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
 
   try {
     console.log('Cron ingestion starting...')
-    const stats = await ingestTrendingStories(5)
+    await cleanExpiredResearchCache()
+    const stats = await ingestTrendingStories(2)
     console.log('Cron ingestion complete:', stats)
     return NextResponse.json({ success: true, stats })
   } catch (err) {

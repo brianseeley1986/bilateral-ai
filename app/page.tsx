@@ -16,11 +16,36 @@ interface DebateCard {
   id: string
   headline: string
   track: string
+  sourceType?: string
   geographicScope: string
   createdAt: string
   publishStatus: string
+  conservativeOneLine?: string
+  liberalOneLine?: string
+  conservativeFeedHook?: string | null
+  liberalFeedHook?: string | null
+  leadingSide?: string | null
+  suggestedHook?: string
   exchanges?: Array<{ c: string; l: string }>
   satireExchanges?: Array<{ a: string; b: string }>
+  factionAlert?: { detected: boolean; dividedSide: string | null; summary?: string } | null
+  viewCount?: number
+  overallScore?: number | null
+}
+
+interface ZoneData {
+  national: DebateCard[]
+  international: DebateCard[]
+  state: DebateCard[]
+  local: DebateCard[]
+  userSubmitted: DebateCard[]
+  counts: {
+    national: number
+    international: number
+    state: number
+    local: number
+    userSubmitted: number
+  }
 }
 
 const ZONE_STYLES = {
@@ -30,9 +55,15 @@ const ZONE_STYLES = {
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     color: '#6B6B6B',
-    marginBottom: '12px',
+    marginBottom: '4px',
     paddingBottom: '8px',
     borderBottom: '0.5px solid #e0e0e0',
+  },
+  subtitle: {
+    fontSize: '12px' as const,
+    color: '#9B9B9B',
+    marginBottom: '14px',
+    marginTop: '0',
   },
   card: {
     padding: '16px 0',
@@ -68,12 +99,27 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-function FeedCard({ debate }: { debate: DebateCard }) {
+function geoBadge(d: DebateCard): { label: string; bg: string; color: string } | null {
+  if (d.sourceType === 'library') return { label: 'LIBRARY', bg: '#f0f4ff', color: '#1e3a8a' }
+  if (d.track === 'satire') return { label: 'SATIRE', bg: '#fef3c7', color: '#92400e' }
+  if (d.geographicScope === 'local') return { label: 'LOCAL', bg: '#dbeafe', color: '#1e3a5f' }
+  if (d.geographicScope === 'state') return { label: 'STATE', bg: '#e0f2fe', color: '#0c4a6e' }
+  if (d.geographicScope === 'international') return { label: 'WORLD', bg: '#f3f4f6', color: '#374151' }
+  return { label: 'NATIONAL', bg: '#f0fdf4', color: '#166534' }
+}
+
+function FeedCard({ debate, showScore }: { debate: DebateCard; showScore?: boolean }) {
   const [copied, setCopied] = useState(false)
   const isSatire = debate.track === 'satire'
-  const firstExchange = isSatire ? debate.satireExchanges?.[0] : debate.exchanges?.[0]
-  const cLine = isSatire ? (firstExchange as any)?.a : (firstExchange as any)?.c
-  const lLine = isSatire ? (firstExchange as any)?.b : (firstExchange as any)?.l
+
+  // Prefer feed hooks, fall back to exchange preview lines
+  const cLine = debate.conservativeFeedHook || debate.conservativeOneLine || ''
+  const lLine = debate.liberalFeedHook || debate.liberalOneLine || ''
+
+  const badge = geoBadge(debate)
+  const timestamp = showScore && debate.overallScore != null
+    ? `${debate.overallScore.toFixed(1)} · ${timeAgo(debate.createdAt)}`
+    : timeAgo(debate.createdAt)
 
   return (
     <div
@@ -87,67 +133,22 @@ function FeedCard({ debate }: { debate: DebateCard }) {
       onClick={() => (window.location.href = `/debate/${debate.id}`)}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-        {isSatire && (
+        {badge && (
           <span
             style={{
               fontSize: '10px',
               fontWeight: 600,
               padding: '2px 8px',
               borderRadius: '4px',
-              background: '#fef3c7',
-              color: '#92400e',
+              background: badge.bg,
+              color: badge.color,
               letterSpacing: '0.05em',
             }}
           >
-            SATIRE
+            {badge.label}
           </span>
         )}
-        {!isSatire && (debate as any).sourceType === 'library' && (
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 8px',
-              borderRadius: '4px',
-              background: '#f0f4ff',
-              color: '#1e3a8a',
-              letterSpacing: '0.05em',
-            }}
-          >
-            LIBRARY
-          </span>
-        )}
-        {!isSatire && (debate as any).sourceType !== 'library' && debate.geographicScope === 'local' && (
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 8px',
-              borderRadius: '4px',
-              background: '#dbeafe',
-              color: '#1e3a5f',
-              letterSpacing: '0.05em',
-            }}
-          >
-            LOCAL
-          </span>
-        )}
-        {!isSatire && (debate as any).sourceType !== 'library' && debate.geographicScope !== 'local' && (
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 8px',
-              borderRadius: '4px',
-              background: '#fee2e2',
-              color: '#7f1d1d',
-              letterSpacing: '0.05em',
-            }}
-          >
-            BREAKING
-          </span>
-        )}
-        <span style={{ fontSize: '11px', color: '#9B9B9B' }}>{timeAgo(debate.createdAt)}</span>
+        <span style={{ fontSize: '11px', color: '#9B9B9B' }}>{timestamp}</span>
       </div>
 
       <div style={ZONE_STYLES.headline}>{cleanHeadline(debate.headline)}</div>
@@ -251,6 +252,58 @@ function FeedCard({ debate }: { debate: DebateCard }) {
   )
 }
 
+function ZoneSection({
+  label,
+  subtitle,
+  debates,
+  count,
+  emptyState,
+  showScore,
+}: {
+  label: string
+  subtitle: string
+  debates: DebateCard[]
+  count: number
+  emptyState?: string
+  showScore?: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+  if (debates.length === 0 && !emptyState) return null
+  const extra = count - 1
+  const visible = expanded ? debates : debates.slice(0, 1)
+
+  return (
+    <div style={{ marginBottom: '36px' }}>
+      <div style={ZONE_STYLES.label}>{label}</div>
+      <div style={ZONE_STYLES.subtitle}>{subtitle}</div>
+      {debates.length === 0 && emptyState ? (
+        <div style={{ fontSize: '12px', color: '#9B9B9B', padding: '12px 0' }}>{emptyState}</div>
+      ) : (
+        visible.map((d) => <FeedCard key={d.id} debate={d} showScore={showScore} />)
+      )}
+      {!expanded && extra > 0 && (
+        <button
+          onClick={() => setExpanded(true)}
+          style={{
+            marginTop: '12px',
+            background: 'none',
+            border: '0.5px solid #d0d0d0',
+            borderRadius: '6px',
+            padding: '7px 14px',
+            fontSize: '12px',
+            color: '#0A0A0A',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            fontWeight: 500,
+          }}
+        >
+          +{extra} more
+        </button>
+      )}
+    </div>
+  )
+}
+
 interface LibraryFeatured {
   id: string
   question: string
@@ -278,9 +331,7 @@ function LibraryFeaturedSection() {
   return (
     <div style={{ marginBottom: '36px' }}>
       <div style={ZONE_STYLES.label}>The Fault Lines</div>
-      <div style={{ fontSize: '12px', color: '#9B9B9B', marginTop: '-6px', marginBottom: '14px' }}>
-        The questions America keeps fighting about.
-      </div>
+      <div style={ZONE_STYLES.subtitle}>The questions America keeps fighting about.</div>
       {items.map((item) => (
         <a
           key={item.id}
@@ -317,7 +368,9 @@ function LibraryFeaturedSection() {
               {item.category?.replace(/_/g, ' ')}
             </span>
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 500, lineHeight: 1.4, color: '#0A0A0A', marginBottom: '8px' }}>
+          <div
+            style={{ fontSize: '16px', fontWeight: 500, lineHeight: 1.4, color: '#0A0A0A', marginBottom: '8px' }}
+          >
             {cleanHeadline(item.question)}
           </div>
           {item.conservativePreview && (
@@ -378,7 +431,11 @@ function LibraryFeaturedSection() {
               <span style={clamp2}>{item.liberalPreview}</span>
             </div>
           )}
-          <div style={{ fontSize: '12px', color: '#6B6B6B', textAlign: 'right', marginTop: '8px' }}>Read the debate →</div>
+          <div
+            style={{ fontSize: '12px', color: '#6B6B6B', textAlign: 'right', marginTop: '8px' }}
+          >
+            Read the debate →
+          </div>
         </a>
       ))}
     </div>
@@ -386,19 +443,19 @@ function LibraryFeaturedSection() {
 }
 
 export default function Home() {
-  const [debates, setDebates] = useState<DebateCard[]>([])
+  const [zones, setZones] = useState<ZoneData | null>(null)
   const [showSubscribe, setShowSubscribe] = useState(false)
   const [urlMessage, setUrlMessage] = useState('')
   const location = useLocation()
 
   useEffect(() => {
     const url = location.state
-      ? `/api/debate?feed=true&state=${encodeURIComponent(location.state)}`
-      : '/api/debate?feed=true'
+      ? `/api/debate?zoneView=true&state=${encodeURIComponent(location.state)}`
+      : '/api/debate?zoneView=true'
     fetch(url)
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) setDebates(data)
+        if (data && data.national) setZones(data)
       })
       .catch(() => {})
   }, [location.state])
@@ -413,41 +470,60 @@ export default function Home() {
     }
   }, [])
 
-  const seriousNational = debates.filter(
-    (d) =>
-      d.track !== 'satire' &&
-      d.publishStatus === 'published' &&
-      d.geographicScope !== 'local' &&
-      d.geographicScope !== 'state' &&
-      d.geographicScope !== 'international'
-  )
-  const stateDebates = debates.filter(
-    (d) => d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'state'
-  )
-  const localDebates = debates.filter(
-    (d) => d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'local'
-  )
-  const international = debates.filter(
-    (d) =>
-      d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'international'
+  const hasContent = zones && (
+    zones.national.length > 0 ||
+    zones.local.length > 0 ||
+    zones.state.length > 0 ||
+    zones.international.length > 0 ||
+    zones.userSubmitted.length > 0
   )
 
   return (
     <main style={{ minHeight: '100vh', background: '#F5F5F0', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 20px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '36px', paddingTop: '20px' }}>
-          <HeadlineInput />
-          <p
+        {/* Top nav */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '20px',
+            marginBottom: '32px',
+          }}
+        >
+          <a href="/debates" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+            Debates
+          </a>
+          <a href="/about" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+            About
+          </a>
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <div
             style={{
-              fontSize: '14px',
-              color: '#9B9B9B',
-              textAlign: 'center',
-              marginTop: '10px',
-              marginBottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              marginBottom: '6px',
             }}
           >
-            Type any headline. Get the argument.
-          </p>
+            <div
+              style={{ width: 10, height: 10, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }}
+            />
+            <span
+              style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', color: '#0A0A0A' }}
+            >
+              bilateral
+            </span>
+            <div
+              style={{ width: 10, height: 10, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }}
+            />
+          </div>
+          <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '24px' }}>
+            The argument behind every headline.
+          </div>
+          <HeadlineInput />
         </div>
 
         {urlMessage && (
@@ -512,60 +588,66 @@ export default function Home() {
           </div>
         )}
 
-        {seriousNational.length > 0 && (
-          <div style={{ marginBottom: '36px' }}>
-            <div style={ZONE_STYLES.label}>National</div>
-            {seriousNational.slice(0, 6).map((d) => (
-              <FeedCard key={d.id} debate={d} />
-            ))}
-          </div>
+        {/* BEING DEBATED — user submitted, hidden when empty */}
+        {zones && zones.userSubmitted.length > 0 && (
+          <ZoneSection
+            label="Being Debated"
+            subtitle="What people are asking bilateral."
+            debates={zones.userSubmitted}
+            count={zones.counts.userSubmitted}
+            showScore
+          />
         )}
 
-        {stateDebates.length > 0 && (
-          <div style={{ marginBottom: '36px' }}>
-            <div style={ZONE_STYLES.label}>State &amp; regional</div>
-            {stateDebates.slice(0, 3).map((d) => (
-              <FeedCard key={d.id} debate={d} />
-            ))}
-          </div>
-        )}
+        {/* NATIONAL */}
+        <ZoneSection
+          label="National"
+          subtitle="The biggest fights in America today."
+          debates={zones?.national ?? []}
+          count={zones?.counts.national ?? 0}
+          emptyState={!zones ? 'Loading…' : undefined}
+        />
 
-        {(localDebates.length > 0 || location.detected) && (
-          <div style={{ marginBottom: '36px' }}>
-            <div style={ZONE_STYLES.label}>
-              {location.city
-                ? `Near ${location.city}`
-                : location.state
-                ? `In ${location.state}`
-                : 'Local & community'}
-            </div>
-            {localDebates.length === 0 ? (
-              <div style={{ fontSize: '12px', color: '#9B9B9B', marginBottom: '16px' }}>
-                No local debates yet for your area. Check back soon.
-              </div>
-            ) : (
-              localDebates.slice(0, 3).map((d) => <FeedCard key={d.id} debate={d} />)
-            )}
-          </div>
-        )}
+        {/* LOCAL & COMMUNITY */}
+        <ZoneSection
+          label={
+            location.city
+              ? `Near ${location.city}`
+              : location.state
+              ? `In ${location.state}`
+              : 'Local & Community'
+          }
+          subtitle="What's happening near you."
+          debates={zones?.local ?? []}
+          count={zones?.counts.local ?? 0}
+          emptyState={location.detected && zones?.local.length === 0
+            ? 'No local debates yet for your area. Check back soon.'
+            : undefined}
+        />
 
-        {international.length > 0 && (
-          <div style={{ marginBottom: '36px' }}>
-            <div style={ZONE_STYLES.label}>World</div>
-            {international.slice(0, 3).map((d) => (
-              <FeedCard key={d.id} debate={d} />
-            ))}
-          </div>
-        )}
+        {/* STATE & REGIONAL */}
+        <ZoneSection
+          label="State & Regional"
+          subtitle="Your state in the national debate."
+          debates={zones?.state ?? []}
+          count={zones?.counts.state ?? 0}
+        />
 
-        {/* Satire zone paused — hidden from UX until satire track is re-enabled */}
+        {/* GLOBAL */}
+        <ZoneSection
+          label="Global"
+          subtitle="The world beyond America's borders."
+          debates={zones?.international ?? []}
+          count={zones?.counts.international ?? 0}
+        />
 
-        {debates.length === 0 && (
+        {!hasContent && zones && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#6B6B6B', fontSize: '14px' }}>
             Drop a headline above to generate the first debate.
           </div>
         )}
 
+        {/* THE FAULT LINES — library questions */}
         <LibraryFeaturedSection />
 
         <div

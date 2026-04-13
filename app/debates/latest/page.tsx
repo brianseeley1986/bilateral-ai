@@ -70,7 +70,30 @@ export default async function LatestDebatesPage() {
       }}
     >
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '24px', paddingTop: '20px' }}>
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '32px',
+            paddingTop: '20px',
+          }}
+        >
+          <a
+            href="/"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+          >
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }} />
+            <span style={{ fontSize: '17px', fontWeight: 700, letterSpacing: '-0.02em', color: '#0A0A0A' }}>
+              bilateral
+            </span>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
+          </a>
+          <a href="/about" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+            About
+          </a>
+        </header>
+        <div style={{ marginBottom: '24px' }}>
           <h1
             style={{
               fontSize: '44px',

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   try {
     console.log('Journalist cron starting...')
-    const stats = await ingestJournalistContent([], 3)
+    const stats = await ingestJournalistContent([], 2)
     console.log('Journalist cron complete:', stats)
     return NextResponse.json({ success: true, stats })
   } catch (err) {

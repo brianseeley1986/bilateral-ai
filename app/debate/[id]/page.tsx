@@ -60,11 +60,12 @@ export default async function DebatePage({ params }: { params: { id: string } })
           href="/"
           style={{
             display: 'flex',
-            alignItems: 'baseline',
-            gap: '10px',
+            alignItems: 'center',
+            gap: '8px',
             textDecoration: 'none',
           }}
         >
+          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }} />
           <span
             style={{
               fontSize: '17px',
@@ -75,7 +76,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
           >
             bilateral
           </span>
-          <span style={{ fontSize: '12px', color: '#6B6B6B' }}>bilateral.news</span>
+          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
         </Link>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <a

@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { neon } from '@neondatabase/serverless'
-import { initDb, getLibraryQuestionBySlug } from '@/lib/db'
-import { getDebate } from '@/lib/store'
 import { StoryExchange } from '@/components/StoryExchange'
 import { LIBRARY_CATEGORIES } from '@/lib/library-questions'
 
@@ -35,8 +33,9 @@ export async function generateMetadata({
 }: {
   params: { slug: string }
 }): Promise<Metadata> {
-  await initDb()
-  const row = await getLibraryQuestionBySlug(params.slug)
+  const sql = neon(process.env.DATABASE_URL!)
+  const rows = await sql`SELECT * FROM library_questions WHERE slug = ${params.slug} LIMIT 1`
+  const row = rows[0] ?? null
   if (!row) return {}
   const title = `${row.question} — Bilateral`
   const description =
@@ -66,11 +65,14 @@ export default async function LibraryQuestionPage({
 }: {
   params: { slug: string }
 }) {
-  await initDb()
-  const row = await getLibraryQuestionBySlug(params.slug)
+  const sql = neon(process.env.DATABASE_URL!)
+  const lqRows = await sql`SELECT * FROM library_questions WHERE slug = ${params.slug} LIMIT 1`
+  const row = lqRows[0] ?? null
   if (!row) notFound()
 
-  const debate = row.debate_id ? await getDebate(row.debate_id) : null
+  const debate = row.debate_id
+    ? await sql`SELECT data FROM debates WHERE id = ${row.debate_id}`.then(r => r[0]?.data ?? null)
+    : null
   const categoryMeta = LIBRARY_CATEGORIES.find((c) => c.id === row.category)
 
   // "In the news" — recent non-library debates whose headlines share keywords
@@ -78,7 +80,6 @@ export default async function LibraryQuestionPage({
   if (row.status === 'published') {
     const keywords = extractKeywords(row.question)
     if (keywords.length) {
-      const sql = neon(process.env.DATABASE_URL!)
       const pattern = keywords.map((k) => `%${k}%`)
       const rows = await sql`
         SELECT id, headline, created_at, data
@@ -123,11 +124,12 @@ export default async function LibraryQuestionPage({
             href="/"
             style={{
               display: 'flex',
-              alignItems: 'baseline',
-              gap: '10px',
+              alignItems: 'center',
+              gap: '8px',
               textDecoration: 'none',
             }}
           >
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }} />
             <span
               style={{
                 fontSize: '17px',
@@ -138,14 +140,16 @@ export default async function LibraryQuestionPage({
             >
               bilateral
             </span>
-            <span style={{ fontSize: '12px', color: '#6B6B6B' }}>bilateral.news</span>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
           </Link>
-          <Link
-            href="/debates"
-            style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}
-          >
-            ← The Debates
-          </Link>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <a href="/about" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+              About
+            </a>
+            <Link href="/debates" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
+              ← The Debates
+            </Link>
+          </div>
         </header>
 
         <div style={{ marginBottom: '8px' }}>
@@ -189,7 +193,7 @@ export default async function LibraryQuestionPage({
 
         {row.status === 'published' && debate ? (
           <>
-            <StoryExchange debate={debate} />
+            <StoryExchange debate={debate} showHeadline={false} />
 
             {inTheNews.length > 0 && (
               <section
