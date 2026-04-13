@@ -303,17 +303,78 @@ const statusColor: Record<CampaignPackage['status'], string> = {
   skipped: '#9ca3af',
 }
 
+function LoginGate({ onLogin }: { onLogin: (key: string) => void }) {
+  const [input, setInput] = useState('')
+  const [error, setError] = useState('')
+  const [checking, setChecking] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!input.trim()) return
+    setChecking(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/admin/stats?key=${encodeURIComponent(input.trim())}`, { cache: 'no-store' })
+      if (res.status === 401) {
+        setError('Invalid key')
+        setChecking(false)
+        return
+      }
+      sessionStorage.setItem('bilateral_admin_key', input.trim())
+      onLogin(input.trim())
+    } catch {
+      setError('Could not reach server')
+      setChecking(false)
+    }
+  }
+
+  return (
+    <main style={{ minHeight: '100vh', background: '#F5F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ background: '#fff', border: '0.5px solid #d0d0d0', borderRadius: '16px', padding: '40px 48px', width: '100%', maxWidth: '360px' }}>
+        <div style={{ fontSize: '17px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '24px', color: '#0A0A0A' }}>bilateral — admin</div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <input
+            type="password"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Admin key"
+            autoFocus
+            style={{ padding: '10px 14px', fontSize: '14px', border: '0.5px solid #d0d0d0', borderRadius: '8px', outline: 'none', fontFamily: 'inherit' }}
+          />
+          {error && <div style={{ fontSize: '12px', color: '#b91c1c' }}>{error}</div>}
+          <button
+            type="submit"
+            disabled={checking || !input.trim()}
+            style={{ padding: '10px', background: checking || !input.trim() ? '#e5e5e5' : '#0A0A0A', color: checking || !input.trim() ? '#9B9B9B' : '#F5F5F0', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: checking || !input.trim() ? 'default' : 'pointer' }}
+          >
+            {checking ? 'Checking…' : 'Sign in'}
+          </button>
+        </form>
+      </div>
+    </main>
+  )
+}
+
 export default function AdminPage() {
   const [items, setItems] = useState<CampaignItem[]>([])
   const [autoPost, setAutoPost] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [filter, setFilter] = useState<FilterValue>('all')
   const [adminKey, setAdminKey] = useState('')
+  const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    setAdminKey(params.get('key') || '')
+    const stored = sessionStorage.getItem('bilateral_admin_key')
+    if (stored) setAdminKey(stored)
+    setAuthReady(true)
+    // strip key from URL if someone visits with old ?key= link
+    if (window.location.search.includes('key=')) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
+
+  if (!authReady) return null
+  if (!adminKey) return <LoginGate onLogin={key => setAdminKey(key)} />
 
   async function load() {
     try {
@@ -432,6 +493,12 @@ export default function AdminPage() {
             />
           )}
           {autoPost ? 'Auto-posting active' : 'Auto-post: OFF'}
+        </button>
+        <button
+          onClick={() => { sessionStorage.removeItem('bilateral_admin_key'); setAdminKey('') }}
+          style={{ background: 'none', border: 'none', fontSize: '12px', color: '#9B9B9B', cursor: 'pointer', padding: '4px 0' }}
+        >
+          Sign out
         </button>
       </header>
 
