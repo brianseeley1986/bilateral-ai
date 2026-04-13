@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { initDb, getAllLibraryQuestions } from '@/lib/db'
 import { LIBRARY_CATEGORIES } from '@/lib/library-questions'
@@ -34,46 +33,7 @@ export default async function DebatesPage() {
       }}
     >
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '40px',
-          }}
-        >
-          <Link
-            href="/"
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: '10px',
-              textDecoration: 'none',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '17px',
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-                color: '#0A0A0A',
-              }}
-            >
-              bilateral
-            </span>
-            <span style={{ fontSize: '12px', color: '#6B6B6B' }}>bilateral.news</span>
-          </Link>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <Link href="/" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
-              Home
-            </Link>
-            <Link href="/about" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
-              About
-            </Link>
-          </div>
-        </header>
-
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', paddingTop: '20px' }}>
           <h1
             style={{
               fontSize: '44px',
