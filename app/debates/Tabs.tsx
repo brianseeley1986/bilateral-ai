@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 
-export function DebatesTabs({ active }: { active: 'topic' | 'latest' }) {
+export function DebatesTabs({ active }: { active: 'topic' | 'latest' | 'readers' }) {
   const tabStyle = (isActive: boolean) => ({
     padding: '10px 18px',
     fontSize: '14px',
@@ -26,6 +26,9 @@ export function DebatesTabs({ active }: { active: 'topic' | 'latest' }) {
       </Link>
       <Link href="/debates/latest" style={tabStyle(active === 'latest')}>
         Latest
+      </Link>
+      <Link href="/debates/readers" style={tabStyle(active === 'readers')}>
+        From Readers
       </Link>
     </div>
   )

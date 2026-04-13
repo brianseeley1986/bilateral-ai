@@ -2,9 +2,6 @@ import { neon } from '@neondatabase/serverless'
 import { Resend } from 'resend'
 import { cleanHeadline } from './headline'
 
-const sql = neon(process.env.DATABASE_URL!)
-const resend = new Resend(process.env.RESEND_API_KEY!)
-
 const TOPIC_KEYWORDS: Record<string, string[]> = {
   economics: ['economy', 'economic', 'fed', 'federal reserve', 'inflation', 'tariff', 'trade', 'budget', 'debt', 'market', 'wage', 'tax'],
   foreign_policy: ['iran', 'ukraine', 'russia', 'china', 'nato', 'war', 'ceasefire', 'military', 'sanctions', 'international', 'treaty', 'diplomacy'],
@@ -57,6 +54,8 @@ export async function sendDailyDigests(): Promise<{
   totalSubscribers: number
   recentDebatesCount: number
 }> {
+  const sql = neon(process.env.DATABASE_URL!)
+  const resend = new Resend(process.env.RESEND_API_KEY!)
   const stats = { sent: 0, failed: 0, skipped: 0, totalSubscribers: 0, recentDebatesCount: 0 }
 
   const recentDebates = await sql`
