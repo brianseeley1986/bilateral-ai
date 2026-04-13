@@ -16,10 +16,11 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Bilateral — The argument behind every headline.",
   description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://bilater-ai.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://bilateral.news"),
   openGraph: {
     title: "Bilateral",
     description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
+    url: "https://bilateral.news",
     siteName: "Bilateral",
     type: "website",
   },
@@ -27,6 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bilateral",
     description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
+    site: "@bilateralnews",
   },
 };
 

@@ -23,6 +23,55 @@ function compressToTwoSentences(text: string): { display: string; truncated: boo
   return { display, truncated: true }
 }
 
+function ShareRow({ id, headline }: { id: string; headline: string }) {
+  const [copied, setCopied] = useState(false)
+  const url = `https://bilateral.news/debate/${id}`
+  const pillStyle: React.CSSProperties = {
+    fontSize: '11px',
+    color: '#6B6B6B',
+    border: '0.5px solid #e0e0e0',
+    padding: '4px 10px',
+    borderRadius: '20px',
+    textDecoration: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'background 120ms',
+  }
+  return (
+    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <a
+        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(headline)}&url=${encodeURIComponent(url)}&via=bilateralnews`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={pillStyle}
+      >
+        Share on X
+      </a>
+      <a
+        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={pillStyle}
+      >
+        LinkedIn
+      </a>
+      <button
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+          } catch {}
+        }}
+        style={pillStyle}
+      >
+        {copied ? 'Copied!' : 'Copy link'}
+      </button>
+    </div>
+  )
+}
+
 export function StoryExchange({ debate }: { debate: DebateOutput }) {
   const [deep, setDeep] = useState(false)
   const badge = resolveBadge(debate.track, debate.sourceType, debate.geographicScope)
@@ -66,9 +115,10 @@ export function StoryExchange({ debate }: { debate: DebateOutput }) {
         >
           {debate.headline}
         </h1>
-        <p style={{ fontSize: '14px', lineHeight: 1.65, color: '#6B6B6B', margin: 0 }}>
+        <p style={{ fontSize: '14px', lineHeight: 1.65, color: '#6B6B6B', margin: '0 0 20px' }}>
           {debate.context?.whatHappened}
         </p>
+        <ShareRow id={debate.id} headline={debate.headline} />
       </div>
 
       {/* Hook block */}
@@ -82,11 +132,12 @@ export function StoryExchange({ debate }: { debate: DebateOutput }) {
         >
           <p
             style={{
-              fontSize: '17px',
-              lineHeight: 1.65,
-              color: '#4a4a4a',
+              fontSize: '16px',
+              lineHeight: 1.7,
+              color: '#6B6B6B',
               margin: 0,
               fontWeight: 400,
+              fontStyle: 'italic',
             }}
           >
             {debate.suggestedHook || debate.context?.whatHappened}
@@ -211,7 +262,7 @@ export function StoryExchange({ debate }: { debate: DebateOutput }) {
                 transition: 'all 0.2s',
               }}
             >
-              {deep ? 'Collapse depth ↑' : 'Go Deeper →'}
+              {deep ? 'Collapse ↑' : 'See the full debate →'}
             </button>
           </div>
 

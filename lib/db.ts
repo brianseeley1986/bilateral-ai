@@ -120,6 +120,40 @@ export async function initDb() {
     `
   } catch {}
 
+  try {
+    await sql()`
+      CREATE TABLE IF NOT EXISTS ingestion_state (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+  } catch {}
+}
+
+// ---- INGESTION STATE ----
+
+export async function getIngestionState(key: string): Promise<string | null> {
+  try {
+    const rows = await sql()`SELECT value FROM ingestion_state WHERE key = ${key}`
+    return rows[0]?.value || null
+  } catch {
+    return null
+  }
+}
+
+export async function setIngestionState(key: string, value: string): Promise<void> {
+  try {
+    await sql()`
+      INSERT INTO ingestion_state (key, value)
+      VALUES (${key}, ${value})
+      ON CONFLICT (key) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = NOW()
+    `
+  } catch (e) {
+    console.error('setIngestionState failed:', e)
+  }
 }
 
 // ---- INGESTION LOCKS ----

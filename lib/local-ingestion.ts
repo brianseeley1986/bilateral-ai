@@ -2,7 +2,121 @@ import { fetchLocalStoriesForLocation, scoreStoryForDebate } from './trends'
 import { checkDuplicate, registerStory } from './deduplication'
 import { runDebatePipeline } from './pipeline'
 import { saveDebate } from './store'
+import { getIngestionState, setIngestionState } from './db'
 import { neon } from '@neondatabase/serverless'
+
+const DEFAULT_CITIES_ROTATION = [
+  { city: 'Lakeland', state: 'Florida' },
+  { city: 'Tampa', state: 'Florida' },
+  { city: 'Orlando', state: 'Florida' },
+  { city: 'Miami', state: 'Florida' },
+  { city: 'Jacksonville', state: 'Florida' },
+  { city: 'Atlanta', state: 'Georgia' },
+  { city: 'Charlotte', state: 'North Carolina' },
+  { city: 'Nashville', state: 'Tennessee' },
+  { city: 'Phoenix', state: 'Arizona' },
+  { city: 'Denver', state: 'Colorado' },
+  { city: 'Chicago', state: 'Illinois' },
+  { city: 'Seattle', state: 'Washington' },
+]
+
+export async function ingestNextDefaultCity(maxDebates = 2): Promise<{
+  city: string
+  state: string
+  debated: number
+  skipped: number
+  storiesFound: number
+  nextCity: string
+  index: number
+}> {
+  const lastIndex = await getIngestionState('last_default_city_index')
+  const currentIndex = lastIndex
+    ? (parseInt(lastIndex) + 1) % DEFAULT_CITIES_ROTATION.length
+    : 0
+
+  const loc = DEFAULT_CITIES_ROTATION[currentIndex]
+  const nextIndex = (currentIndex + 1) % DEFAULT_CITIES_ROTATION.length
+  const next = DEFAULT_CITIES_ROTATION[nextIndex]
+
+  console.log(`[local] Processing default city: ${loc.city}, ${loc.state} (${currentIndex + 1}/${DEFAULT_CITIES_ROTATION.length})`)
+
+  const result = await fetchLocalStoriesForLocation(undefined, loc.city, loc.state, undefined, 5)
+  console.log(`[local] ${loc.city}: resolved=${result.resolvedLevel}, stories=${result.stories.length}`)
+
+  let debated = 0
+  let skipped = 0
+
+  for (const story of result.stories) {
+    if (debated >= maxDebates) break
+
+    const dupCheck = await checkDuplicate(story.title)
+    if (dupCheck.isDuplicate) {
+      skipped++
+      continue
+    }
+
+    const score = await scoreStoryForDebate(story.title)
+    if (!score.shouldDebate || score.confidence < 0.65) {
+      skipped++
+      continue
+    }
+
+    try {
+      const debate = await runDebatePipeline(story.title, 'rss', loc.city, loc.state)
+      await saveDebate(debate)
+      registerStory(story.title, debate.id, dupCheck.hash)
+      debated++
+      await new Promise((r) => setTimeout(r, 1000))
+    } catch (err) {
+      console.error('[local] Pipeline error:', err)
+      skipped++
+    }
+  }
+
+  await setIngestionState('last_default_city_index', currentIndex.toString())
+
+  return {
+    city: loc.city,
+    state: loc.state,
+    debated,
+    skipped,
+    storiesFound: result.stories.length,
+    nextCity: `${next.city}, ${next.state}`,
+    index: currentIndex,
+  }
+}
+
+export async function ingestSpecificCity(
+  city: string,
+  state: string,
+  maxDebates = 2
+): Promise<{ city: string; state: string; debated: number; skipped: number; storiesFound: number }> {
+  console.log(`[local] Processing specific city: ${city}, ${state}`)
+  const result = await fetchLocalStoriesForLocation(undefined, city, state, undefined, 5)
+  let debated = 0
+  let skipped = 0
+
+  for (const story of result.stories) {
+    if (debated >= maxDebates) break
+    const dupCheck = await checkDuplicate(story.title)
+    if (dupCheck.isDuplicate) { skipped++; continue }
+    const score = await scoreStoryForDebate(story.title)
+    if (!score.shouldDebate || score.confidence < 0.65) { skipped++; continue }
+    try {
+      const debate = await runDebatePipeline(story.title, 'rss', city, state)
+      await saveDebate(debate)
+      registerStory(story.title, debate.id, dupCheck.hash)
+      debated++
+      await new Promise((r) => setTimeout(r, 1000))
+    } catch (err) {
+      console.error('[local] Pipeline error:', err)
+      skipped++
+    }
+  }
+
+  return { city, state, debated, skipped, storiesFound: result.stories.length }
+}
+
 
 function getSql() {
   return neon(process.env.DATABASE_URL!)

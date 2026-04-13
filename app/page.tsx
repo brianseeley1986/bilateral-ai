@@ -67,6 +67,7 @@ function timeAgo(dateStr: string): string {
 }
 
 function FeedCard({ debate }: { debate: DebateCard }) {
+  const [copied, setCopied] = useState(false)
   const isSatire = debate.track === 'satire'
   const firstExchange = isSatire ? debate.satireExchanges?.[0] : debate.exchanges?.[0]
   const cLine = isSatire ? (firstExchange as any)?.a : (firstExchange as any)?.c
@@ -135,17 +136,96 @@ function FeedCard({ debate }: { debate: DebateCard }) {
       <div style={ZONE_STYLES.headline}>{debate.headline}</div>
 
       {cLine && (
-        <div style={{ ...ZONE_STYLES.preview, color: isSatire ? '#444' : '#C1121F' }}>
-          {isSatire ? 'A' : 'C'} {truncateSentence(cLine)}
+        <div
+          style={{
+            ...ZONE_STYLES.preview,
+            color: '#444',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '8px',
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: isSatire ? '#f1f1ef' : '#fee2e2',
+              color: isSatire ? '#444' : '#7f1d1d',
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '2px 6px',
+              borderRadius: '4px',
+              flexShrink: 0,
+            }}
+          >
+            {isSatire ? 'A' : 'C'}
+          </span>
+          <span>{truncateSentence(cLine)}</span>
         </div>
       )}
       {lLine && (
-        <div style={{ ...ZONE_STYLES.preview, color: isSatire ? '#444' : '#1B4FBE' }}>
-          {isSatire ? 'B' : 'L'} {truncateSentence(lLine)}
+        <div
+          style={{
+            ...ZONE_STYLES.preview,
+            color: '#444',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '8px',
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: isSatire ? '#f1f1ef' : '#dbeafe',
+              color: isSatire ? '#444' : '#1e3a5f',
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '2px 6px',
+              borderRadius: '4px',
+              flexShrink: 0,
+            }}
+          >
+            {isSatire ? 'B' : 'L'}
+          </span>
+          <span>{truncateSentence(lLine)}</span>
         </div>
       )}
 
-      <div style={ZONE_STYLES.goDeeper}>Go Deeper →</div>
+      <div
+        style={{
+          ...ZONE_STYLES.goDeeper,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          gap: '14px',
+        }}
+      >
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            navigator.clipboard
+              .writeText(`https://bilateral.news/debate/${debate.id}`)
+              .then(() => {
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              })
+              .catch(() => {})
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            fontSize: '12px',
+            color: '#9B9B9B',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {copied ? 'Copied!' : 'Share'}
+        </button>
+        <span>Read debate →</span>
+      </div>
     </div>
   )
 }
@@ -365,6 +445,10 @@ export default function Home() {
           bilateral.news — two minds, every story
           <br />
           AI-powered. Editorially neutral. Intellectually honest.
+          <br />
+          <a href="/about" style={{ color: '#6B6B6B', textDecoration: 'none', fontSize: '12px' }}>
+            About
+          </a>
         </div>
       </div>
     </main>

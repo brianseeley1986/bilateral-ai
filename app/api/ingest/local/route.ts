@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   ingestLocalStoriesForAllSubscribers,
   ingestLocalStoriesForSubscriber,
+  ingestNextDefaultCity,
+  ingestSpecificCity,
 } from '@/lib/local-ingestion'
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +25,16 @@ export async function POST(req: NextRequest) {
     if (body.subscriberId) {
       const stats = await ingestLocalStoriesForSubscriber(body.subscriberId)
       return NextResponse.json({ success: true, stats })
+    }
+
+    if (body.city && body.state) {
+      const stats = await ingestSpecificCity(body.city, body.state, body.maxPerLocation || 2)
+      return NextResponse.json({ success: true, stats })
+    }
+
+    if (body.nextCity) {
+      const result = await ingestNextDefaultCity(body.maxPerLocation || 2)
+      return NextResponse.json({ success: true, result })
     }
 
     const stats = await ingestLocalStoriesForAllSubscribers(body.maxPerLocation || 2)

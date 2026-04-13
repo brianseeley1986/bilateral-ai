@@ -14,7 +14,10 @@ const RSS_FEEDS = [
 ]
 
 function buildGoogleNewsLocalUrl(city: string, state: string): string {
-  const q = encodeURIComponent(`${city} ${state} local news`)
+  // Policy-focused query — Google News sorts by recency so we target
+  // governance/policy content directly instead of crawling past entertainment and crime stories
+  const terms = '("city council" OR "school board" OR "county commission" OR mayor OR ordinance OR zoning OR "property tax" OR policy OR ruling OR lawsuit)'
+  const q = encodeURIComponent(`${city} ${state} ${terms}`)
   return `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`
 }
 
@@ -218,9 +221,39 @@ export async function fetchLocalStoriesForLocation(
   return none
 }
 
+const AUTO_DEBATE_SIGNALS = [
+  'supreme court',
+  'rules against', 'rules for', 'ruled that', 'court holds', 'court decides', 'court rules',
+  'dissent', 'unconstitutional', 'strikes down', 'overturns', 'overruled',
+  'signed into law', 'executive order',
+  'congress passes', 'senate votes', 'senate passes', 'house passes', 'house votes',
+  'fed raises', 'fed cuts', 'fed holds', 'interest rates',
+  'ceasefire', 'invasion', 'peace talks', 'declared war', 'sanctions', 'impeachment',
+  '8-1', '7-2', '6-3', '5-4', '9-0',
+  'landmark ruling', 'historic ruling', 'first time in',
+  'appeals court', 'circuit court', 'district court rules',
+  'injunction', 'blocked by', 'upholds',
+  'school board votes', 'city council votes', 'city council approves',
+  'zoning', 'ballot measure', 'referendum', 'recall',
+  'mayor signs', 'governor signs', 'governor vetoes',
+  'legislature passes', 'state senate', 'state house passes',
+]
+
 export async function scoreStoryForDebate(
   title: string
 ): Promise<{ shouldDebate: boolean; reason: string; confidence: number }> {
+  const titleLower = title.toLowerCase()
+  const hasAutoSignal = AUTO_DEBATE_SIGNALS.some((signal) => titleLower.includes(signal))
+
+  if (hasAutoSignal) {
+    console.log('[scorer] auto-debate signal:', title)
+    return {
+      shouldDebate: true,
+      reason: 'auto-debate: high-signal story (government/court/policy action)',
+      confidence: 0.95,
+    }
+  }
+
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -240,14 +273,22 @@ SHOULD DEBATE if the story involves:
 - Legal decisions with political implications
 - Local government decisions (school boards, zoning, city budgets)
 
-SHOULD NOT DEBATE if the story is:
-- Pure entertainment or celebrity news
-- Sports scores or results
+SHOULD NOT DEBATE — only these narrow categories:
+- Pure celebrity or entertainment news with zero policy dimension
+- Sports scores and game results
 - Natural disasters with no policy angle
-- Product launches or business earnings
-- Crime reports without policy dimension
+- Individual crime reports with no broader policy dimension
+- Product launches and earnings with no regulatory dimension
 - Weather events
-- Too thin or vague to produce substantive arguments
+- Obituaries
+- Human interest stories with no ideological stakes
+
+NEVER filter out:
+- Court rulings even if the headline is phrased as a plain fact
+- Government decisions and votes even if phrased declaratively
+- Policy changes even if no opinion language appears in the headline
+- Anything involving legislative, executive, or judicial action
+- Local government decisions (city council, school board, zoning)
 
 Return ONLY valid JSON:
 {

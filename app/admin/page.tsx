@@ -183,6 +183,7 @@ export default function AdminPage() {
 
       <IngestionPanel />
       <JournalistPanel />
+      <LibraryPanel />
       <SubscriberStatsBlock />
 
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -1320,3 +1321,309 @@ function CampaignCard({
     </div>
   )
 }
+
+function LibraryPanel() {
+  const [stats, setStats] = useState<any>(null)
+  const [questions, setQuestions] = useState<any[]>([])
+  const [running, setRunning] = useState(false)
+  const [msg, setMsg] = useState<string>('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+
+  async function load() {
+    try {
+      const [s, q] = await Promise.all([
+        fetch('/api/library?stats=true').then((r) => r.json()),
+        fetch('/api/library').then((r) => r.json()),
+      ])
+      setStats(s)
+      setQuestions(Array.isArray(q) ? q : [])
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  async function runBatch(count: number) {
+    if (running) return
+    setRunning(true)
+    setMsg(`Generating ${count}...`)
+    try {
+      const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+      const r = await fetch('/api/library/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ingest-token': token },
+        body: JSON.stringify({ count }),
+      })
+      const d = await r.json()
+      if (!r.ok) {
+        setMsg(`Error: ${d.error || r.status}`)
+      } else {
+        setMsg(`Processed ${d.processed}. Published: ${d.stats?.published || 0}`)
+        await load()
+      }
+    } catch (e: any) {
+      setMsg(`Error: ${e.message}`)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  async function runAll() {
+    if (running) return
+    if (!confirm('Kick off generation across all pending questions? This will run until every pending question is generated.')) return
+    setRunning(true)
+    setMsg('Kicking off full generation...')
+    try {
+      const token = process.env.NEXT_PUBLIC_INGEST_TOKEN || ''
+      const r = await fetch('/api/library/generate-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-ingest-token': token },
+        body: JSON.stringify({ batchSize: 3, maxBatches: 100 }),
+      })
+      const d = await r.json()
+      if (!r.ok) setMsg(`Error: ${d.error || r.status}`)
+      else setMsg('Generation started in background. Refresh stats to watch progress.')
+      await load()
+    } catch (e: any) {
+      setMsg(`Error: ${e.message}`)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  const filtered = categoryFilter === 'all'
+    ? questions
+    : questions.filter((q) => q.category === categoryFilter)
+  const total = stats?.total || 0
+  const published = stats?.published || 0
+  const pct = total > 0 ? Math.round((published / total) * 100) : 0
+  const categories = Array.from(new Set(questions.map((q) => q.category))).sort()
+
+  return (
+    <section
+      style={{
+        maxWidth: '900px',
+        margin: '0 auto 24px',
+        padding: '20px',
+        background: '#FFF',
+        border: '1px solid #E5E5DD',
+        borderRadius: '10px',
+      }}
+    >
+      <h3
+        style={{
+          fontSize: '16px',
+          fontWeight: 700,
+          color: '#0A0A0A',
+          margin: '0 0 16px',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        Library
+      </h3>
+
+      {stats ? (
+        <>
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', flexWrap: 'wrap', fontSize: '13px' }}>
+            <span><strong>Total:</strong> {total}</span>
+            <span><strong>Published:</strong> {published}</span>
+            <span><strong>Pending:</strong> {stats.pending}</span>
+            <span><strong>Generating:</strong> {stats.generating}</span>
+            <span style={{ color: stats.failed > 0 ? '#C1121F' : '#6B6B6B' }}>
+              <strong>Failed:</strong> {stats.failed}
+            </span>
+          </div>
+
+          <div
+            style={{
+              height: '8px',
+              background: '#F5F5F0',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              marginBottom: '16px',
+            }}
+          >
+            <div
+              style={{
+                width: `${pct}%`,
+                height: '100%',
+                background: '#1B4FBE',
+                transition: 'width 0.3s',
+              }}
+            />
+          </div>
+        </>
+      ) : (
+        <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '12px' }}>Loading...</div>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => runBatch(3)}
+          disabled={running}
+          style={{
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            background: '#0A0A0A',
+            color: '#F5F5F0',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: running ? 'not-allowed' : 'pointer',
+            opacity: running ? 0.6 : 1,
+          }}
+        >
+          Generate Next 3
+        </button>
+        <button
+          onClick={() => runBatch(5)}
+          disabled={running}
+          style={{
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            background: '#FFF',
+            color: '#0A0A0A',
+            border: '1px solid #0A0A0A',
+            borderRadius: '6px',
+            cursor: running ? 'not-allowed' : 'pointer',
+            opacity: running ? 0.6 : 1,
+          }}
+        >
+          Generate Next 5
+        </button>
+        <button
+          onClick={runAll}
+          disabled={running}
+          style={{
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            background: '#C1121F',
+            color: '#F5F5F0',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: running ? 'not-allowed' : 'pointer',
+            opacity: running ? 0.6 : 1,
+          }}
+        >
+          Generate All
+        </button>
+        <button
+          onClick={load}
+          style={{
+            padding: '8px 16px',
+            fontSize: '13px',
+            background: '#FFF',
+            color: '#6B6B6B',
+            border: '1px solid #E5E5DD',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+
+      {msg && (
+        <div style={{ fontSize: '12px', color: '#6B6B6B', marginBottom: '12px' }}>{msg}</div>
+      )}
+
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => setCategoryFilter('all')}
+          style={{
+            padding: '4px 10px',
+            fontSize: '12px',
+            borderRadius: '999px',
+            border: categoryFilter === 'all' ? '1px solid #0A0A0A' : '1px solid #E5E5DD',
+            background: categoryFilter === 'all' ? '#0A0A0A' : '#FFF',
+            color: categoryFilter === 'all' ? '#F5F5F0' : '#0A0A0A',
+            cursor: 'pointer',
+          }}
+        >
+          All
+        </button>
+        {categories.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategoryFilter(c)}
+            style={{
+              padding: '4px 10px',
+              fontSize: '12px',
+              borderRadius: '999px',
+              border: categoryFilter === c ? '1px solid #0A0A0A' : '1px solid #E5E5DD',
+              background: categoryFilter === c ? '#0A0A0A' : '#FFF',
+              color: categoryFilter === c ? '#F5F5F0' : '#0A0A0A',
+              cursor: 'pointer',
+            }}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ maxHeight: '360px', overflowY: 'auto', border: '1px solid #E5E5DD', borderRadius: '6px' }}>
+        <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#F5F5F0', position: 'sticky', top: 0 }}>
+              <th style={thStyle}>Question</th>
+              <th style={thStyle}>Category</th>
+              <th style={thStyle}>Tier</th>
+              <th style={thStyle}>Status</th>
+              <th style={thStyle}>Generated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((q) => (
+              <tr key={q.slug} style={{ borderTop: '1px solid #E5E5DD' }}>
+                <td style={tdStyle}>
+                  {q.debateId ? (
+                    <a href={`/debates/${q.slug}`} style={{ color: '#0A0A0A' }}>{q.question}</a>
+                  ) : (
+                    q.question
+                  )}
+                </td>
+                <td style={tdStyle}>{q.category}</td>
+                <td style={tdStyle}>{q.tier}</td>
+                <td style={{ ...tdStyle, color: libraryStatusColor(q.status), fontWeight: 600 }}>
+                  {q.status}
+                </td>
+                <td style={tdStyle}>
+                  {q.generatedAt ? new Date(q.generatedAt).toLocaleDateString() : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+const thStyle: React.CSSProperties = {
+  textAlign: 'left',
+  padding: '8px 10px',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: '#6B6B6B',
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+}
+
+const tdStyle: React.CSSProperties = {
+  padding: '8px 10px',
+  color: '#0A0A0A',
+  verticalAlign: 'top',
+}
+
+function libraryStatusColor(s: string): string {
+  if (s === 'published') return '#1B4FBE'
+  if (s === 'failed') return '#C1121F'
+  if (s === 'generating') return '#B8860B'
+  return '#6B6B6B'
+}
+
