@@ -162,7 +162,7 @@ export async function runAdvertising(debate: Partial<DebateOutput>): Promise<Cam
 
 export async function runDebatePipeline(
   headline: string,
-  sourceType: 'user_submitted' | 'trending' | 'rss' = 'user_submitted',
+  sourceType: 'user_submitted' | 'trending' | 'rss' | 'library' = 'user_submitted',
   city?: string,
   state?: string,
 ): Promise<DebateOutput> {
@@ -292,6 +292,8 @@ ${JSON.stringify(verdict, null, 2)}`
     geographicScope,
     suggestedHook,
     sourceType,
+    city,
+    state,
     context: research.context,
     timeline: research.timeline || [],
     conservative,

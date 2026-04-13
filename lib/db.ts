@@ -90,6 +90,26 @@ export async function initDb() {
   try { await sql()`CREATE INDEX IF NOT EXISTS journalists_tier_idx ON journalists (tier)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS journalists_active_idx ON journalists (active)` } catch {}
 
+  await sql()`
+    CREATE TABLE IF NOT EXISTS library_questions (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      question TEXT NOT NULL,
+      category TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      hook TEXT,
+      debate_id TEXT REFERENCES debates(id) ON DELETE SET NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      search_volume_tier INTEGER NOT NULL DEFAULT 2,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      generated_at TIMESTAMPTZ,
+      error_message TEXT
+    )
+  `
+
+  try { await sql()`CREATE INDEX IF NOT EXISTS library_status_idx ON library_questions (status)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS library_category_idx ON library_questions (category)` } catch {}
+  try { await sql()`CREATE INDEX IF NOT EXISTS library_tier_idx ON library_questions (search_volume_tier)` } catch {}
+
   try {
     await sql()`
       CREATE TABLE IF NOT EXISTS ingestion_locks (
@@ -99,6 +119,7 @@ export async function initDb() {
       )
     `
   } catch {}
+
 }
 
 // ---- INGESTION LOCKS ----
@@ -405,6 +426,141 @@ export async function getJournalistStats(): Promise<any> {
     FROM journalists
   `
   return rows[0]
+}
+
+// ---- LIBRARY ----
+
+export interface LibraryRow {
+  id: string
+  question: string
+  category: string
+  slug: string
+  hook: string | null
+  debate_id: string | null
+  status: 'pending' | 'generating' | 'published' | 'failed'
+  search_volume_tier: number
+  created_at: string
+  generated_at: string | null
+  error_message: string | null
+}
+
+export async function upsertLibraryQuestion(q: {
+  question: string
+  category: string
+  slug: string
+  hook?: string
+  tier?: number
+}): Promise<void> {
+  await sql()`
+    INSERT INTO library_questions (question, category, slug, hook, search_volume_tier)
+    VALUES (${q.question}, ${q.category}, ${q.slug}, ${q.hook || null}, ${q.tier || 2})
+    ON CONFLICT (slug) DO UPDATE SET
+      question = EXCLUDED.question,
+      category = EXCLUDED.category,
+      hook = EXCLUDED.hook,
+      search_volume_tier = EXCLUDED.search_volume_tier
+  `
+}
+
+export async function getLibraryQuestionBySlug(slug: string): Promise<LibraryRow | null> {
+  const rows = await sql()`SELECT * FROM library_questions WHERE slug = ${slug} LIMIT 1`
+  return (rows[0] as LibraryRow) || null
+}
+
+export async function getAllLibraryQuestions(): Promise<LibraryRow[]> {
+  const rows = await sql()`
+    SELECT * FROM library_questions
+    ORDER BY search_volume_tier ASC, category ASC, question ASC
+  `
+  return rows as LibraryRow[]
+}
+
+export async function getLibraryQuestionsByCategory(category: string): Promise<LibraryRow[]> {
+  const rows = await sql()`
+    SELECT * FROM library_questions
+    WHERE category = ${category}
+    ORDER BY search_volume_tier ASC, question ASC
+  `
+  return rows as LibraryRow[]
+}
+
+export async function getPendingLibraryQuestions(limit: number): Promise<LibraryRow[]> {
+  const rows = await sql()`
+    SELECT * FROM library_questions
+    WHERE status = 'pending' OR status = 'failed'
+    ORDER BY search_volume_tier ASC, created_at ASC
+    LIMIT ${limit}
+  `
+  return rows as LibraryRow[]
+}
+
+export async function setLibraryStatus(
+  id: string,
+  status: 'pending' | 'generating' | 'published' | 'failed',
+  extra: { debate_id?: string | null; error_message?: string | null } = {}
+): Promise<void> {
+  if (status === 'published') {
+    await sql()`
+      UPDATE library_questions
+      SET status = 'published',
+          debate_id = ${extra.debate_id || null},
+          generated_at = NOW(),
+          error_message = NULL
+      WHERE id = ${id}
+    `
+  } else if (status === 'failed') {
+    await sql()`
+      UPDATE library_questions
+      SET status = 'failed',
+          error_message = ${extra.error_message || null}
+      WHERE id = ${id}
+    `
+  } else {
+    await sql()`
+      UPDATE library_questions
+      SET status = ${status}
+      WHERE id = ${id}
+    `
+  }
+}
+
+export async function getLibraryStats(): Promise<{
+  total: number
+  pending: number
+  generating: number
+  published: number
+  failed: number
+}> {
+  const rows = await sql()`
+    SELECT
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE status = 'pending') AS pending,
+      COUNT(*) FILTER (WHERE status = 'generating') AS generating,
+      COUNT(*) FILTER (WHERE status = 'published') AS published,
+      COUNT(*) FILTER (WHERE status = 'failed') AS failed
+    FROM library_questions
+  `
+  const r = rows[0]
+  return {
+    total: parseInt(r.total),
+    pending: parseInt(r.pending),
+    generating: parseInt(r.generating),
+    published: parseInt(r.published),
+    failed: parseInt(r.failed),
+  }
+}
+
+export async function getTopLibraryDebateIds(limit: number = 3): Promise<string[]> {
+  const rows = await sql()`
+    SELECT lq.debate_id,
+           COALESCE((d.data->'qualityScore'->>'overallScore')::float, 0) AS score
+    FROM library_questions lq
+    JOIN debates d ON d.id = lq.debate_id
+    WHERE lq.status = 'published' AND lq.debate_id IS NOT NULL
+    ORDER BY score DESC, lq.generated_at DESC
+    LIMIT ${limit}
+  `
+  return rows.map((r: any) => r.debate_id)
 }
 
 export async function hasRecentHeadline(
