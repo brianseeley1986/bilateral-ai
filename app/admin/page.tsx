@@ -314,9 +314,18 @@ function LoginGate({ onLogin }: { onLogin: (key: string) => void }) {
     setChecking(true)
     setError('')
     try {
-      const res = await fetch(`/api/admin/stats?key=${encodeURIComponent(input.trim())}`, { cache: 'no-store' })
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: input.trim() }),
+      })
       if (res.status === 401) {
-        setError('Invalid key')
+        setError('Invalid password')
+        setChecking(false)
+        return
+      }
+      if (!res.ok) {
+        setError('Server error — check ADMIN_SECRET is set in Vercel')
         setChecking(false)
         return
       }
