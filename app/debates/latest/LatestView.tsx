@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { LIBRARY_CATEGORIES } from '@/lib/library-questions'
+import { cleanHeadline } from '@/lib/headline'
 
 interface D {
   id: string
@@ -74,9 +75,9 @@ export function LatestView({ debates }: { debates: D[] }) {
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        {['all', 'serious', 'local', 'satire'].map((t) => (
+        {['all', 'local', 'satire'].map((t) => (
           <Pill key={t} active={track === t} onClick={() => setTrack(t)}>
-            {t === 'all' ? 'All tracks' : t.charAt(0).toUpperCase() + t.slice(1)}
+            {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
           </Pill>
         ))}
       </div>
@@ -105,6 +106,7 @@ export function LatestView({ debates }: { debates: D[] }) {
               <div
                 style={{
                   display: 'flex',
+                  alignItems: 'center',
                   gap: '10px',
                   fontSize: '11px',
                   textTransform: 'uppercase',
@@ -115,10 +117,39 @@ export function LatestView({ debates }: { debates: D[] }) {
                 }}
               >
                 <span>{date}</span>
-                <span>·</span>
-                <span>{d.track}</span>
-                <span>·</span>
-                <span>{d.geographicScope}</span>
+                {(() => {
+                  const t = (d.track || '').toLowerCase()
+                  const g = (d.geographicScope || '').toLowerCase()
+                  const geoLabel = g && g !== 'serious' ? g : ''
+                  return (
+                    <>
+                      {geoLabel && (
+                        <>
+                          <span>·</span>
+                          <span>{geoLabel}</span>
+                        </>
+                      )}
+                      {t === 'satire' && (
+                        <>
+                          <span>·</span>
+                          <span
+                            style={{
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              letterSpacing: '0.08em',
+                            }}
+                          >
+                            Satire
+                          </span>
+                        </>
+                      )}
+                    </>
+                  )
+                })()}
                 {d.sourceType === 'library' && (
                   <>
                     <span>·</span>
@@ -135,7 +166,7 @@ export function LatestView({ debates }: { debates: D[] }) {
                   marginBottom: d.hook ? '6px' : 0,
                 }}
               >
-                {d.headline}
+                {cleanHeadline(d.headline)}
               </div>
               {d.hook && (
                 <div style={{ fontSize: '14px', color: '#6B6B6B', lineHeight: 1.5 }}>{d.hook}</div>
