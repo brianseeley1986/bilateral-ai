@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { neon } from '@neondatabase/serverless'
 import { initDb } from '@/lib/db'
@@ -29,7 +28,7 @@ export default async function LatestDebatesPage() {
     ORDER BY created_at DESC
     LIMIT 200
   `
-  const debates = rows.map((r: any) => {
+  const rawDebates = rows.map((r: any) => {
     const d = r.data
     return {
       id: d.id,
@@ -46,6 +45,20 @@ export default async function LatestDebatesPage() {
     }
   })
 
+  // Defensive dedupe: if the same headline appears more than once, keep
+  // the oldest (most established) row and drop the rest.
+  const seen = new Set<string>()
+  const debates = rawDebates
+    .slice()
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .filter((d) => {
+      const key = (d.headline || '').trim().toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
   return (
     <main
       style={{
@@ -56,46 +69,7 @@ export default async function LatestDebatesPage() {
       }}
     >
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '40px',
-          }}
-        >
-          <Link
-            href="/"
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: '10px',
-              textDecoration: 'none',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '17px',
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-                color: '#0A0A0A',
-              }}
-            >
-              bilateral
-            </span>
-            <span style={{ fontSize: '12px', color: '#6B6B6B' }}>bilateral.news</span>
-          </Link>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <Link href="/" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
-              Home
-            </Link>
-            <Link href="/about" style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}>
-              About
-            </Link>
-          </div>
-        </header>
-
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', paddingTop: '20px' }}>
           <h1
             style={{
               fontSize: '44px',
