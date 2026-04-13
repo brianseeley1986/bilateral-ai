@@ -22,18 +22,16 @@ export function LatestView({ debates }: { debates: D[] }) {
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState<string>('all')
   const [geo, setGeo] = useState<string>('all')
-  const [track, setTrack] = useState<string>('all')
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return debates.filter((d) => {
-      if (track !== 'all' && d.track !== track) return false
       if (geo !== 'all' && d.geographicScope !== geo) return false
       if (cat !== 'all' && d.libraryCategory !== cat) return false
       if (needle && !d.headline.toLowerCase().includes(needle)) return false
       return true
     })
-  }, [debates, search, cat, geo, track])
+  }, [debates, search, cat, geo])
 
   return (
     <div>
@@ -74,13 +72,7 @@ export function LatestView({ debates }: { debates: D[] }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        {['all', 'local', 'satire'].map((t) => (
-          <Pill key={t} active={track === t} onClick={() => setTrack(t)}>
-            {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
-          </Pill>
-        ))}
-      </div>
+      {/* Track filter paused — satire hidden from UX for now */}
 
       <div style={{ display: 'grid', gap: '12px' }}>
         {filtered.map((d) => {

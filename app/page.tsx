@@ -100,7 +100,22 @@ function FeedCard({ debate }: { debate: DebateCard }) {
             SATIRE
           </span>
         )}
-        {!isSatire && debate.geographicScope === 'local' && (
+        {!isSatire && (debate as any).sourceType === 'library' && (
+          <span
+            style={{
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '2px 8px',
+              borderRadius: '4px',
+              background: '#f0f4ff',
+              color: '#1e3a8a',
+              letterSpacing: '0.05em',
+            }}
+          >
+            LIBRARY
+          </span>
+        )}
+        {!isSatire && (debate as any).sourceType !== 'library' && debate.geographicScope === 'local' && (
           <span
             style={{
               fontSize: '10px',
@@ -115,7 +130,7 @@ function FeedCard({ debate }: { debate: DebateCard }) {
             LOCAL
           </span>
         )}
-        {!isSatire && debate.geographicScope !== 'local' && (
+        {!isSatire && (debate as any).sourceType !== 'library' && debate.geographicScope !== 'local' && (
           <span
             style={{
               fontSize: '10px',
@@ -205,7 +220,9 @@ function FeedCard({ debate }: { debate: DebateCard }) {
           onClick={(e) => {
             e.stopPropagation()
             navigator.clipboard
-              .writeText(`https://bilateral.news/debate/${debate.id}`)
+              .writeText(
+                `https://bilateral.news/debate/${debate.id}?h=${encodeURIComponent(debate.headline)}`,
+              )
               .then(() => {
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
@@ -226,6 +243,85 @@ function FeedCard({ debate }: { debate: DebateCard }) {
         </button>
         <span>Read debate →</span>
       </div>
+    </div>
+  )
+}
+
+interface LibraryFeatured {
+  id: string
+  question: string
+  category: string
+  slug: string
+  hook?: string
+}
+
+function LibraryFeaturedSection() {
+  const [items, setItems] = useState<LibraryFeatured[]>([])
+
+  useEffect(() => {
+    fetch('/api/library?featured=true')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setItems(data)
+      })
+      .catch(() => {})
+  }, [])
+
+  if (items.length === 0) return null
+
+  return (
+    <div style={{ marginBottom: '36px' }}>
+      <div style={ZONE_STYLES.label}>From the library</div>
+      <div style={{ fontSize: '12px', color: '#9B9B9B', marginTop: '-6px', marginBottom: '14px' }}>
+        The most contested questions in America
+      </div>
+      {items.map((item) => (
+        <a
+          key={item.id}
+          href={`/debates/${item.slug}`}
+          style={{
+            display: 'block',
+            textDecoration: 'none',
+            color: 'inherit',
+            padding: '16px 0',
+            borderBottom: '0.5px solid #ebebeb',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: '#f0f4ff',
+                color: '#1e3a8a',
+                letterSpacing: '0.05em',
+              }}
+            >
+              LIBRARY
+            </span>
+            <span
+              style={{
+                fontSize: '11px',
+                color: '#6B6B6B',
+                textTransform: 'capitalize',
+              }}
+            >
+              {item.category?.replace(/_/g, ' ')}
+            </span>
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: 500, lineHeight: 1.4, color: '#0A0A0A', marginBottom: '6px' }}>
+            {item.question}
+          </div>
+          {item.hook && (
+            <div style={{ fontSize: '13px', color: '#6B6B6B', lineHeight: 1.55, marginBottom: '6px' }}>
+              {item.hook}
+            </div>
+          )}
+          <div style={{ fontSize: '12px', color: '#6B6B6B', textAlign: 'right' }}>Read the debate →</div>
+        </a>
+      ))}
     </div>
   )
 }
@@ -276,23 +372,23 @@ export default function Home() {
     (d) =>
       d.track !== 'satire' && d.publishStatus === 'published' && d.geographicScope === 'international'
   )
-  const satireDebates = debates.filter((d) => d.track === 'satire')
 
   return (
     <main style={{ minHeight: '100vh', background: '#F5F5F0', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 20px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <div
-            style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '6px' }}
-          >
-            bilateral
-          </div>
-          <div
-            style={{ fontSize: '13px', color: '#6B6B6B', letterSpacing: '0.02em', marginBottom: '28px' }}
-          >
-            The argument behind every headline.
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: '36px', paddingTop: '20px' }}>
           <HeadlineInput />
+          <p
+            style={{
+              fontSize: '14px',
+              color: '#9B9B9B',
+              textAlign: 'center',
+              marginTop: '10px',
+              marginBottom: 0,
+            }}
+          >
+            Type any headline. Get the argument.
+          </p>
         </div>
 
         {urlMessage && (
@@ -359,7 +455,7 @@ export default function Home() {
 
         {seriousNational.length > 0 && (
           <div style={{ marginBottom: '36px' }}>
-            <div style={ZONE_STYLES.label}>Today&apos;s debates</div>
+            <div style={ZONE_STYLES.label}>National</div>
             {seriousNational.slice(0, 6).map((d) => (
               <FeedCard key={d.id} debate={d} />
             ))}
@@ -403,33 +499,15 @@ export default function Home() {
           </div>
         )}
 
-        {satireDebates.length > 0 && (
-          <div style={{ marginBottom: '36px' }}>
-            <div style={{ ...ZONE_STYLES.label, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>Also on bilateral</span>
-              <span
-                style={{
-                  fontSize: '10px',
-                  background: '#fef3c7',
-                  color: '#92400e',
-                  padding: '1px 6px',
-                  borderRadius: '3px',
-                }}
-              >
-                SATIRE
-              </span>
-            </div>
-            {satireDebates.slice(0, 2).map((d) => (
-              <FeedCard key={d.id} debate={d} />
-            ))}
-          </div>
-        )}
+        {/* Satire zone paused — hidden from UX until satire track is re-enabled */}
 
         {debates.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#6B6B6B', fontSize: '14px' }}>
             Drop a headline above to generate the first debate.
           </div>
         )}
+
+        <LibraryFeaturedSection />
 
         <div
           style={{
@@ -445,10 +523,6 @@ export default function Home() {
           bilateral.news — two minds, every story
           <br />
           AI-powered. Editorially neutral. Intellectually honest.
-          <br />
-          <a href="/about" style={{ color: '#6B6B6B', textDecoration: 'none', fontSize: '12px' }}>
-            About
-          </a>
         </div>
       </div>
     </main>

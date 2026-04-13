@@ -25,6 +25,7 @@ export default async function LatestDebatesPage() {
   const rows = await sql`
     SELECT data FROM debates
     WHERE publish_status = 'published'
+      AND track != 'satire'
     ORDER BY created_at DESC
     LIMIT 200
   `

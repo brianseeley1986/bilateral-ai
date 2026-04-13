@@ -176,6 +176,8 @@ export async function runDebatePipeline(
   // Normalize casing — the classifier sometimes returns uppercase values
   classification.track = (classification.track?.toLowerCase() || 'serious')
   classification.geographicScope = (classification.geographicScope?.toLowerCase() || 'national')
+  // Satire track is paused — coerce to serious until re-enabled
+  if (classification.track === 'satire') classification.track = 'serious'
   const track = classification.track as Track
   const geographicScope = classification.geographicScope as GeoScope
   const suggestedHook = classification.suggestedHook as string
