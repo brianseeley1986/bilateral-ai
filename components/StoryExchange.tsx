@@ -25,7 +25,7 @@ function compressToTwoSentences(text: string): { display: string; truncated: boo
 
 function ShareRow({ id, headline }: { id: string; headline: string }) {
   const [copied, setCopied] = useState(false)
-  const url = `https://bilateral.news/debate/${id}`
+  const url = `https://bilateral.news/debate/${id}?h=${encodeURIComponent(headline)}`
   const pillStyle: React.CSSProperties = {
     fontSize: '11px',
     color: '#6B6B6B',
@@ -243,6 +243,75 @@ export function StoryExchange({ debate }: { debate: DebateOutput }) {
         </div>
       )}
 
+      {/* Sources — hidden for satire */}
+      {!isSatire && Array.isArray(debate.sources) && debate.sources.length > 0 && (
+        <div
+          style={{
+            marginTop: '48px',
+            paddingTop: '24px',
+            borderTop: '1px solid #E5E5DD',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '10px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: '#9A9A92',
+              marginBottom: '14px',
+            }}
+          >
+            Sources
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {(debate.sources as any[]).map((s, i) => {
+              if (s && typeof s === 'object' && typeof s.url === 'string') {
+                const title = s.title || s.url
+                const outlet = s.outlet || s.source || ''
+                return (
+                  <li
+                    key={i}
+                    style={{
+                      fontSize: '13px',
+                      lineHeight: 1.6,
+                      color: '#3A3A3A',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    {outlet && (
+                      <span style={{ fontWeight: 500, marginRight: '6px' }}>{outlet}</span>
+                    )}
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#1B4FBE', textDecoration: 'underline' }}
+                    >
+                      {title}
+                    </a>
+                  </li>
+                )
+              }
+              const text = typeof s === 'string' ? s : JSON.stringify(s)
+              return (
+                <li
+                  key={i}
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: 1.6,
+                    color: '#3A3A3A',
+                    marginBottom: '6px',
+                  }}
+                >
+                  {text}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
       {/* Go Deeper — hidden for satire */}
       {!isSatire && debate.conservative && (
         <>
@@ -262,7 +331,7 @@ export function StoryExchange({ debate }: { debate: DebateOutput }) {
                 transition: 'all 0.2s',
               }}
             >
-              {deep ? 'Collapse ↑' : 'See the full debate →'}
+              {deep ? 'Collapse ↑' : 'Go deeper →'}
             </button>
           </div>
 
