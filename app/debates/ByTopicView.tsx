@@ -182,23 +182,18 @@ function QuestionCard({ q }: { q: Q }) {
           {q.hook}
         </div>
       )}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '12px',
-        }}
-      >
-        <span
+      {published && (
+        <div
           style={{
-            color: published ? '#0A0A0A' : '#6B6B6B',
-            fontWeight: published ? 600 : 400,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '12px',
           }}
         >
-          {published ? 'Read the debate →' : 'Coming soon'}
-        </span>
-      </div>
+          <span style={{ color: '#0A0A0A', fontWeight: 600 }}>Read the debate →</span>
+        </div>
+      )}
     </Link>
   )
 }
