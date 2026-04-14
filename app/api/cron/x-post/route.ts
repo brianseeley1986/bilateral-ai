@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
     const result = await postToX(
       {
         id: debate.id,
+        slug: debate.slug,
         headline: debate.headline || debateData.headline,
         conservativeFeedHook: debateData.conservativeFeedHook,
         liberalFeedHook: debateData.liberalFeedHook,

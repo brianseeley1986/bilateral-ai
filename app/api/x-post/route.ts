@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (body.debateId) {
     const sql = neon(process.env.DATABASE_URL!)
     const rows = await sql`
-      SELECT id, headline, data FROM debates WHERE id = ${body.debateId}
+      SELECT id, headline, slug, data FROM debates WHERE id = ${body.debateId}
     `
     debate = rows[0]
   } else {
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
   const result = await postToX(
     {
       id: debate.id,
+      slug: debate.slug,
       headline: debate.headline || debateData.headline,
       conservativeFeedHook: debateData.conservativeFeedHook,
       liberalFeedHook: debateData.liberalFeedHook,

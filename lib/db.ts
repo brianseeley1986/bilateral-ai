@@ -47,6 +47,8 @@ export async function initDb() {
 
   try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS city TEXT` } catch {}
   try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS state TEXT` } catch {}
+  try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS slug TEXT` } catch {}
+  try { await sql()`CREATE UNIQUE INDEX IF NOT EXISTS debates_slug_unique_idx ON debates (slug) WHERE slug IS NOT NULL` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_created_at_idx ON debates (created_at DESC)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_track_idx ON debates (track)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_publish_status_idx ON debates (publish_status)` } catch {}
@@ -190,7 +192,20 @@ export async function cleanExpiredLocks(): Promise<void> {
   } catch {}
 }
 
+function buildSlug(headline: string, id: string): string {
+  const base = headline
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80)
+  // Append a short id suffix so headline collisions resolve deterministically.
+  return base ? `${base}-${id.slice(-6)}` : id
+}
+
 export async function saveDebate(debate: any): Promise<void> {
+  const slug = buildSlug(debate.headline || '', debate.id)
   await sql()`
     INSERT INTO debates (
       id,
@@ -201,6 +216,7 @@ export async function saveDebate(debate: any): Promise<void> {
       created_at,
       city,
       state,
+      slug,
       data
     ) VALUES (
       ${debate.id},
@@ -211,23 +227,28 @@ export async function saveDebate(debate: any): Promise<void> {
       ${debate.createdAt},
       ${debate.city || null},
       ${debate.state || null},
+      ${slug},
       ${JSON.stringify(debate)}
     )
     ON CONFLICT (id) DO UPDATE SET
       data = EXCLUDED.data,
       publish_status = EXCLUDED.publish_status,
       city = EXCLUDED.city,
-      state = EXCLUDED.state
+      state = EXCLUDED.state,
+      slug = COALESCE(debates.slug, EXCLUDED.slug)
   `
 }
 
-export async function getDebate(id: string): Promise<any | null> {
-  const rows = await sql()`
-    SELECT data FROM debates
-    WHERE id = ${id}
-  `
+export async function getDebate(idOrSlug: string): Promise<any | null> {
+  // Accept either the numeric id or the SEO slug.
+  const isNumericId = /^\d+$/.test(idOrSlug)
+  const rows = isNumericId
+    ? await sql()`SELECT data, slug FROM debates WHERE id = ${idOrSlug} LIMIT 1`
+    : await sql()`SELECT data, slug FROM debates WHERE slug = ${idOrSlug} LIMIT 1`
   if (rows.length === 0) return null
-  return rows[0].data
+  const data = rows[0].data
+  if (data && rows[0].slug && !data.slug) data.slug = rows[0].slug
+  return data
 }
 
 export async function getRecentDebates(
@@ -630,7 +651,7 @@ export async function markAsPostedToX(debateId: string, tweetId?: string): Promi
 export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
   // Prefer fresh news debates (< 24h, quality ≥ 8.0, not library)
   const fresh = await sql()`
-    SELECT id, headline, data, created_at, view_count
+    SELECT id, headline, slug, data, created_at, view_count
     FROM debates
     WHERE publish_status = 'published'
       AND x_posted_at IS NULL
@@ -644,7 +665,7 @@ export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
 
   // Fall back to evergreen library debates if no fresh news is ready
   return await sql()`
-    SELECT id, headline, data, created_at, view_count
+    SELECT id, headline, slug, data, created_at, view_count
     FROM debates
     WHERE publish_status = 'published'
       AND x_posted_at IS NULL

@@ -22,15 +22,20 @@ export async function generateMetadata(
   // Propagate the ?og= cache-buster from the page URL into the image URL so X's
   // image cache (keyed by image URL) refetches when the design changes.
   const og = searchParams?.og
+  // Canonical always points to the slug URL when one exists, so search engines
+  // dedupe id-based and ?og-busted variants to the SEO-friendly slug version.
+  const canonicalSlug = (debate as { slug?: string }).slug || params.id
+  const canonicalUrl = `https://bilateral.news/debate/${canonicalSlug}`
   const imageUrl = `https://bilateral.news/debate/${params.id}/opengraph-image${og ? `?og=${encodeURIComponent(og)}` : ''}`
 
   return {
     title: `${debate.headline} — Bilateral`,
     description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title: debate.headline,
       description,
-      url: `https://bilateral.news/debate/${params.id}`,
+      url: canonicalUrl,
       siteName: 'Bilateral',
       type: 'article',
       images: [{ url: imageUrl, width: 1200, height: 630 }],

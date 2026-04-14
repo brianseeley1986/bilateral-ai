@@ -14,15 +14,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const rows = await sql`
-      SELECT id, created_at AS last_modified
+      SELECT id, slug, created_at AS last_modified
       FROM debates
       WHERE publish_status = 'published'
       ORDER BY created_at DESC
       LIMIT 5000
-    ` as Array<{ id: string; last_modified: Date }>
+    ` as Array<{ id: string; slug: string | null; last_modified: Date }>
 
     const debateEntries = rows.map((row) => ({
-      url: `${base}/debate/${row.id}`,
+      url: `${base}/debate/${row.slug || row.id}`,
       lastModified: new Date(row.last_modified),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
