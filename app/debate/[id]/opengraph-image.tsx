@@ -225,15 +225,15 @@ export default async function Image({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        {/* CTA footer — no border, same panel gradient tail so it reads as a continuation */}
+        {/* CTA footer — right-aligned so X's bottom-left title overlay doesn't cover it */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px 60px 28px',
+            justifyContent: 'flex-end',
+            padding: '20px 48px 28px',
             background: '#0A0A0A',
-            fontSize: '24px',
+            fontSize: '22px',
             fontWeight: 500,
             color: '#F5F5F0',
             letterSpacing: '0.02em',
