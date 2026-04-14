@@ -30,6 +30,9 @@ export const metadata: Metadata = {
     description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
     site: "@bilateralnews",
   },
+  verification: {
+    google: "aDr9H4menYr1FZLbgX0QPVeDehQpPvmaucznYZNp0IM",
+  },
 };
 
 export default function RootLayout({
