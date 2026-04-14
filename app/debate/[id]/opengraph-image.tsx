@@ -210,6 +210,24 @@ export default async function Image({ params }: { params: { id: string } }) {
             </div>
           </div>
         )}
+
+        {/* CTA footer */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '18px 60px',
+            background: '#0A0A0A',
+            borderTop: '1px solid #1f1f1f',
+            fontSize: '20px',
+            fontWeight: 600,
+            color: '#F5F5F0',
+            letterSpacing: '0.01em',
+          }}
+        >
+          Read the full debate  →
+        </div>
       </div>
     ),
     { ...size },
