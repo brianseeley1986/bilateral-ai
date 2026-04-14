@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const rows = await sql`
-      SELECT id, COALESCE(updated_at, created_at) AS last_modified
+      SELECT id, created_at AS last_modified
       FROM debates
       WHERE publish_status = 'published'
       ORDER BY created_at DESC
