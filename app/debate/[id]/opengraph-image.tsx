@@ -6,7 +6,20 @@ export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 function truncate(text: string, max: number) {
-  return text.length > max ? text.slice(0, max - 1) + '…' : text
+  if (text.length <= max) return text
+  const cut = text.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…'
+}
+
+// When a feed hook isn't available, extract the first sentence of the analytical line.
+// Produces hook-feeling text without mid-phrase truncation.
+function hookify(hook: string | undefined, fallback: string | undefined): string {
+  if (hook && hook.trim()) return hook.trim()
+  if (!fallback) return ''
+  const firstSentence = fallback.match(/^[^.!?]+[.!?]/)?.[0]
+  const candidate = (firstSentence || fallback).trim()
+  return truncate(candidate, 110)
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
@@ -22,10 +35,8 @@ export default async function Image({ params }: { params: { id: string } }) {
     if (res.ok) {
       const debate = await res.json()
       headline = debate.headline || headline
-      // Prefer feed hooks — they're written to be tight and punchy.
-      // Fall back to previewLine only if no hook exists.
-      cLine = debate.conservativeFeedHook || debate.conservative?.previewLine || ''
-      lLine = debate.liberalFeedHook || debate.liberal?.previewLine || ''
+      cLine = hookify(debate.conservativeFeedHook, debate.conservative?.previewLine)
+      lLine = hookify(debate.liberalFeedHook, debate.liberal?.previewLine)
     }
   } catch {}
 
@@ -115,14 +126,23 @@ export default async function Image({ params }: { params: { id: string } }) {
             >
               <div
                 style={{
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: '#C1121F',
-                  letterSpacing: '0.12em',
-                  marginBottom: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '14px',
                 }}
               >
-                CONSERVATIVE
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#C1121F' }} />
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#F5F5F0',
+                    letterSpacing: '0.14em',
+                  }}
+                >
+                  CONSERVATIVE
+                </span>
               </div>
               <div style={{ fontSize: '22px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
                 {truncate(cLine, 95)}
@@ -139,14 +159,23 @@ export default async function Image({ params }: { params: { id: string } }) {
             >
               <div
                 style={{
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: '#1B4FBE',
-                  letterSpacing: '0.12em',
-                  marginBottom: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '14px',
                 }}
               >
-                LIBERAL
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#1B4FBE' }} />
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#F5F5F0',
+                    letterSpacing: '0.14em',
+                  }}
+                >
+                  LIBERAL
+                </span>
               </div>
               <div style={{ fontSize: '22px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
                 {truncate(lLine, 95)}
