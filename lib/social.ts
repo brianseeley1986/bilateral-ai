@@ -60,7 +60,10 @@ export async function postToX(
   mock?: boolean
 }> {
   const baseUrl = 'https://bilateral.news'
-  const debateUrl = `${baseUrl}/debate/${debate.id}`
+  // ?og= bumps whenever the OG card design changes. X caches the scraped OG per
+  // exact URL, so a new query param forces a fresh scrape. Bump this on any
+  // opengraph-image.tsx change that should be reflected in already-posted-style tweets.
+  const debateUrl = `${baseUrl}/debate/${debate.id}?og=2`
 
   // Tweet text = just the URL. The OG card renders headline + C/L + brand,
   // so any additional text creates duplication when Twitter unfurls it.
