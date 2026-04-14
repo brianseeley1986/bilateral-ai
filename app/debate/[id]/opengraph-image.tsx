@@ -14,8 +14,10 @@ function smartTrim(text: string, max: number): string {
   const clean = text.trim()
   if (clean.length <= max) return clean
 
-  // Collect complete sentences up to the cap.
-  const sentences = clean.match(/[^.!?]+[.!?]+/g) || []
+  // Collect complete sentences up to the cap. Period must be followed by
+  // whitespace + capital (or end of string) so decimals like "$13.4" don't
+  // register as sentence boundaries.
+  const sentences = clean.match(/[^.!?]+[.!?]+(?=\s+[A-Z"']|$)/g) || []
   let built = ''
   for (const s of sentences) {
     const next = built + s
