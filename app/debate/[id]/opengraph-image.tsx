@@ -34,7 +34,7 @@ function smartTrim(text: string, max: number): string {
   return (space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 200): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 240): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }
@@ -82,39 +82,58 @@ export default async function Image({ params }: { params: { id: string } }) {
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        {/* Brand bar */}
+        {/* Top row — brand centered, CTA on the right (safe from X's bottom overlay) */}
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '32px 60px 20px',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            padding: '28px 48px 16px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F' }} />
-            <span
+          <div style={{ width: '200px' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F' }} />
+              <span
+                style={{
+                  fontSize: '30px',
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  color: '#F5F5F0',
+                }}
+              >
+                bilateral
+              </span>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#1B4FBE' }} />
+            </div>
+            <div
               style={{
-                fontSize: '30px',
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-                color: '#F5F5F0',
+                marginTop: '10px',
+                fontSize: '22px',
+                fontWeight: 500,
+                color: '#D4D4CA',
+                letterSpacing: '0.01em',
               }}
             >
-              bilateral
-            </span>
-            <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#1B4FBE' }} />
+              The argument behind every headline.
+            </div>
           </div>
           <div
             style={{
-              marginTop: '10px',
-              fontSize: '20px',
-              color: '#9B9B9B',
-              letterSpacing: '0.01em',
+              width: '200px',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              paddingTop: '12px',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#F5F5F0',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
             }}
           >
-            The argument behind every headline.
+            Read →
           </div>
         </div>
 
