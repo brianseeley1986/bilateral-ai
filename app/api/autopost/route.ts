@@ -4,7 +4,7 @@ import { getAutoPostToggle, setAutoPostToggle } from '@/lib/autopost'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  return NextResponse.json({ enabled: getAutoPostToggle() })
+  return NextResponse.json({ enabled: await getAutoPostToggle() })
 }
 
 export async function PATCH(req: NextRequest) {
@@ -12,6 +12,6 @@ export async function PATCH(req: NextRequest) {
   if (typeof body?.enabled !== 'boolean') {
     return NextResponse.json({ error: 'enabled must be boolean' }, { status: 400 })
   }
-  setAutoPostToggle(body.enabled)
+  await setAutoPostToggle(body.enabled)
   return NextResponse.json({ enabled: body.enabled })
 }

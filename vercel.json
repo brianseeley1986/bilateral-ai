@@ -4,6 +4,7 @@
     { "path": "/api/cron/digest",       "schedule": "0 13 * * *" },
     { "path": "/api/cron/journalists",  "schedule": "0 9 * * *" },
     { "path": "/api/cron/local-daily",  "schedule": "0 10 * * *" },
-    { "path": "/api/cron/local-digest", "schedule": "0 12 * * 0" }
+    { "path": "/api/cron/local-digest", "schedule": "0 12 * * 0" },
+    { "path": "/api/cron/x-post",       "schedule": "0 13,17,22 * * *" }
   ]
 }

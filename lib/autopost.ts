@@ -1,16 +1,16 @@
 import type { CampaignPackage } from '@/types/debate'
+import { getIngestionState, setIngestionState } from '@/lib/db'
 
 export const AUTO_POST_ENABLED = false
+const KEY = 'autopost_enabled'
 
-const g = globalThis as unknown as { __bilateralAutoPostToggle?: boolean }
-if (g.__bilateralAutoPostToggle === undefined) g.__bilateralAutoPostToggle = false
-
-export function getAutoPostToggle(): boolean {
-  return g.__bilateralAutoPostToggle!
+export async function getAutoPostToggle(): Promise<boolean> {
+  const v = await getIngestionState(KEY)
+  return v === 'true'
 }
 
-export function setAutoPostToggle(val: boolean): void {
-  g.__bilateralAutoPostToggle = val
+export async function setAutoPostToggle(val: boolean): Promise<void> {
+  await setIngestionState(KEY, val ? 'true' : 'false')
 }
 
 export interface QueueResult {
