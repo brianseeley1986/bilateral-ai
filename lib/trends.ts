@@ -10,6 +10,9 @@ const RSS_FEEDS = [
   { url: 'https://feeds.reuters.com/Reuters/worldNews', name: 'Reuters World News', scope: 'international' },
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC World News', scope: 'international' },
   { url: 'https://feeds.npr.org/1001/rss.xml', name: 'NPR News', scope: 'national' },
+  { url: 'https://feeds.npr.org/1014/rss.xml', name: 'NPR Politics', scope: 'national' },
+  { url: 'https://feeds.reuters.com/reuters/politicsNews', name: 'Reuters Politics', scope: 'national' },
+  { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml', name: 'BBC UK Politics', scope: 'international' },
   // AP Top News removed 2026-04-14 — endpoint consistently failing with TypeError.
   // { url: 'https://rss.apnews.com/apf-topnews', name: 'AP Top News', scope: 'national' },
 ]
@@ -92,7 +95,7 @@ export async function fetchRSSFeeds(): Promise<TrendingStory[]> {
         const response = await fetchWithTimeout(feed.url)
         if (!response.ok) return
         const xml = await response.text()
-        for (const title of parseRSSItems(xml).slice(0, 5)) {
+        for (const title of parseRSSItems(xml).slice(0, 15)) {
           stories.push({ title, source: feed.name, scope: feed.scope, sourceType: 'rss' })
         }
       } catch (err) {
