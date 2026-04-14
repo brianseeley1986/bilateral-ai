@@ -239,6 +239,24 @@ export async function saveDebate(debate: any): Promise<void> {
   `
 }
 
+export async function getRelatedDebates(
+  excludeId: string,
+  limit: number = 4
+): Promise<Array<{ id: string; slug: string | null; headline: string }>> {
+  // Cheap "related": exclude self, prefer recent published debates with the
+  // same track. Keyword-similarity ranking would be better but this is enough
+  // to give Google a real internal link graph and readers a path to keep going.
+  const rows = await sql()`
+    SELECT id, slug, headline
+    FROM debates
+    WHERE publish_status = 'published'
+      AND id != ${excludeId}
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  ` as Array<{ id: string; slug: string | null; headline: string }>
+  return rows
+}
+
 export async function getDebate(idOrSlug: string): Promise<any | null> {
   // Accept either the numeric id or the SEO slug.
   const isNumericId = /^\d+$/.test(idOrSlug)

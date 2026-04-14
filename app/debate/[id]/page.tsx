@@ -1,4 +1,5 @@
 import { getDebate } from '@/lib/store'
+import { getRelatedDebates } from '@/lib/db'
 import { StoryExchange } from '@/components/StoryExchange'
 import { PendingDebateView } from '@/components/PendingDebateView'
 import { notFound } from 'next/navigation'
@@ -56,6 +57,7 @@ export async function generateMetadata(
 export default async function DebatePage({ params }: { params: { id: string } }) {
   const debate = await getDebate(params.id)
   if (!debate) notFound()
+  const related = await getRelatedDebates(debate.id || params.id, 4)
 
   // Structured data: NewsArticle + Question/Answer so Google and AI search
   // engines can identify both the news context and the two-sided debate.
@@ -175,6 +177,50 @@ export default async function DebatePage({ params }: { params: { id: string } })
         <PendingDebateView id={params.id} headline={debate.headline} />
       ) : (
         <StoryExchange debate={debate} />
+      )}
+
+      {related.length > 0 && (
+        <section
+          style={{
+            maxWidth: '720px',
+            margin: '64px auto 0',
+            paddingTop: '32px',
+            borderTop: '1px solid #E5E5DD',
+          }}
+        >
+          <h2
+            style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: '#6B6B6B',
+              margin: '0 0 20px',
+            }}
+          >
+            More debates
+          </h2>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {related.map((r) => (
+              <li key={r.id}>
+                <Link
+                  href={`/debate/${r.slug || r.id}`}
+                  style={{
+                    display: 'block',
+                    fontSize: '17px',
+                    fontWeight: 600,
+                    color: '#0A0A0A',
+                    textDecoration: 'none',
+                    lineHeight: 1.35,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {r.headline}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </main>
     </>
