@@ -14,29 +14,32 @@ function smartTrim(text: string, max: number): string {
   const clean = text.trim()
   if (clean.length <= max) return clean
 
-  // Collect complete sentences up to the cap. Period must be followed by
-  // whitespace + capital (or end of string) so decimals like "$13.4" don't
-  // register as sentence boundaries.
-  const sentences = clean.match(/[^.!?]+[.!?]+(?=\s+[A-Z"']|$)/g) || []
+  // Temporarily swap decimal points so they aren't mistaken for sentence ends.
+  const SENTINEL = '\uE000'
+  const safe = clean.replace(/(\d)\.(\d)/g, `$1${SENTINEL}$2`)
+  const restore = (s: string) => s.replace(new RegExp(SENTINEL, 'g'), '.')
+
+  // Collect complete sentences up to the cap.
+  const sentences = safe.match(/[^.!?]+[.!?]+/g) || []
   let built = ''
   for (const s of sentences) {
     const next = built + s
     if (next.length > max) break
     built = next
   }
-  if (built.length >= 40) return built.trim()
+  if (built.length >= 40) return restore(built).trim()
 
   // No complete sentence fits — fall back to a clause break.
-  const cut = clean.slice(0, max)
+  const cut = safe.slice(0, max)
   const clause = Math.max(cut.lastIndexOf(';'), cut.lastIndexOf(' — '), cut.lastIndexOf(', '))
-  if (clause > 60) return clean.slice(0, clause).trim() + '…'
+  if (clause > 60) return restore(safe.slice(0, clause)).trim() + '…'
 
   // Last resort: word boundary.
   const space = cut.lastIndexOf(' ')
-  return (space > 0 ? cut.slice(0, space) : cut).trim() + '…'
+  return restore(space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 180): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 140): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }
