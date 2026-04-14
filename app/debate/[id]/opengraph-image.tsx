@@ -91,7 +91,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             padding: '28px 48px 16px',
           }}
         >
-          <div style={{ width: '200px' }} />
+          <div style={{ width: '260px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F' }} />
@@ -121,19 +121,18 @@ export default async function Image({ params }: { params: { id: string } }) {
           </div>
           <div
             style={{
-              width: '200px',
+              width: '260px',
               display: 'flex',
               justifyContent: 'flex-end',
               alignItems: 'center',
-              paddingTop: '12px',
-              fontSize: '16px',
-              fontWeight: 600,
+              paddingTop: '14px',
+              fontSize: '22px',
+              fontWeight: 500,
               color: '#F5F5F0',
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
+              letterSpacing: '0.02em',
             }}
           >
-            Read →
+            Read the full debate  →
           </div>
         </div>
 
@@ -244,22 +243,6 @@ export default async function Image({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        {/* CTA footer — right-aligned so X's bottom-left title overlay doesn't cover it */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            padding: '20px 48px 28px',
-            background: '#0A0A0A',
-            fontSize: '22px',
-            fontWeight: 500,
-            color: '#F5F5F0',
-            letterSpacing: '0.02em',
-          }}
-        >
-          Read the full debate  →
-        </div>
       </div>
     ),
     { ...size },
