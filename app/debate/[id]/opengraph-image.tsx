@@ -17,9 +17,11 @@ function truncate(text: string, max: number) {
 function hookify(hook: string | undefined, fallback: string | undefined): string {
   if (hook && hook.trim()) return hook.trim()
   if (!fallback) return ''
+  // Prefer first full sentence; if none, allow a longer slice so the C/L
+  // panel can render real prose without mid-word truncation.
   const firstSentence = fallback.match(/^[^.!?]+[.!?]/)?.[0]
   const candidate = (firstSentence || fallback).trim()
-  return truncate(candidate, 110)
+  return truncate(candidate, 200)
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
@@ -132,10 +134,10 @@ export default async function Image({ params }: { params: { id: string } }) {
                   marginBottom: '14px',
                 }}
               >
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#C1121F' }} />
+                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
                 <span
                   style={{
-                    fontSize: '14px',
+                    fontSize: '20px',
                     fontWeight: 700,
                     color: '#F5F5F0',
                     letterSpacing: '0.14em',
@@ -144,8 +146,8 @@ export default async function Image({ params }: { params: { id: string } }) {
                   CONSERVATIVE
                 </span>
               </div>
-              <div style={{ fontSize: '22px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
-                {truncate(cLine, 95)}
+              <div style={{ fontSize: '28px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
+                {truncate(cLine, 180)}
               </div>
             </div>
             <div
@@ -165,10 +167,10 @@ export default async function Image({ params }: { params: { id: string } }) {
                   marginBottom: '14px',
                 }}
               >
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#1B4FBE' }} />
+                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
                 <span
                   style={{
-                    fontSize: '14px',
+                    fontSize: '20px',
                     fontWeight: 700,
                     color: '#F5F5F0',
                     letterSpacing: '0.14em',
@@ -177,8 +179,8 @@ export default async function Image({ params }: { params: { id: string } }) {
                   LIBERAL
                 </span>
               </div>
-              <div style={{ fontSize: '22px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
-                {truncate(lLine, 95)}
+              <div style={{ fontSize: '28px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
+                {truncate(lLine, 180)}
               </div>
             </div>
           </div>
