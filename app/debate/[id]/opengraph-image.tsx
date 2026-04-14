@@ -82,13 +82,32 @@ export default async function Image({ params }: { params: { id: string } }) {
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        {/* Small brand mark, top-left */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '22px 48px 0' }}>
-          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
-          <span style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', color: '#F5F5F0' }}>
-            bilateral
-          </span>
-          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
+        {/* Brand left, CTA right */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '22px 48px 0',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
+            <span style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', color: '#F5F5F0' }}>
+              bilateral
+            </span>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
+          </div>
+          <div
+            style={{
+              fontSize: '22px',
+              fontWeight: 600,
+              color: '#F5F5F0',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Read the full debate  →
+          </div>
         </div>
 
         {/* Headline — huge, dominates the card for mobile legibility */}
