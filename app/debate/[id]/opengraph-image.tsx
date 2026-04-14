@@ -108,8 +108,8 @@ export default async function Image({ params }: { params: { id: string } }) {
           </div>
           <div
             style={{
-              marginTop: '8px',
-              fontSize: '16px',
+              marginTop: '10px',
+              fontSize: '20px',
               color: '#9B9B9B',
               letterSpacing: '0.01em',
             }}
@@ -231,10 +231,10 @@ export default async function Image({ params }: { params: { id: string } }) {
             justifyContent: 'center',
             padding: '20px 60px 28px',
             background: '#0A0A0A',
-            fontSize: '18px',
+            fontSize: '24px',
             fontWeight: 500,
-            color: '#9B9B9B',
-            letterSpacing: '0.04em',
+            color: '#F5F5F0',
+            letterSpacing: '0.02em',
           }}
         >
           Read the full debate  →
