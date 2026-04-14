@@ -8,23 +8,35 @@ export const alt = 'Bilateral Debate'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-function truncate(text: string, max: number) {
-  if (text.length <= max) return text
-  const cut = text.slice(0, max)
-  const lastSpace = cut.lastIndexOf(' ')
-  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…'
+// Truncate at a sentence, then a clause (semicolon/em dash), then a space.
+// Avoids mid-word cuts, and always leaves the panel text feeling complete.
+function smartTrim(text: string, max: number): string {
+  const clean = text.trim()
+  if (clean.length <= max) return clean
+
+  // Collect complete sentences up to the cap.
+  const sentences = clean.match(/[^.!?]+[.!?]+/g) || []
+  let built = ''
+  for (const s of sentences) {
+    const next = built + s
+    if (next.length > max) break
+    built = next
+  }
+  if (built.length >= 40) return built.trim()
+
+  // No complete sentence fits — fall back to a clause break.
+  const cut = clean.slice(0, max)
+  const clause = Math.max(cut.lastIndexOf(';'), cut.lastIndexOf(' — '), cut.lastIndexOf(', '))
+  if (clause > 60) return clean.slice(0, clause).trim() + '…'
+
+  // Last resort: word boundary.
+  const space = cut.lastIndexOf(' ')
+  return (space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-// When a feed hook isn't available, extract the first sentence of the analytical line.
-// Produces hook-feeling text without mid-phrase truncation.
-function hookify(hook: string | undefined, fallback: string | undefined): string {
-  if (hook && hook.trim()) return hook.trim()
-  if (!fallback) return ''
-  // Prefer first full sentence; if none, allow a longer slice so the C/L
-  // panel can render real prose without mid-word truncation.
-  const firstSentence = fallback.match(/^[^.!?]+[.!?]/)?.[0]
-  const candidate = (firstSentence || fallback).trim()
-  return truncate(candidate, 200)
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 220): string {
+  const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
+  return smartTrim(source, max)
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
@@ -48,8 +60,8 @@ export default async function Image({ params }: { params: { id: string } }) {
         debate.exchanges?.[0]?.l ||
         debate.liberal?.argument ||
         ''
-      cLine = hookify(debate.conservativeFeedHook, cFallback)
-      lLine = hookify(debate.liberalFeedHook, lFallback)
+      cLine = pickLine(debate.conservativeFeedHook, cFallback)
+      lLine = pickLine(debate.liberalFeedHook, lFallback)
     }
   } catch (err) {
     console.error('OG image DB query failed for', params.id, err)
@@ -172,7 +184,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                 </span>
               </div>
               <div style={{ fontSize: '28px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
-                {truncate(cLine, 180)}
+                {cLine}
               </div>
             </div>
             <div
@@ -205,25 +217,24 @@ export default async function Image({ params }: { params: { id: string } }) {
                 </span>
               </div>
               <div style={{ fontSize: '28px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
-                {truncate(lLine, 180)}
+                {lLine}
               </div>
             </div>
           </div>
         )}
 
-        {/* CTA footer */}
+        {/* CTA footer — no border, same panel gradient tail so it reads as a continuation */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '18px 60px',
+            padding: '20px 60px 28px',
             background: '#0A0A0A',
-            borderTop: '1px solid #1f1f1f',
-            fontSize: '20px',
-            fontWeight: 600,
-            color: '#F5F5F0',
-            letterSpacing: '0.01em',
+            fontSize: '18px',
+            fontWeight: 500,
+            color: '#9B9B9B',
+            letterSpacing: '0.04em',
           }}
         >
           Read the full debate  →
