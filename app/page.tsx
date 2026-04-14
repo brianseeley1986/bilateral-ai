@@ -50,20 +50,19 @@ interface ZoneData {
 
 const ZONE_STYLES = {
   label: {
-    fontSize: '10px' as const,
+    fontSize: '22px' as const,
     fontWeight: 600,
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase' as const,
-    color: '#6B6B6B',
+    letterSpacing: '-0.01em',
+    color: '#0A0A0A',
     marginBottom: '4px',
-    paddingBottom: '8px',
-    borderBottom: '0.5px solid #e0e0e0',
   },
   subtitle: {
-    fontSize: '12px' as const,
-    color: '#9B9B9B',
-    marginBottom: '14px',
+    fontSize: '13px' as const,
+    color: '#6B6B6B',
+    marginBottom: '18px',
     marginTop: '0',
+    paddingBottom: '14px',
+    borderBottom: '0.5px solid #e0e0e0',
   },
   card: {
     padding: '16px 0',
@@ -108,7 +107,7 @@ function geoBadge(d: DebateCard): { label: string; bg: string; color: string } |
   return { label: 'NATIONAL', bg: '#f0fdf4', color: '#166534' }
 }
 
-function FeedCard({ debate, showScore }: { debate: DebateCard; showScore?: boolean }) {
+function FeedCard({ debate, showScore, hideBadge }: { debate: DebateCard; showScore?: boolean; hideBadge?: boolean }) {
   const [copied, setCopied] = useState(false)
   const isSatire = debate.track === 'satire'
 
@@ -116,7 +115,7 @@ function FeedCard({ debate, showScore }: { debate: DebateCard; showScore?: boole
   const cLine = debate.conservativeFeedHook || debate.conservativeOneLine || ''
   const lLine = debate.liberalFeedHook || debate.liberalOneLine || ''
 
-  const badge = geoBadge(debate)
+  const badge = hideBadge ? null : geoBadge(debate)
   const timestamp = showScore && debate.overallScore != null
     ? `${debate.overallScore.toFixed(1)} · ${timeAgo(debate.createdAt)}`
     : timeAgo(debate.createdAt)
@@ -259,6 +258,7 @@ function ZoneSection({
   count,
   emptyState,
   showScore,
+  hideBadge,
 }: {
   label: string
   subtitle: string
@@ -266,6 +266,7 @@ function ZoneSection({
   count: number
   emptyState?: string
   showScore?: boolean
+  hideBadge?: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   if (debates.length === 0 && !emptyState) return null
@@ -273,13 +274,13 @@ function ZoneSection({
   const visible = expanded ? debates : debates.slice(0, 1)
 
   return (
-    <div style={{ marginBottom: '36px' }}>
+    <div style={{ marginBottom: '56px' }}>
       <div style={ZONE_STYLES.label}>{label}</div>
       <div style={ZONE_STYLES.subtitle}>{subtitle}</div>
       {debates.length === 0 && emptyState ? (
         <div style={{ fontSize: '12px', color: '#9B9B9B', padding: '12px 0' }}>{emptyState}</div>
       ) : (
-        visible.map((d) => <FeedCard key={d.id} debate={d} showScore={showScore} />)
+        visible.map((d) => <FeedCard key={d.id} debate={d} showScore={showScore} hideBadge={hideBadge} />)
       )}
       {!expanded && extra > 0 && (
         <button
@@ -606,6 +607,7 @@ export default function Home() {
           debates={zones?.national ?? []}
           count={zones?.counts.national ?? 0}
           emptyState={!zones ? 'Loading…' : undefined}
+          hideBadge
         />
 
         {/* LOCAL & COMMUNITY */}
@@ -623,6 +625,7 @@ export default function Home() {
           emptyState={location.detected && zones?.local.length === 0
             ? 'No local debates yet for your area. Check back soon.'
             : undefined}
+          hideBadge
         />
 
         {/* STATE & REGIONAL */}
@@ -631,6 +634,7 @@ export default function Home() {
           subtitle="Your state in the national debate."
           debates={zones?.state ?? []}
           count={zones?.counts.state ?? 0}
+          hideBadge
         />
 
         {/* GLOBAL */}
@@ -639,6 +643,7 @@ export default function Home() {
           subtitle="The world beyond America's borders."
           debates={zones?.international ?? []}
           count={zones?.counts.international ?? 0}
+          hideBadge
         />
 
         {!hasContent && zones && (
