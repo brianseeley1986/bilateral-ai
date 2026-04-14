@@ -63,7 +63,7 @@ export async function postToX(
   // ?og= bumps whenever the OG card design changes. X caches the scraped OG per
   // exact URL, so a new query param forces a fresh scrape. Bump this on any
   // opengraph-image.tsx change that should be reflected in already-posted-style tweets.
-  const debateUrl = `${baseUrl}/debate/${debate.id}?og=9`
+  const debateUrl = `${baseUrl}/debate/${debate.id}?og=10`
 
   // Tweet text = just the URL. The OG card renders headline + C/L + brand,
   // so any additional text creates duplication when Twitter unfurls it.
