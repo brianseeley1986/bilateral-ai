@@ -54,16 +54,19 @@ export function HeadlineInput() {
       })
       clearInterval(interval)
       const data = await res.json()
-      if (res.status === 409 && data.existingDebateId) {
-        router.push(`/debate/${data.existingDebateId}`)
-        return
-      }
       if (!res.ok) {
-        setStatus('Pipeline failed. Check server logs and try again.')
+        setStatus('Pipeline failed. Try again.')
         setLoading(false)
         return
       }
-      router.push(`/debate/${data.id}`)
+      // Same redirect for all three cases: existing, duplicate, or newly-pending
+      const targetId = data.id || data.existingDebateId
+      if (targetId) {
+        router.push(`/debate/${targetId}`)
+        return
+      }
+      setStatus('Something went wrong. Try again.')
+      setLoading(false)
     } catch {
       clearInterval(interval)
       setStatus('Something went wrong. Try again.')

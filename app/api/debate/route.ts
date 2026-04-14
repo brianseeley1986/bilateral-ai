@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { runDebatePipeline } from '@/lib/pipeline'
 import { saveDebate, getDebate, getAllDebates } from '@/lib/store'
 import { checkDuplicate, registerStory } from '@/lib/deduplication'
+import { normalizeUserHeadline } from '@/lib/headline'
 import { neon } from '@neondatabase/serverless'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300
 
 // Shared card formatter
 function formatCard(d: any, viewCount?: number) {
@@ -39,39 +42,69 @@ function formatCard(d: any, viewCount?: number) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { headline } = await req.json()
-    if (!headline || typeof headline !== 'string') {
+    const { headline: rawHeadline } = await req.json()
+    if (!rawHeadline || typeof rawHeadline !== 'string') {
       return NextResponse.json({ error: 'headline required' }, { status: 400 })
     }
 
-    const dedup = await checkDuplicate(headline)
-    if (dedup.isDuplicate) {
-      // Silently redirect to existing debate — user never sees an error
-      if (dedup.existingDebateId) {
-        const existing = await getDebate(dedup.existingDebateId)
-        return NextResponse.json({
-          id: dedup.existingDebateId,
-          publishStatus: existing?.publishStatus || 'published',
-          qualityScore: existing?.qualityScore,
-          fromCache: true,
-        })
-      }
-      return NextResponse.json({ duplicate: true, reason: dedup.reason }, { status: 409 })
+    const headline = await normalizeUserHeadline(rawHeadline)
+
+    const dedup = await checkDuplicate(headline, { source: 'user_submitted' })
+    if (dedup.isDuplicate && dedup.existingDebateId) {
+      const existing = await getDebate(dedup.existingDebateId)
+      return NextResponse.json({
+        id: dedup.existingDebateId,
+        publishStatus: existing?.publishStatus || 'published',
+        qualityScore: existing?.qualityScore,
+        fromCache: true,
+      })
     }
 
-    try {
-      const debate = await runDebatePipeline(headline)
-      await saveDebate(debate)
-      const firstC = debate.exchanges?.[0]?.c || debate.conservative?.previewLine
-      registerStory(headline, debate.id, dedup.hash, firstC)
-      return NextResponse.json({
-        id: debate.id,
-        publishStatus: debate.publishStatus,
-        qualityScore: debate.qualityScore,
-      })
-    } catch (pipelineErr) {
-      throw pipelineErr
+    // Create a placeholder debate row immediately so the client can navigate to it.
+    const id = Date.now().toString()
+    const createdAt = new Date().toISOString()
+    const placeholder = {
+      id,
+      headline,
+      createdAt,
+      track: 'serious',
+      geographicScope: 'national',
+      suggestedHook: '',
+      sourceType: 'user_submitted',
+      context: { whatHappened: '', whyItMatters: '', keyFacts: [] },
+      timeline: [],
+      sources: [],
+      publishStatus: 'generating' as const,
     }
+    await saveDebate(placeholder as any)
+
+    // Run the real pipeline in the background; response returns immediately.
+    waitUntil(
+      (async () => {
+        try {
+          const debate = await runDebatePipeline(headline, 'user_submitted', undefined, undefined, {
+            id,
+            createdAt,
+            onPartial: async (partial) => {
+              // Persist intermediate state so the polling client sees content stream in.
+              await saveDebate({ ...partial, publishStatus: 'generating' })
+            },
+          })
+          const finalDebate = { ...debate, id, createdAt }
+          await saveDebate(finalDebate)
+          const firstC = finalDebate.exchanges?.[0]?.c || finalDebate.conservative?.previewLine
+          registerStory(headline, id, dedup.hash, firstC)
+        } catch (err) {
+          const msg = err instanceof Error ? `${err.message}\n${err.stack || ''}` : String(err)
+          console.error('Background pipeline failed for', id, msg)
+          try {
+            await saveDebate({ ...placeholder, publishStatus: 'failed', errorMessage: msg.slice(0, 2000) } as any)
+          } catch {}
+        }
+      })()
+    )
+
+    return NextResponse.json({ id, publishStatus: 'generating', pending: true })
   } catch (err) {
     console.error(err)
     return NextResponse.json({ error: 'Pipeline failed' }, { status: 500 })

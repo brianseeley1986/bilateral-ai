@@ -65,9 +65,9 @@ export function LatestView({ debates }: { debates: D[] }) {
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        {['all', 'national', 'international', 'state', 'local'].map((g) => (
+        {['all', 'international', 'national', 'state', 'local'].map((g) => (
           <Pill key={g} active={geo === g} onClick={() => setGeo(g)}>
-            {g === 'all' ? 'All geography' : g.charAt(0).toUpperCase() + g.slice(1)}
+            {g === 'all' ? 'All geography' : g === 'international' ? 'Global' : g.charAt(0).toUpperCase() + g.slice(1)}
           </Pill>
         ))}
       </div>

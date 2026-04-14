@@ -51,6 +51,7 @@ export async function initDb() {
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_track_idx ON debates (track)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_publish_status_idx ON debates (publish_status)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_state_idx ON debates (state)` } catch {}
+  try { await sql()`CREATE UNIQUE INDEX IF NOT EXISTS debates_headline_unique_idx ON debates (LOWER(TRIM(headline)))` } catch {}
 
   await sql()`
     CREATE TABLE IF NOT EXISTS journalists (

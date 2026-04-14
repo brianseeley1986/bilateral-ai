@@ -1,8 +1,11 @@
 import { getDebate } from '@/lib/store'
 import { StoryExchange } from '@/components/StoryExchange'
+import { PendingDebateView } from '@/components/PendingDebateView'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const debate = await getDebate(params.id)
@@ -93,7 +96,13 @@ export default async function DebatePage({ params }: { params: { id: string } })
           </Link>
         </div>
       </header>
-      <StoryExchange debate={debate} />
+      {(debate.publishStatus === 'generating' ||
+        debate.publishStatus === 'failed' ||
+        (!debate.exchanges && !debate.satireExchanges)) ? (
+        <PendingDebateView id={params.id} headline={debate.headline} />
+      ) : (
+        <StoryExchange debate={debate} />
+      )}
     </main>
   )
 }

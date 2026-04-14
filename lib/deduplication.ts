@@ -2,21 +2,49 @@ import crypto from 'crypto'
 import Anthropic from '@anthropic-ai/sdk'
 import { neon } from '@neondatabase/serverless'
 
+function aggressiveNormalize(s: string): string {
+  return s
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 async function hasRecentDebateInDB(
   headline: string
 ): Promise<{ found: boolean; id?: string }> {
   const sql = neon(process.env.DATABASE_URL!)
   const normalizedHeadline = headline.toLowerCase().trim()
+  const aggressiveNew = aggressiveNormalize(headline)
 
-  // Exact-ish headline match in last 48 hours
+  // Exact-ish headline match in last 48 hours — ignore failed/generating rows so retries work
   const rows = await sql`
     SELECT id, headline FROM debates
     WHERE created_at > NOW() - INTERVAL '48 hours'
     AND LOWER(TRIM(headline)) = ${normalizedHeadline}
+    AND publish_status NOT IN ('failed', 'generating')
     LIMIT 1
   `
   if (rows.length > 0) {
     return { found: true, id: rows[0].id }
+  }
+
+  // Aggressive normalized match — catches smart quotes, punctuation variation, unicode differences
+  try {
+    const recent = await sql`
+      SELECT id, headline FROM debates
+      WHERE created_at > NOW() - INTERVAL '48 hours'
+      AND publish_status NOT IN ('failed', 'generating')
+    `
+    for (const row of recent) {
+      if (aggressiveNormalize(row.headline as string) === aggressiveNew) {
+        return { found: true, id: row.id as string }
+      }
+    }
+  } catch (e) {
+    console.error('aggressive-normalize dedup failed:', e)
   }
 
   // Similarity match using pg_trgm
@@ -43,10 +71,45 @@ async function getRecentHeadlines(): Promise<string[]> {
   const rows = await sql`
     SELECT headline FROM debates
     WHERE created_at > NOW() - INTERVAL '24 hours'
+    AND publish_status NOT IN ('failed', 'generating')
     ORDER BY created_at DESC
     LIMIT 30
   `
   return rows.map((r) => r.headline as string)
+}
+
+interface HeadlineRecord {
+  id: string
+  headline: string
+}
+
+// For user-submitted dedup: wider window on debates plus the whole library.
+async function getCandidateHeadlinesForUserSubmission(): Promise<HeadlineRecord[]> {
+  const sql = neon(process.env.DATABASE_URL!)
+  const out: HeadlineRecord[] = []
+  try {
+    const recent = await sql`
+      SELECT id, headline FROM debates
+      WHERE publish_status = 'published'
+      AND created_at > NOW() - INTERVAL '7 days'
+      ORDER BY created_at DESC
+      LIMIT 60
+    `
+    for (const r of recent) out.push({ id: r.id as string, headline: r.headline as string })
+  } catch (e) {
+    console.error('user-dedup: recent debates query failed', e)
+  }
+  try {
+    const lib = await sql`
+      SELECT debate_id AS id, question AS headline FROM library_questions
+      WHERE status = 'published' AND debate_id IS NOT NULL
+      LIMIT 200
+    `
+    for (const r of lib) if (r.id) out.push({ id: r.id as string, headline: r.headline as string })
+  } catch (e) {
+    console.error('user-dedup: library query failed', e)
+  }
+  return out
 }
 
 interface StoryRecord {
@@ -176,7 +239,10 @@ export interface DeduplicationResult {
   hash: string
 }
 
-export async function checkDuplicate(headline: string): Promise<DeduplicationResult> {
+export async function checkDuplicate(
+  headline: string,
+  opts: { source?: 'cron' | 'user_submitted' } = {}
+): Promise<DeduplicationResult> {
   const normalized = normalizeText(headline)
   const hash = generateHash(normalized)
   const WINDOW_HOURS = 24
@@ -238,20 +304,42 @@ export async function checkDuplicate(headline: string): Promise<DeduplicationRes
     }
   }
 
-  // Layer 3: semantic check via Claude — cross-instance, pulls headlines from DB
+  // Layer 3: semantic check via Claude — cross-instance, pulls headlines from DB.
+  // For user-submitted headlines we also include the last 7 days and the library.
   try {
-    const recentFromDB = await getRecentHeadlines()
-    if (recentFromDB.length > 0) {
-      const recordsWithContext = recentFromDB.map((h) => ({ headline: h }))
-      const semantic = await checkSemanticSimilarity(headline, recordsWithContext)
-
-      if (semantic.isDuplicate) {
-        return {
-          isDuplicate: true,
-          reason: 'semantic_similarity',
-          existingDebateId: undefined,
-          similarityScore: semantic.confidence,
-          hash,
+    if (opts.source === 'user_submitted') {
+      const candidates = await getCandidateHeadlinesForUserSubmission()
+      if (candidates.length > 0) {
+        const semantic = await checkSemanticSimilarity(
+          headline,
+          candidates.map((c) => ({ headline: c.headline }))
+        )
+        if (semantic.isDuplicate) {
+          const matched = candidates.find(
+            (c) => c.headline === semantic.matchedHeadline
+          )
+          return {
+            isDuplicate: true,
+            reason: 'semantic_similarity',
+            existingDebateId: matched?.id,
+            similarityScore: semantic.confidence,
+            hash,
+          }
+        }
+      }
+    } else {
+      const recentFromDB = await getRecentHeadlines()
+      if (recentFromDB.length > 0) {
+        const recordsWithContext = recentFromDB.map((h) => ({ headline: h }))
+        const semantic = await checkSemanticSimilarity(headline, recordsWithContext)
+        if (semantic.isDuplicate) {
+          return {
+            isDuplicate: true,
+            reason: 'semantic_similarity',
+            existingDebateId: undefined,
+            similarityScore: semantic.confidence,
+            hash,
+          }
         }
       }
     }

@@ -97,32 +97,50 @@ function useSpeech(segments: SpeechSegment[]) {
 }
 
 function ListenBar({ speech }: { speech: ReturnType<typeof useSpeech> }) {
-  const pill: React.CSSProperties = {
-    fontSize: '11px',
+  const primary: React.CSSProperties = {
+    fontSize: '13px',
+    fontWeight: 500,
+    color: '#F5F5F0',
+    background: '#0A0A0A',
+    border: 'none',
+    padding: '9px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+  }
+  const secondary: React.CSSProperties = {
+    fontSize: '12px',
     color: '#6B6B6B',
-    border: '0.5px solid #e0e0e0',
-    padding: '4px 10px',
-    borderRadius: '20px',
+    border: '0.5px solid #d0d0d0',
+    padding: '7px 12px',
+    borderRadius: '8px',
     background: 'transparent',
     cursor: 'pointer',
     fontFamily: 'inherit',
   }
   if (speech.status === 'idle') {
-    return <button onClick={speech.play} style={pill}>▶ Listen</button>
+    return (
+      <button onClick={speech.play} style={primary} aria-label="Listen to the debate">
+        <span aria-hidden>▶</span> Listen to the debate
+      </button>
+    )
   }
   const side = speech.activeSegment?.side
   const sideColor = side === 'c' ? '#C1121F' : side === 'l' ? '#1B4FBE' : '#9B9B9B'
   const sideLabel = side === 'c' ? 'Conservative' : side === 'l' ? 'Liberal' : ''
   return (
-    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-      {sideLabel && (
-        <span style={{ fontSize: '11px', color: sideColor, fontWeight: 600 }}>● {sideLabel}</span>
-      )}
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
       {speech.status === 'playing'
-        ? <button onClick={speech.pause} style={pill}>⏸ Pause</button>
-        : <button onClick={speech.resume} style={pill}>▶ Resume</button>
+        ? <button onClick={speech.pause} style={primary}><span aria-hidden>⏸</span> Pause</button>
+        : <button onClick={speech.resume} style={primary}><span aria-hidden>▶</span> Resume</button>
       }
-      <button onClick={speech.stop} style={pill}>✕</button>
+      <button onClick={speech.stop} style={secondary}>Stop</button>
+      {sideLabel && (
+        <span style={{ fontSize: '12px', color: sideColor, fontWeight: 600 }}>● {sideLabel} speaking</span>
+      )}
     </div>
   )
 }
@@ -198,7 +216,7 @@ function ShareRow({ id, headline }: { id: string; headline: string }) {
         rel="noopener noreferrer"
         style={pillStyle}
       >
-        Share on X
+        X
       </a>
       <a
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
@@ -312,12 +330,12 @@ export function StoryExchange({
         <p style={{ fontSize: '14px', lineHeight: 1.65, color: '#6B6B6B', margin: '0 0 20px' }}>
           {debate.context?.whatHappened}
         </p>
-        <ShareRow id={debate.id} headline={debate.headline} />
         {!isSatire && (
-          <div style={{ marginTop: '-12px', marginBottom: '24px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <ListenBar speech={speech} />
           </div>
         )}
+        <ShareRow id={debate.id} headline={debate.headline} />
       </div>
 
       {/* Faction notice — shown when a significant internal split exists */}

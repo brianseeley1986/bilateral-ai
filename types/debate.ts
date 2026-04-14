@@ -1,7 +1,7 @@
 export type EvidenceTag = 'hist' | 'data' | 'prec' | 'econ'
 export type Track = 'serious' | 'local' | 'satire'
 export type GeoScope = 'local' | 'state' | 'national' | 'international'
-export type PublishStatus = 'published' | 'review' | 'held'
+export type PublishStatus = 'published' | 'review' | 'held' | 'generating' | 'failed'
 
 export interface Evidence {
   tag: EvidenceTag
@@ -137,4 +137,6 @@ export interface DebateOutput {
   conservativeFeedHook?: string | null
   liberalFeedHook?: string | null
   leadingSide?: 'conservative' | 'liberal' | null
+  city?: string
+  state?: string
 }
