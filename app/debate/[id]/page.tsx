@@ -52,7 +52,63 @@ export default async function DebatePage({ params }: { params: { id: string } })
   const debate = await getDebate(params.id)
   if (!debate) notFound()
 
+  // Structured data: NewsArticle + Question/Answer so Google and AI search
+  // engines can identify both the news context and the two-sided debate.
+  const url = `https://bilateral.news/debate/${params.id}`
+  const datePublished = debate.createdAt || new Date().toISOString()
+  const cAnswer: string =
+    debate.conservative?.argument || debate.conservative?.previewLine || debate.exchanges?.[0]?.c || ''
+  const lAnswer: string =
+    debate.liberal?.argument || debate.liberal?.previewLine || debate.exchanges?.[0]?.l || ''
+  const description: string =
+    debate.suggestedHook || debate.context?.whatHappened || ''
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: debate.headline,
+      description,
+      datePublished,
+      dateModified: datePublished,
+      url,
+      image: `${url}/opengraph-image`,
+      author: { '@type': 'Organization', name: 'Bilateral', url: 'https://bilateral.news' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Bilateral',
+        url: 'https://bilateral.news',
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Question',
+      name: debate.headline,
+      text: debate.headline,
+      url,
+      answerCount: (cAnswer ? 1 : 0) + (lAnswer ? 1 : 0),
+      suggestedAnswer: [
+        cAnswer && {
+          '@type': 'Answer',
+          text: cAnswer,
+          author: { '@type': 'Person', name: 'Conservative analyst' },
+        },
+        lAnswer && {
+          '@type': 'Answer',
+          text: lAnswer,
+          author: { '@type': 'Person', name: 'Liberal analyst' },
+        },
+      ].filter(Boolean),
+    },
+  ]
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <main
       style={{
         minHeight: '100vh',
@@ -116,5 +172,6 @@ export default async function DebatePage({ params }: { params: { id: string } })
         <StoryExchange debate={debate} />
       )}
     </main>
+    </>
   )
 }
