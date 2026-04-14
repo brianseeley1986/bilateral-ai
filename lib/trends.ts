@@ -10,7 +10,8 @@ const RSS_FEEDS = [
   { url: 'https://feeds.reuters.com/Reuters/worldNews', name: 'Reuters World News', scope: 'international' },
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC World News', scope: 'international' },
   { url: 'https://feeds.npr.org/1001/rss.xml', name: 'NPR News', scope: 'national' },
-  { url: 'https://rss.apnews.com/apf-topnews', name: 'AP Top News', scope: 'national' },
+  // AP Top News removed 2026-04-14 — endpoint consistently failing with TypeError.
+  // { url: 'https://rss.apnews.com/apf-topnews', name: 'AP Top News', scope: 'national' },
 ]
 
 function buildGoogleNewsLocalUrl(city: string, state: string): string {
