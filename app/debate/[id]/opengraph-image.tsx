@@ -34,7 +34,7 @@ function smartTrim(text: string, max: number): string {
   return (space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 170): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 150): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }
@@ -184,7 +184,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                   CONSERVATIVE
                 </span>
               </div>
-              <div style={{ fontSize: '28px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
+              <div style={{ fontSize: '24px', color: '#F5F5F0', lineHeight: 1.4, fontWeight: 500 }}>
                 {cLine}
               </div>
             </div>
@@ -218,7 +218,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                   LIBERAL
                 </span>
               </div>
-              <div style={{ fontSize: '28px', color: '#F5F5F0', lineHeight: 1.35, fontWeight: 500 }}>
+              <div style={{ fontSize: '24px', color: '#F5F5F0', lineHeight: 1.4, fontWeight: 500 }}>
                 {lLine}
               </div>
             </div>
