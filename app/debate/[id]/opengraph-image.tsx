@@ -34,7 +34,7 @@ function smartTrim(text: string, max: number): string {
   return (space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 240): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 110): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }
@@ -67,8 +67,8 @@ export default async function Image({ params }: { params: { id: string } }) {
     console.error('OG image DB query failed for', params.id, err)
   }
 
-  const displayHeadline = headline.length > 120 ? headline.slice(0, 117) + '…' : headline
-  const headlineSize = displayHeadline.length > 90 ? 44 : displayHeadline.length > 60 ? 52 : 60
+  const displayHeadline = headline.length > 110 ? headline.slice(0, 107) + '…' : headline
+  const headlineSize = displayHeadline.length > 85 ? 58 : displayHeadline.length > 55 ? 68 : 78
 
   return new ImageResponse(
     (
@@ -82,161 +82,106 @@ export default async function Image({ params }: { params: { id: string } }) {
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        {/* Top row — brand centered, CTA on the right (safe from X's bottom overlay) */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            padding: '20px 48px 10px',
-          }}
-        >
-          <div style={{ width: '260px' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F' }} />
-              <span
-                style={{
-                  fontSize: '30px',
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  color: '#F5F5F0',
-                }}
-              >
-                bilateral
-              </span>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#1B4FBE' }} />
-            </div>
-            <div
-              style={{
-                marginTop: '10px',
-                fontSize: '22px',
-                fontWeight: 500,
-                color: '#D4D4CA',
-                letterSpacing: '0.01em',
-              }}
-            >
-              The argument behind every headline.
-            </div>
-          </div>
-          <div
-            style={{
-              width: '260px',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              paddingTop: '14px',
-              fontSize: '22px',
-              fontWeight: 500,
-              color: '#F5F5F0',
-              letterSpacing: '0.02em',
-            }}
-          >
-            Read the full debate  →
-          </div>
+        {/* Small brand mark, top-left */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '22px 48px 0' }}>
+          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
+          <span style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', color: '#F5F5F0' }}>
+            bilateral
+          </span>
+          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
         </div>
 
-        {/* Headline */}
+        {/* Headline — huge, dominates the card for mobile legibility */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 80px',
+            padding: '18px 60px 14px',
             flex: cLine && lLine ? '0 0 auto' : 1,
-            marginBottom: cLine && lLine ? '20px' : 0,
           }}
         >
           <div
             style={{
               fontSize: `${headlineSize}px`,
-              fontWeight: 700,
+              fontWeight: 800,
               color: '#F5F5F0',
-              lineHeight: 1.15,
-              letterSpacing: '-0.025em',
+              lineHeight: 1.08,
+              letterSpacing: '-0.03em',
               textAlign: 'center',
-              maxWidth: '1040px',
+              maxWidth: '1080px',
             }}
           >
             {displayHeadline}
           </div>
         </div>
 
-        {/* Split C/L panel */}
+        {/* Split C/L panel with center VS divider */}
         {(cLine || lLine) && (
-          <div
-            style={{
-              display: 'flex',
-              flex: 1,
-              borderTop: '1px solid #1f1f1f',
-            }}
-          >
+          <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
             <div
               style={{
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '24px 40px 90px',
+                padding: '22px 50px 80px 48px',
                 overflow: 'hidden',
-                background: 'linear-gradient(180deg, rgba(193,18,31,0.18) 0%, rgba(193,18,31,0.05) 100%)',
-                borderRight: '1px solid #1f1f1f',
+                background: 'linear-gradient(180deg, rgba(193,18,31,0.35) 0%, rgba(193,18,31,0.08) 100%)',
               }}
             >
-              <div
+              <span
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '14px',
+                  fontSize: '22px',
+                  fontWeight: 800,
+                  color: '#FF6B78',
+                  letterSpacing: '0.18em',
+                  marginBottom: '12px',
                 }}
               >
-                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: 700,
-                    color: '#F5F5F0',
-                    letterSpacing: '0.14em',
-                  }}
-                >
-                  CONSERVATIVE
-                </span>
-              </div>
-              <div style={{ fontSize: '24px', color: '#F5F5F0', lineHeight: 1.4, fontWeight: 500 }}>
+                CONSERVATIVE
+              </span>
+              <div style={{ fontSize: '32px', color: '#F5F5F0', lineHeight: 1.28, fontWeight: 600 }}>
                 {cLine}
               </div>
+            </div>
+            {/* VS divider */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 72,
+                background: '#0A0A0A',
+                fontSize: '28px',
+                fontWeight: 900,
+                color: '#F5F5F0',
+                letterSpacing: '0.05em',
+              }}
+            >
+              VS
             </div>
             <div
               style={{
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '24px 40px 90px',
+                padding: '22px 48px 80px 50px',
                 overflow: 'hidden',
-                background: 'linear-gradient(180deg, rgba(27,79,190,0.18) 0%, rgba(27,79,190,0.05) 100%)',
+                background: 'linear-gradient(180deg, rgba(27,79,190,0.35) 0%, rgba(27,79,190,0.08) 100%)',
               }}
             >
-              <div
+              <span
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '14px',
+                  fontSize: '22px',
+                  fontWeight: 800,
+                  color: '#6B93FF',
+                  letterSpacing: '0.18em',
+                  marginBottom: '12px',
                 }}
               >
-                <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
-                <span
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: 700,
-                    color: '#F5F5F0',
-                    letterSpacing: '0.14em',
-                  }}
-                >
-                  LIBERAL
-                </span>
-              </div>
-              <div style={{ fontSize: '24px', color: '#F5F5F0', lineHeight: 1.4, fontWeight: 500 }}>
+                LIBERAL
+              </span>
+              <div style={{ fontSize: '32px', color: '#F5F5F0', lineHeight: 1.28, fontWeight: 600 }}>
                 {lLine}
               </div>
             </div>
