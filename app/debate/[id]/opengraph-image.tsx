@@ -71,24 +71,36 @@ export default async function Image({ params }: { params: { id: string } }) {
         <div
           style={{
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '14px',
-            padding: '36px 60px 24px',
+            padding: '32px 60px 20px',
           }}
         >
-          <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F' }} />
-          <span
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F' }} />
+            <span
+              style={{
+                fontSize: '30px',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: '#F5F5F0',
+              }}
+            >
+              bilateral
+            </span>
+            <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#1B4FBE' }} />
+          </div>
+          <div
             style={{
-              fontSize: '30px',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              color: '#F5F5F0',
+              marginTop: '8px',
+              fontSize: '16px',
+              color: '#9B9B9B',
+              letterSpacing: '0.01em',
             }}
           >
-            bilateral
-          </span>
-          <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#1B4FBE' }} />
+            The argument behind every headline.
+          </div>
         </div>
 
         {/* Headline */}
