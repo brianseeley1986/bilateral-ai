@@ -62,30 +62,9 @@ export async function postToX(
   const baseUrl = 'https://bilateral.news'
   const debateUrl = `${baseUrl}/debate/${debate.id}`
 
-  const cLine = debate.conservativeFeedHook || debate.conservative?.previewLine || ''
-  const lLine = debate.liberalFeedHook || debate.liberal?.previewLine || ''
-
-  const cleanHeadline = debate.headline
-    .replace(/\s[-–|]\s[A-Z][^-–|]{2,50}$/, '')
-    .trim()
-
-  function truncateAtWord(s: string, max: number): string {
-    if (s.length <= max) return s
-    const cut = s.slice(0, max)
-    const lastSpace = cut.lastIndexOf(' ')
-    return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…'
-  }
-
-  // Always include both C and L lines. Calculate remaining space and split it.
-  const suffix = '\n\n' + debateUrl
-  const fixed = cleanHeadline.length + '\n\nC: '.length + '\nL: '.length + suffix.length
-  const remaining = 280 - fixed
-  const half = Math.floor(remaining / 2)
-
-  const cTruncated = truncateAtWord(cLine, half + Math.max(0, half - lLine.length))
-  const lTruncated = truncateAtWord(lLine, remaining - cTruncated.length)
-
-  const tweetText = cleanHeadline + '\n\nC: ' + cTruncated + '\nL: ' + lTruncated + suffix
+  // Tweet text = just the URL. The OG card renders headline + C/L + brand,
+  // so any additional text creates duplication when Twitter unfurls it.
+  const tweetText = debateUrl
 
   if (mockMode) {
     console.log('MOCK X POST:\n', tweetText)
