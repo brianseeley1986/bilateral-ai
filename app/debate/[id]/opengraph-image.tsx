@@ -34,7 +34,7 @@ function smartTrim(text: string, max: number): string {
   return (space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 220): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 170): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }
@@ -158,7 +158,8 @@ export default async function Image({ params }: { params: { id: string } }) {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '28px 40px',
+                padding: '28px 40px 20px',
+                overflow: 'hidden',
                 background: 'linear-gradient(180deg, rgba(193,18,31,0.18) 0%, rgba(193,18,31,0.05) 100%)',
                 borderRight: '1px solid #1f1f1f',
               }}
@@ -192,7 +193,8 @@ export default async function Image({ params }: { params: { id: string } }) {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '28px 40px',
+                padding: '28px 40px 20px',
+                overflow: 'hidden',
                 background: 'linear-gradient(180deg, rgba(27,79,190,0.18) 0%, rgba(27,79,190,0.05) 100%)',
               }}
             >
