@@ -1,8 +1,9 @@
 import { ImageResponse } from 'next/og'
-import { getDebate } from '@/lib/store'
+import { neon } from '@neondatabase/serverless'
 
-// Node runtime so we can query Postgres directly (faster + more reliable than self-fetch).
-export const runtime = 'nodejs'
+// Edge runtime keeps cold starts tight — Twitter's scraper times out on slow OG renders.
+// Neon's serverless driver works at the edge, so we query the DB directly.
+export const runtime = 'edge'
 export const alt = 'Bilateral Debate'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
@@ -32,7 +33,9 @@ export default async function Image({ params }: { params: { id: string } }) {
   let lLine = ''
 
   try {
-    const debate: any = await getDebate(params.id)
+    const sql = neon(process.env.DATABASE_URL!)
+    const rows = await sql`SELECT data FROM debates WHERE id = ${params.id} LIMIT 1`
+    const debate: any = rows[0]?.data
     if (debate) {
       headline = debate.headline || headline
       const cFallback =
@@ -49,7 +52,7 @@ export default async function Image({ params }: { params: { id: string } }) {
       lLine = hookify(debate.liberalFeedHook, lFallback)
     }
   } catch (err) {
-    console.error('OG image fetch failed for', params.id, err)
+    console.error('OG image DB query failed for', params.id, err)
   }
 
   const displayHeadline = headline.length > 120 ? headline.slice(0, 117) + '…' : headline
