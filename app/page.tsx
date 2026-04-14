@@ -600,13 +600,31 @@ export default function Home() {
           />
         )}
 
+        {/* GLOBAL */}
+        <ZoneSection
+          label="Global"
+          subtitle="The arguments shaping the world."
+          debates={zones?.international ?? []}
+          count={zones?.counts.international ?? 0}
+          emptyState={!zones ? 'Loading…' : undefined}
+          hideBadge
+        />
+
         {/* NATIONAL */}
         <ZoneSection
           label="National"
           subtitle="The biggest fights in America today."
           debates={zones?.national ?? []}
           count={zones?.counts.national ?? 0}
-          emptyState={!zones ? 'Loading…' : undefined}
+          hideBadge
+        />
+
+        {/* STATE & REGIONAL */}
+        <ZoneSection
+          label="State & Regional"
+          subtitle="Your state in the national debate."
+          debates={zones?.state ?? []}
+          count={zones?.counts.state ?? 0}
           hideBadge
         />
 
@@ -625,24 +643,6 @@ export default function Home() {
           emptyState={location.detected && zones?.local.length === 0
             ? 'No local debates yet for your area. Check back soon.'
             : undefined}
-          hideBadge
-        />
-
-        {/* STATE & REGIONAL */}
-        <ZoneSection
-          label="State & Regional"
-          subtitle="Your state in the national debate."
-          debates={zones?.state ?? []}
-          count={zones?.counts.state ?? 0}
-          hideBadge
-        />
-
-        {/* GLOBAL */}
-        <ZoneSection
-          label="Global"
-          subtitle="The world beyond America's borders."
-          debates={zones?.international ?? []}
-          count={zones?.counts.international ?? 0}
           hideBadge
         />
 
