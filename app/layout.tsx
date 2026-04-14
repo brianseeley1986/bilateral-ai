@@ -36,6 +36,9 @@ export const metadata: Metadata = {
       "msvalidate.01": "CC095FB95C12E266D735DF6ADED69649",
     },
   },
+  alternates: {
+    types: { 'application/rss+xml': '/feed.xml' },
+  },
 };
 
 export default function RootLayout({
