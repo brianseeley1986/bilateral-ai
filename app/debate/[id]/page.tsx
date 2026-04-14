@@ -7,7 +7,9 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata(
+  { params, searchParams }: { params: { id: string }; searchParams: { og?: string } }
+): Promise<Metadata> {
   const debate = await getDebate(params.id)
   if (!debate) return {}
   const rawDescription =
@@ -17,7 +19,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const description =
     rawDescription.length > 160 ? rawDescription.slice(0, 157) + '...' : rawDescription
 
-  const imageUrl = `https://bilateral.news/debate/${params.id}/opengraph-image`
+  // Propagate the ?og= cache-buster from the page URL into the image URL so X's
+  // image cache (keyed by image URL) refetches when the design changes.
+  const og = searchParams?.og
+  const imageUrl = `https://bilateral.news/debate/${params.id}/opengraph-image${og ? `?og=${encodeURIComponent(og)}` : ''}`
 
   return {
     title: `${debate.headline} — Bilateral`,
