@@ -360,9 +360,9 @@ export async function ingestTrendingStories(maxStories = 5): Promise<{
       }
 
       const score = await scoreStoryForDebate(story.title)
-      if (!score.shouldDebate || score.confidence < 0.7) {
+      if (!score.shouldDebate || score.confidence < 0.55) {
         stats.skipped++
-        console.log(`Skipped (${score.reason}): ${story.title}`)
+        console.log(`Skipped (${score.reason}, conf=${score.confidence}): ${story.title}`)
         continue
       }
 
