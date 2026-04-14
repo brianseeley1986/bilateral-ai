@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og'
+import { getDebate } from '@/lib/store'
 
-export const runtime = 'edge'
+// Node runtime so we can query Postgres directly (faster + more reliable than self-fetch).
+export const runtime = 'nodejs'
 export const alt = 'Bilateral Debate'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
@@ -25,22 +27,20 @@ function hookify(hook: string | undefined, fallback: string | undefined): string
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://bilateral.news'
   let headline = 'The argument behind every headline.'
   let cLine = ''
   let lLine = ''
 
   try {
-    const res = await fetch(`${baseUrl}/api/debate?id=${params.id}`, {
-      next: { revalidate: 3600 },
-    })
-    if (res.ok) {
-      const debate = await res.json()
+    const debate: any = await getDebate(params.id)
+    if (debate) {
       headline = debate.headline || headline
       cLine = hookify(debate.conservativeFeedHook, debate.conservative?.previewLine)
       lLine = hookify(debate.liberalFeedHook, debate.liberal?.previewLine)
     }
-  } catch {}
+  } catch (err) {
+    console.error('OG image fetch failed for', params.id, err)
+  }
 
   const displayHeadline = headline.length > 120 ? headline.slice(0, 117) + '…' : headline
   const headlineSize = displayHeadline.length > 90 ? 44 : displayHeadline.length > 60 ? 52 : 60
