@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     },
     twitter: {
       card: 'summary_large_image',
-      title: ' ',
+      title: debate.headline,
       description,
       site: '@bilateralnews',
       images: [imageUrl],
