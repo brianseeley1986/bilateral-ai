@@ -88,7 +88,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            padding: '28px 48px 16px',
+            padding: '20px 48px 10px',
           }}
         >
           <div style={{ width: '260px' }} />
@@ -144,7 +144,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             justifyContent: 'center',
             padding: '0 80px',
             flex: cLine && lLine ? '0 0 auto' : 1,
-            marginBottom: cLine && lLine ? '32px' : 0,
+            marginBottom: cLine && lLine ? '20px' : 0,
           }}
         >
           <div
@@ -176,7 +176,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '28px 40px 20px',
+                padding: '24px 40px 90px',
                 overflow: 'hidden',
                 background: 'linear-gradient(180deg, rgba(193,18,31,0.18) 0%, rgba(193,18,31,0.05) 100%)',
                 borderRight: '1px solid #1f1f1f',
@@ -211,7 +211,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '28px 40px 20px',
+                padding: '24px 40px 90px',
                 overflow: 'hidden',
                 background: 'linear-gradient(180deg, rgba(27,79,190,0.18) 0%, rgba(27,79,190,0.05) 100%)',
               }}
