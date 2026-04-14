@@ -28,8 +28,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       type: 'article',
     },
     twitter: {
+      // The OG image itself renders the headline prominently. Using the brand here
+      // so Twitter's auto-overlay bar reinforces identity instead of duplicating the headline.
       card: 'summary_large_image',
-      title: debate.headline,
+      title: 'Bilateral — the argument behind every headline.',
       description,
       site: '@bilateralnews',
     },
