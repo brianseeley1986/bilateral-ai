@@ -17,6 +17,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const description =
     rawDescription.length > 160 ? rawDescription.slice(0, 157) + '...' : rawDescription
 
+  const imageUrl = `https://bilateral.news/debate/${params.id}/opengraph-image`
+
   return {
     title: `${debate.headline} — Bilateral`,
     description,
@@ -26,14 +28,14 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       url: `https://bilateral.news/debate/${params.id}`,
       siteName: 'Bilateral',
       type: 'article',
+      images: [{ url: imageUrl, width: 1200, height: 630 }],
     },
     twitter: {
-      // Everything visible lives inside the OG image. Minimal title so Twitter
-      // doesn't overlay a black bar on top of the card.
       card: 'summary_large_image',
       title: ' ',
       description,
       site: '@bilateralnews',
+      images: [imageUrl],
     },
   }
 }
