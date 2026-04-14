@@ -35,8 +35,18 @@ export default async function Image({ params }: { params: { id: string } }) {
     const debate: any = await getDebate(params.id)
     if (debate) {
       headline = debate.headline || headline
-      cLine = hookify(debate.conservativeFeedHook, debate.conservative?.previewLine)
-      lLine = hookify(debate.liberalFeedHook, debate.liberal?.previewLine)
+      const cFallback =
+        debate.conservative?.previewLine ||
+        debate.exchanges?.[0]?.c ||
+        debate.conservative?.argument ||
+        ''
+      const lFallback =
+        debate.liberal?.previewLine ||
+        debate.exchanges?.[0]?.l ||
+        debate.liberal?.argument ||
+        ''
+      cLine = hookify(debate.conservativeFeedHook, cFallback)
+      lLine = hookify(debate.liberalFeedHook, lFallback)
     }
   } catch (err) {
     console.error('OG image fetch failed for', params.id, err)
