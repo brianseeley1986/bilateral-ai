@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendLocalWeeklyDigests } from '@/lib/local-digest'
-import { acquireIngestionLock, releaseIngestionLock } from '@/lib/db'
+import { acquireIngestionLock, releaseIngestionLock, getIngestionState } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -9,6 +9,10 @@ export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if ((await getIngestionState('local_ingest_enabled')) !== 'true') {
+    return NextResponse.json({ skipped: true, reason: 'local ingest disabled' })
   }
 
   const locked = await acquireIngestionLock('local-digest', 15)

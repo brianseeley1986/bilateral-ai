@@ -628,7 +628,8 @@ export async function markAsPostedToX(debateId: string, tweetId?: string): Promi
 }
 
 export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
-  return await sql()`
+  // Prefer fresh news debates (< 24h, quality ≥ 8.0, not library)
+  const fresh = await sql()`
     SELECT id, headline, data, created_at, view_count
     FROM debates
     WHERE publish_status = 'published'
@@ -636,6 +637,18 @@ export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
       AND (data->>'sourceType' IS NULL OR data->>'sourceType' != 'library')
       AND (data->'qualityScore'->>'overallScore')::float >= 8.0
       AND created_at > NOW() - INTERVAL '24 hours'
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `
+  if (fresh.length > 0) return fresh
+
+  // Fall back to evergreen library debates if no fresh news is ready
+  return await sql()`
+    SELECT id, headline, data, created_at, view_count
+    FROM debates
+    WHERE publish_status = 'published'
+      AND x_posted_at IS NULL
+      AND data->>'sourceType' = 'library'
     ORDER BY created_at DESC
     LIMIT ${limit}
   `

@@ -5,6 +5,9 @@ import { saveDebate, getDebate, getAllDebates } from '@/lib/store'
 import { checkDuplicate, registerStory } from '@/lib/deduplication'
 import { normalizeUserHeadline } from '@/lib/headline'
 import { neon } from '@neondatabase/serverless'
+import { getIngestionState, setIngestionState } from '@/lib/db'
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -47,6 +50,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'headline required' }, { status: 400 })
     }
 
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      req.headers.get('x-real-ip') ||
+      'unknown'
+    const rateKey = `submit:${ip}`
+    const last = await getIngestionState(rateKey)
+    if (last) {
+      const lastMs = parseInt(last, 10)
+      if (!Number.isNaN(lastMs) && Date.now() - lastMs < ONE_DAY_MS) {
+        return NextResponse.json(
+          { error: 'One story per day. Come back tomorrow.' },
+          { status: 429 },
+        )
+      }
+    }
+
     const headline = await normalizeUserHeadline(rawHeadline)
 
     const dedup = await checkDuplicate(headline, { source: 'user_submitted' })
@@ -77,6 +96,7 @@ export async function POST(req: NextRequest) {
       publishStatus: 'generating' as const,
     }
     await saveDebate(placeholder as any)
+    await setIngestionState(rateKey, String(Date.now()))
 
     // Run the real pipeline in the background; response returns immediately.
     waitUntil(
