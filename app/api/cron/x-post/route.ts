@@ -14,7 +14,12 @@ export async function GET(req: NextRequest) {
 
   const enabled = await getAutoPostToggle()
   if (!enabled) {
-    return NextResponse.json({ success: true, skipped: true, reason: 'auto-post disabled' })
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: 'auto-post disabled',
+      v: 'cache-fix-1',
+    })
   }
 
   const mockMode = process.env.X_MOCK_MODE === 'true'
