@@ -1,5 +1,6 @@
 import { getDebate } from '@/lib/store'
 import { getRelatedDebates } from '@/lib/db'
+import { PERSONAS } from '@/lib/personas'
 import { StoryExchange } from '@/components/StoryExchange'
 import { PendingDebateView } from '@/components/PendingDebateView'
 import { notFound } from 'next/navigation'
@@ -80,7 +81,32 @@ export default async function DebatePage({ params }: { params: { id: string } })
       dateModified: datePublished,
       url,
       image: `${url}/opengraph-image`,
-      author: { '@type': 'Organization', name: 'Bilateral', url: 'https://bilateral.news' },
+      author: [
+        {
+          '@type': 'Person',
+          name: PERSONAS.researcher.name,
+          jobTitle: PERSONAS.researcher.title,
+          url: `https://bilateral.news/authors/${PERSONAS.researcher.slug}`,
+        },
+        {
+          '@type': 'Person',
+          name: PERSONAS.conservative.name,
+          jobTitle: PERSONAS.conservative.title,
+          url: `https://bilateral.news/authors/${PERSONAS.conservative.slug}`,
+        },
+        {
+          '@type': 'Person',
+          name: PERSONAS.liberal.name,
+          jobTitle: PERSONAS.liberal.title,
+          url: `https://bilateral.news/authors/${PERSONAS.liberal.slug}`,
+        },
+        {
+          '@type': 'Person',
+          name: PERSONAS.arbiter.name,
+          jobTitle: PERSONAS.arbiter.title,
+          url: `https://bilateral.news/authors/${PERSONAS.arbiter.slug}`,
+        },
+      ],
       publisher: {
         '@type': 'Organization',
         name: 'Bilateral',
@@ -99,12 +125,20 @@ export default async function DebatePage({ params }: { params: { id: string } })
         cAnswer && {
           '@type': 'Answer',
           text: cAnswer,
-          author: { '@type': 'Person', name: 'Conservative analyst' },
+          author: {
+            '@type': 'Person',
+            name: PERSONAS.conservative.name,
+            url: `https://bilateral.news/authors/${PERSONAS.conservative.slug}`,
+          },
         },
         lAnswer && {
           '@type': 'Answer',
           text: lAnswer,
-          author: { '@type': 'Person', name: 'Liberal analyst' },
+          author: {
+            '@type': 'Person',
+            name: PERSONAS.liberal.name,
+            url: `https://bilateral.news/authors/${PERSONAS.liberal.slug}`,
+          },
         },
       ].filter(Boolean),
     },
@@ -182,7 +216,57 @@ export default async function DebatePage({ params }: { params: { id: string } })
         (!debate.exchanges && !debate.satireExchanges)) ? (
         <PendingDebateView id={params.id} headline={debate.headline} />
       ) : (
-        <StoryExchange debate={debate} />
+        <>
+          <div
+            style={{
+              maxWidth: 720,
+              margin: '0 auto 24px',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: 14,
+              fontSize: 13,
+              color: '#6B6B6B',
+            }}
+          >
+            <span style={{ fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              By
+            </span>
+            {[PERSONAS.researcher, PERSONAS.conservative, PERSONAS.liberal, PERSONAS.arbiter].map((p, i) => (
+              <Link
+                key={p.slug}
+                href={`/authors/${p.slug}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: '#0A0A0A',
+                  textDecoration: 'none',
+                }}
+              >
+                <span
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    background: p.color,
+                    color: '#F5F5F0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 9,
+                    fontWeight: 700,
+                  }}
+                >
+                  {p.initials}
+                </span>
+                <span style={{ fontWeight: 600 }}>{p.name}</span>
+                {i < 3 && <span style={{ color: '#C4C4BE', marginLeft: 4 }}>·</span>}
+              </Link>
+            ))}
+          </div>
+          <StoryExchange debate={debate} />
+        </>
       )}
 
       {related.length > 0 && (

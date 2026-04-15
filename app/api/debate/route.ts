@@ -4,6 +4,7 @@ import { runDebatePipeline } from '@/lib/pipeline'
 import { saveDebate, getDebate, getAllDebates } from '@/lib/store'
 import { checkDuplicate, registerStory } from '@/lib/deduplication'
 import { normalizeUserHeadline } from '@/lib/headline'
+import { runContentGate } from '@/lib/contentGate'
 import { neon } from '@neondatabase/serverless'
 import { getIngestionState, setIngestionState } from '@/lib/db'
 
@@ -67,6 +68,15 @@ export async function POST(req: NextRequest) {
     }
 
     const headline = await normalizeUserHeadline(rawHeadline)
+
+    // Content gate: hard-block out-of-bounds framings, then verify the topic is
+    // covered by mainstream press (current news OR documented historical
+    // conspiracies). Protects against defamation, harassment, and conspiracy
+    // junk that has zero established sourcing.
+    const gate = await runContentGate(headline)
+    if (!gate.allow) {
+      return NextResponse.json({ error: gate.userMessage }, { status: 422 })
+    }
 
     const dedup = await checkDuplicate(headline, { source: 'user_submitted' })
     if (dedup.isDuplicate && dedup.existingDebateId) {
