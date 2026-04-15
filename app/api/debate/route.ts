@@ -246,7 +246,7 @@ export async function GET(req: NextRequest) {
       sql`SELECT data, view_count FROM debates
           WHERE publish_status='published'
           AND data->>'sourceType'='user_submitted'
-          ORDER BY created_at DESC LIMIT 50`,
+          ORDER BY created_at DESC LIMIT 5`,
       // user submitted count
       sql`SELECT COUNT(*)::int AS n FROM debates
           WHERE publish_status='published'
