@@ -13,8 +13,14 @@ export async function GET(req: NextRequest) {
   }
 
   const enabled = await getAutoPostToggle()
+  const dbHost = (process.env.DATABASE_URL || '').match(/@([^/]+)/)?.[1] || 'unknown'
   if (!enabled) {
-    return NextResponse.json({ success: true, skipped: true, reason: 'auto-post disabled' })
+    return NextResponse.json({
+      success: true,
+      skipped: true,
+      reason: 'auto-post disabled',
+      debug: { enabled, dbHost },
+    })
   }
 
   const mockMode = process.env.X_MOCK_MODE === 'true'
