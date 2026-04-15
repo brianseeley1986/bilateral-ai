@@ -13,12 +13,21 @@ export async function GET(req: NextRequest) {
   }
 
   const enabled = await getAutoPostToggle()
+  // Diag: also call getIngestionState directly so we see what the helper saw
+  const { getIngestionState } = await import('@/lib/db')
+  let helperRaw: string | null = null
+  let helperErr: string | null = null
+  try {
+    helperRaw = await getIngestionState('autopost_enabled')
+  } catch (e) {
+    helperErr = String(e)
+  }
   if (!enabled) {
     return NextResponse.json({
       success: true,
       skipped: true,
       reason: 'auto-post disabled',
-      v: 'cache-fix-1',
+      diag: { enabled, helperRaw, helperErr, helperType: typeof helperRaw },
     })
   }
 
