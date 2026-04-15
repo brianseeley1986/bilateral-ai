@@ -13,8 +13,9 @@ export async function GET(req: NextRequest) {
   }
 
   const enabled = await getAutoPostToggle()
-  // Diag: also call getIngestionState directly so we see what the helper saw
+  // Deep diag: try the same query through helper and through fresh inline neon
   const { getIngestionState } = await import('@/lib/db')
+  const { neon: neonInline } = await import('@neondatabase/serverless')
   let helperRaw: string | null = null
   let helperErr: string | null = null
   try {
@@ -22,12 +23,23 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     helperErr = String(e)
   }
+  let inlineRaw: any = null
+  let inlineErr: string | null = null
+  try {
+    const inline = neonInline(process.env.DATABASE_URL!)
+    const r = await inline`SELECT value FROM ingestion_state WHERE key = 'autopost_enabled'`
+    inlineRaw = (r as any)[0]?.value ?? null
+  } catch (e) {
+    inlineErr = String(e)
+  }
+  const dbUrlPresent = !!process.env.DATABASE_URL
+  const dbUrlLen = (process.env.DATABASE_URL || '').length
   if (!enabled) {
     return NextResponse.json({
       success: true,
       skipped: true,
       reason: 'auto-post disabled',
-      diag: { enabled, helperRaw, helperErr, helperType: typeof helperRaw },
+      diag: { enabled, helperRaw, helperErr, inlineRaw, inlineErr, dbUrlPresent, dbUrlLen },
     })
   }
 
