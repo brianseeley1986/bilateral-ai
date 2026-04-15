@@ -1,9 +1,11 @@
-import { neon, type NeonQueryFunction } from '@neondatabase/serverless'
+import { neon } from '@neondatabase/serverless'
 
-let _sql: NeonQueryFunction<false, false> | null = null
+// Don't cache the connection at module level — Vercel cron and other contexts
+// can load this module before DATABASE_URL is populated, leaving a permanently
+// broken cached client whose errors get swallowed downstream. Creating a fresh
+// neon() per call is cheap because the underlying transport is HTTP.
 function sql() {
-  if (!_sql) _sql = neon(process.env.DATABASE_URL!)
-  return _sql
+  return neon(process.env.DATABASE_URL!)
 }
 
 export async function initDb() {
