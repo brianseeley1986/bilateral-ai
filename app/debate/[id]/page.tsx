@@ -157,6 +157,12 @@ export default async function DebatePage({ params }: { params: { id: string } })
           <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
         </Link>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <Link
+            href="/topics"
+            style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}
+          >
+            Topics
+          </Link>
           <a
             href="/about"
             style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}

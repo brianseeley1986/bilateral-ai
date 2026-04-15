@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { neon } from '@neondatabase/serverless'
+import { TOPICS } from '@/lib/topics'
 
 export const revalidate = 3600
 
@@ -9,6 +10,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: base, lastModified: new Date(), changeFrequency: 'hourly', priority: 1.0 },
     { url: `${base}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${base}/topics`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.7 },
+    ...TOPICS.map((t) => ({
+      url: `${base}/topics/${t.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.7,
+    })),
   ]
 
   try {
