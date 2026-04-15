@@ -140,9 +140,11 @@ export async function initDb() {
 
 export async function getIngestionState(key: string): Promise<string | null> {
   try {
-    const rows = await sql()`SELECT value FROM ingestion_state WHERE key = ${key}`
+    const direct = neon(process.env.DATABASE_URL!)
+    const rows = await direct`SELECT value FROM ingestion_state WHERE key = ${key}`
     return rows[0]?.value || null
-  } catch {
+  } catch (e) {
+    console.error('getIngestionState failed for', key, e)
     return null
   }
 }
