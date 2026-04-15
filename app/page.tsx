@@ -255,7 +255,6 @@ function ZoneSection({
   label,
   subtitle,
   debates,
-  count,
   emptyState,
   showScore,
   hideBadge,
@@ -263,14 +262,15 @@ function ZoneSection({
   label: string
   subtitle: string
   debates: DebateCard[]
-  count: number
+  count?: number
   emptyState?: string
   showScore?: boolean
   hideBadge?: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   if (debates.length === 0 && !emptyState) return null
-  const extra = count - 1
+  // Label reflects what the dropdown will actually reveal, not archive totals.
+  const extra = Math.max(0, debates.length - 1)
   const visible = expanded ? debates : debates.slice(0, 1)
 
   return (
