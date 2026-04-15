@@ -51,7 +51,10 @@ export default async function Image({ params }: { params: { id: string } }) {
 
   try {
     const sql = neon(process.env.DATABASE_URL!)
-    const rows = await sql`SELECT data FROM debates WHERE id = ${params.id} LIMIT 1`
+    const isNumericId = /^\d+$/.test(params.id)
+    const rows = isNumericId
+      ? await sql`SELECT data FROM debates WHERE id = ${params.id} LIMIT 1`
+      : await sql`SELECT data FROM debates WHERE slug = ${params.id} LIMIT 1`
     const debate: any = rows[0]?.data
     if (debate) {
       headline = debate.headline || headline
