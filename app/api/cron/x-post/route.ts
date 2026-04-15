@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { neon } from '@neondatabase/serverless'
 import { getUnpostedDebates, markAsPostedToX } from '@/lib/db'
 import { postToX } from '@/lib/social'
-import { getAutoPostToggle } from '@/lib/autopost'
+
+async function readAutoPostToggle(): Promise<boolean> {
+  try {
+    const sql = neon(process.env.DATABASE_URL!)
+    const rows = (await sql`SELECT value FROM ingestion_state WHERE key = 'autopost_enabled'`) as Array<{ value: string }>
+    return rows[0]?.value === 'true'
+  } catch (e) {
+    console.error('readAutoPostToggle failed', e)
+    return false
+  }
+}
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -12,35 +23,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const enabled = await getAutoPostToggle()
-  // Deep diag: try the same query through helper and through fresh inline neon
-  const { getIngestionState } = await import('@/lib/db')
-  const { neon: neonInline } = await import('@neondatabase/serverless')
-  let helperRaw: string | null = null
-  let helperErr: string | null = null
-  try {
-    helperRaw = await getIngestionState('autopost_enabled')
-  } catch (e) {
-    helperErr = String(e)
-  }
-  let inlineRaw: any = null
-  let inlineErr: string | null = null
-  try {
-    const inline = neonInline(process.env.DATABASE_URL!)
-    const r = await inline`SELECT value FROM ingestion_state WHERE key = 'autopost_enabled'`
-    inlineRaw = (r as any)[0]?.value ?? null
-  } catch (e) {
-    inlineErr = String(e)
-  }
-  const dbUrlPresent = !!process.env.DATABASE_URL
-  const dbUrlLen = (process.env.DATABASE_URL || '').length
+  const enabled = await readAutoPostToggle()
   if (!enabled) {
-    return NextResponse.json({
-      success: true,
-      skipped: true,
-      reason: 'auto-post disabled',
-      diag: { enabled, helperRaw, helperErr, inlineRaw, inlineErr, dbUrlPresent, dbUrlLen },
-    })
+    return NextResponse.json({ success: true, skipped: true, reason: 'auto-post disabled' })
   }
 
   const mockMode = process.env.X_MOCK_MODE === 'true'
