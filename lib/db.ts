@@ -139,9 +139,15 @@ export async function initDb() {
 // ---- INGESTION STATE ----
 
 export async function getIngestionState(key: string): Promise<string | null> {
+  // Use the .query() form instead of tagged-template — the tagged-template
+  // version was returning null in cron context (suspect bundler/parameter
+  // mismatch). .query() with explicit params is bulletproof.
   try {
     const direct = neon(process.env.DATABASE_URL!)
-    const rows = await direct`SELECT value FROM ingestion_state WHERE key = ${key}`
+    const rows = (await direct.query(
+      'SELECT value FROM ingestion_state WHERE key = $1',
+      [key]
+    )) as Array<{ value: string }>
     return rows[0]?.value || null
   } catch (e) {
     console.error('getIngestionState failed for', key, e)
