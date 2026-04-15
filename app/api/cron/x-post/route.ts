@@ -14,12 +14,23 @@ export async function GET(req: NextRequest) {
 
   const enabled = await getAutoPostToggle()
   const dbHost = (process.env.DATABASE_URL || '').match(/@([^/]+)/)?.[1] || 'unknown'
+  // Direct DB read to compare with the helper
+  let directRead: any = null
+  let directError: string | null = null
+  try {
+    const { neon } = await import('@neondatabase/serverless')
+    const direct = neon(process.env.DATABASE_URL!)
+    const rows = await direct`SELECT value FROM ingestion_state WHERE key = 'autopost_enabled'`
+    directRead = (rows as any)[0]?.value ?? null
+  } catch (e) {
+    directError = String(e)
+  }
   if (!enabled) {
     return NextResponse.json({
       success: true,
       skipped: true,
       reason: 'auto-post disabled',
-      debug: { enabled, dbHost },
+      debug: { enabled, dbHost, directRead, directError },
     })
   }
 
