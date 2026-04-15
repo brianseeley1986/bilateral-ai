@@ -142,6 +142,24 @@ export default async function DebatePage({ params }: { params: { id: string } })
         },
       ].filter(Boolean),
     },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Bilateral', item: 'https://bilateral.news' },
+        { '@type': 'ListItem', position: 2, name: 'Debates', item: 'https://bilateral.news/topics' },
+        { '@type': 'ListItem', position: 3, name: debate.headline, item: url },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      url,
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['h1', '.speakable-summary'],
+      },
+    },
   ]
 
   return (

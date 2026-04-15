@@ -77,7 +77,8 @@ export default async function TopicPage({ params }: { params: { slug: string } }
         <h1 style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.025em', margin: '6px 0 12px' }}>
           {topic.title}
         </h1>
-        <p style={{ fontSize: 17, color: '#444', margin: '0 0 36px', lineHeight: 1.5 }}>{topic.description}</p>
+        <p style={{ fontSize: 18, color: '#1a1a1a', margin: '0 0 16px', lineHeight: 1.55, fontWeight: 500 }}>{topic.description}</p>
+        <p style={{ fontSize: 16, color: '#333', margin: '0 0 36px', lineHeight: 1.6 }}>{topic.intro}</p>
 
         <h2 style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#6B6B6B', margin: '0 0 18px' }}>
           {rows.length} {rows.length === 1 ? 'debate' : 'debates'}
