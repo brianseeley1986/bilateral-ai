@@ -399,8 +399,8 @@ Calculate overall score as weighted average:
 - Depth beyond headlines: 15%
 
 Classify the result:
-- 8.0 and above: PUBLISH — high quality, publish immediately
-- 6.0 to 7.9: REVIEW — acceptable but flag for human review
+- 7.5 and above: PUBLISH — solid quality, publish immediately
+- 6.0 to 7.49: REVIEW — acceptable but flag for human review
 - Below 6.0: HOLD — too weak to publish, needs regeneration
 
 Return ONLY valid JSON:
