@@ -160,50 +160,89 @@ function LibraryFeaturedSection() {
             background: '#FFFFFF',
             borderRadius: 14,
             boxShadow: '0 1px 2px rgba(10,10,10,0.04)',
-            padding: '22px 24px',
+            overflow: 'hidden',
             marginBottom: 16,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                padding: '3px 9px',
-                borderRadius: 6,
-                background: '#F0F4FF',
-                color: '#1E3A8A',
-                letterSpacing: '0.05em',
-              }}
-            >
-              LIBRARY
-            </span>
-            <span
-              style={{
-                fontSize: 11,
-                color: '#9B9B96',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontWeight: 600,
-              }}
-            >
-              {item.category?.replace(/_/g, ' ')}
-            </span>
-          </div>
+          {/* Cover — red/blue split with the question as hero serif */}
           <div
             style={{
-              fontFamily: 'var(--font-serif)',
-              fontSize: 22,
-              fontWeight: 500,
-              lineHeight: 1.25,
-              letterSpacing: '-0.02em',
-              color: '#0A0A0A',
-              marginBottom: 14,
+              position: 'relative',
+              width: '100%',
+              aspectRatio: '1200 / 630',
+              background:
+                'linear-gradient(90deg, #C1121F 0%, #C1121F 50%, #1B4FBE 50%, #1B4FBE 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '32px 36px 56px',
             }}
           >
-            {cleanHeadline(item.question)}
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 32,
+                fontWeight: 500,
+                color: '#F5F5F0',
+                textAlign: 'center',
+                lineHeight: 1.12,
+                letterSpacing: '-0.025em',
+                textShadow: '0 2px 18px rgba(0,0,0,0.22)',
+                maxWidth: 560,
+              }}
+            >
+              {cleanHeadline(item.question)}
+            </div>
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 14,
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 0,
+                fontFamily: 'var(--font-serif)',
+                fontSize: 18,
+                fontWeight: 700,
+                color: '#F5F5F0',
+                letterSpacing: '-0.035em',
+                lineHeight: 1,
+              }}
+            >
+              <span>bi</span>
+              <span>lateral</span>
+            </div>
           </div>
-          {(item.conservativePreview || item.liberalPreview) && (
+
+          <div style={{ padding: '20px 24px 22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: '3px 9px',
+                  borderRadius: 6,
+                  background: '#F0F4FF',
+                  color: '#1E3A8A',
+                  letterSpacing: '0.05em',
+                }}
+              >
+                LIBRARY
+              </span>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: '#9B9B96',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontWeight: 600,
+                }}
+              >
+                {item.category?.replace(/_/g, ' ')}
+              </span>
+            </div>
+            {(item.conservativePreview || item.liberalPreview) && (
             <div
               style={{
                 display: 'grid',
@@ -262,17 +301,18 @@ function LibraryFeaturedSection() {
               </div>
             </div>
           )}
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              color: '#0A0A0A',
-              textAlign: 'right',
-            }}
-          >
-            Read the debate →
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                color: '#0A0A0A',
+                textAlign: 'right',
+              }}
+            >
+              Read the debate →
+            </div>
           </div>
         </a>
       ))}
