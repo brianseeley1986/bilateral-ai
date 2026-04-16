@@ -94,7 +94,7 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
         style={{
           width: '100%',
           aspectRatio: '1200 / 630',
-          background: `center/cover no-repeat url(${debate.imageUrl || `/debate/${debate.id}/opengraph-image?v=3`})`,
+          background: `center/cover no-repeat url(${debate.imageUrl || `/debate/${debate.id}/opengraph-image?v=4`})`,
           borderBottom: `1px solid ${colors.line}`,
         }}
         role="img"

@@ -15,18 +15,16 @@ const PAPER = '#F5F5F0'
 
 export default async function Image({ params }: { params: { id: string } }) {
   let headline = 'The argument behind every headline.'
-  let scope: string | null = null
 
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const isNumericId = /^\d+$/.test(params.id)
     const rows = isNumericId
-      ? await sql`SELECT data, geographic_scope FROM debates WHERE id = ${params.id} LIMIT 1`
-      : await sql`SELECT data, geographic_scope FROM debates WHERE slug = ${params.id} LIMIT 1`
+      ? await sql`SELECT data FROM debates WHERE id = ${params.id} LIMIT 1`
+      : await sql`SELECT data FROM debates WHERE slug = ${params.id} LIMIT 1`
     const debate: any = rows[0]?.data
     if (debate) {
       headline = debate.headline || headline
-      scope = rows[0]?.geographic_scope || debate.geographicScope || null
     }
   } catch (err) {
     console.error('OG image DB query failed for', params.id, err)
@@ -45,16 +43,6 @@ export default async function Image({ params }: { params: { id: string } }) {
     frauncesMedium && { name: 'Fraunces', data: frauncesMedium, weight: 500 as const, style: 'normal' as const },
     frauncesBold && { name: 'Fraunces', data: frauncesBold, weight: 700 as const, style: 'normal' as const },
   ].filter(Boolean) as Array<{ name: string; data: ArrayBuffer; weight: 500 | 700; style: 'normal' }>
-
-  const scopeLabel = scope
-    ? scope === 'local'
-      ? 'LOCAL'
-      : scope === 'state'
-        ? 'STATE'
-        : scope === 'international'
-          ? 'WORLD'
-          : 'NATIONAL'
-    : null
 
   return new ImageResponse(
     (
@@ -124,24 +112,6 @@ export default async function Image({ params }: { params: { id: string } }) {
           <span style={{ display: 'flex' }}>lateral</span>
         </div>
 
-        {scopeLabel && (
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 24,
-              display: 'flex',
-              justifyContent: 'center',
-              fontSize: 12,
-              fontWeight: 700,
-              color: 'rgba(245,245,240,0.7)',
-              letterSpacing: '0.22em',
-            }}
-          >
-            {scopeLabel}
-          </div>
-        )}
       </div>
     ),
     {
