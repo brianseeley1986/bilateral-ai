@@ -54,8 +54,14 @@ export function generateLocalDigestHTML(params: {
     ${cityState ? `<span style="font-size: 11px; color: #9B9B9B; margin-left: 8px;">${escapeHtml(cityState)}</span>` : ''}
   </div>
   <div style="font-size: 17px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; color: #0A0A0A;">${headline}</div>
-  ${cLine ? `<div style="font-size: 13px; color: #C1121F; margin-bottom: 4px; line-height: 1.6;"><strong>C</strong> ${escapeHtml(cLine)}</div>` : ''}
-  ${lLine ? `<div style="font-size: 13px; color: #1B4FBE; margin-bottom: 12px; line-height: 1.6;"><strong>L</strong> ${escapeHtml(lLine)}</div>` : ''}
+  ${cLine ? `<div style="background: #fff0f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
+    <div style="font-size: 9px; font-weight: 700; color: #C1121F; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;">Conservative</div>
+    <div style="font-size: 13px; line-height: 1.5; color: #1a1a1a;">${escapeHtml(cLine)}</div>
+  </div>` : ''}
+  ${lLine ? `<div style="background: #f0f4ff; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+    <div style="font-size: 9px; font-weight: 700; color: #1B4FBE; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;">Liberal</div>
+    <div style="font-size: 13px; line-height: 1.5; color: #1a1a1a;">${escapeHtml(lLine)}</div>
+  </div>` : ''}
   <a href="${link}" style="font-size: 12px; color: #0A0A0A; text-decoration: none; font-weight: 500;">Read the debate →</a>
 </div>`
     })

@@ -641,10 +641,47 @@ export default function Home() {
           debates={zones?.local ?? []}
           count={zones?.counts.local ?? 0}
           emptyState={location.detected && zones?.local.length === 0
-            ? 'No local debates yet for your area. Check back soon.'
+            ? 'No local debates yet for your area.'
             : undefined}
           hideBadge
         />
+
+        <div
+          style={{
+            marginTop: '-24px',
+            marginBottom: '56px',
+            padding: '18px 20px',
+            border: '0.5px solid #d0d0d0',
+            borderRadius: '10px',
+            background: '#ffffff',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#0A0A0A', letterSpacing: '-0.01em' }}>
+            Get local debates for {location.city || location.state || 'your area'}
+          </div>
+          <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.5 }}>
+            Subscribe and pick &quot;Local&quot; — Bilateral will generate debates on city-council, school-board, and county-level stories in your area, delivered in your daily digest.
+          </div>
+          <a
+            href="#subscribe"
+            style={{
+              marginTop: 4,
+              alignSelf: 'flex-start',
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#F5F5F0',
+              background: '#0A0A0A',
+              padding: '8px 14px',
+              borderRadius: 6,
+              textDecoration: 'none',
+            }}
+          >
+            Subscribe for local →
+          </a>
+        </div>
 
         {!hasContent && zones && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#6B6B6B', fontSize: '14px' }}>
