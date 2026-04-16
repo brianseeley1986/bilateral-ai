@@ -48,6 +48,18 @@ export async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<R
   }
 }
 
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&amp;/g, '&')
+}
+
 function extractTextContent(xml: string, tag: string): string {
   const patterns = [
     new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([^\\]]+)\\]\\]></${tag}>`, 'i'),
@@ -55,7 +67,7 @@ function extractTextContent(xml: string, tag: string): string {
   ]
   for (const pattern of patterns) {
     const match = xml.match(pattern)
-    if (match?.[1]) return match[1].trim()
+    if (match?.[1]) return decodeHtmlEntities(match[1].trim())
   }
   return ''
 }
