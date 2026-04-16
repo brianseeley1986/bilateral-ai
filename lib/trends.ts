@@ -16,6 +16,13 @@ const RSS_FEEDS = [
   { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',               name: 'BBC World',       scope: 'international' },
   { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml',            name: 'BBC UK Politics', scope: 'international' },
   { url: 'https://www.theguardian.com/world/rss',                     name: 'Guardian World',  scope: 'international' },
+  // Right-leaning outlets for source balance — the Researcher briefings were
+  // drawing overwhelmingly from center-left outlets, so the Conservative
+  // analyst was building cases from opposing framings instead of direct ones.
+  { url: 'https://feeds.a.dj.com/rss/RSSPolitics.xml',                name: 'WSJ Politics',           scope: 'national' },
+  { url: 'https://www.washingtonexaminer.com/section/news/rss.xml',   name: 'Washington Examiner',    scope: 'national' },
+  { url: 'https://www.nationalreview.com/feed/',                      name: 'National Review',        scope: 'national' },
+  { url: 'https://www.realclearpolitics.com/index.xml',               name: 'RealClearPolitics',      scope: 'national' },
 ]
 
 function buildGoogleNewsLocalUrl(city: string, state: string): string {

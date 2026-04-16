@@ -226,8 +226,18 @@ export default function AboutPage() {
               Where stories come from
             </h2>
             <p style={{ fontSize: '15px', lineHeight: 1.8, color: '#0A0A0A' }}>
-              Bilateral automatically ingests stories from Google Trends, Reuters, BBC, NPR, AP, and a curated registry of 25 independent journalists — including writers from ProPublica, Platformer, The Dispatch, Tangle News, Stateline, and Reason. Stories update every two hours.
+              Bilateral automatically ingests stories from a deliberately cross-spectrum lineup of established outlets. Stories update every two hours.
             </p>
+            <div style={{ fontSize: '14px', lineHeight: 1.7, color: '#0A0A0A', marginTop: '16px' }}>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>Center / wire</div>
+              <div style={{ color: '#444' }}>Reuters Top News · Reuters World News</div>
+              <div style={{ fontWeight: 700, margin: '14px 0 6px' }}>Center-left to left</div>
+              <div style={{ color: '#444' }}>NPR Politics · New York Times Politics · Politico · The Hill · BBC World · BBC UK Politics · Guardian World</div>
+              <div style={{ fontWeight: 700, margin: '14px 0 6px' }}>Center-right to right</div>
+              <div style={{ color: '#444' }}>Wall Street Journal Politics · Washington Examiner · National Review · RealClearPolitics</div>
+              <div style={{ fontWeight: 700, margin: '14px 0 6px' }}>Independent journalism</div>
+              <div style={{ color: '#444' }}>A curated registry of 25 independent journalists, including writers from ProPublica, Platformer, The Dispatch, Tangle News, Stateline, and Reason.</div>
+            </div>
             <p style={{ fontSize: '15px', lineHeight: 1.8, color: '#0A0A0A', marginTop: '12px' }}>
               Local content is sourced separately for each visitor based on their location. Someone in Lakeland sees Lakeland stories. Someone in Atlanta sees Atlanta stories.
             </p>
