@@ -67,58 +67,22 @@ export default async function Image({ params }: { params: { id: string } }) {
         }}
       >
         {/* Red half */}
-        <div
-          style={{
-            flex: 1,
-            background: CONSERVATIVE,
-            display: 'flex',
-            padding: '44px 48px',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.82)',
-              letterSpacing: '0.22em',
-            }}
-          >
-            CONSERVATIVE
-          </span>
-        </div>
-
+        <div style={{ flex: 1, background: CONSERVATIVE, display: 'flex' }} />
         {/* Blue half */}
-        <div
-          style={{
-            flex: 1,
-            background: LIBERAL,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            padding: '44px 48px',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.82)',
-              letterSpacing: '0.22em',
-            }}
-          >
-            LIBERAL
-          </span>
-        </div>
+        <div style={{ flex: 1, background: LIBERAL, display: 'flex' }} />
 
-        {/* Headline panel overlaid across the split */}
+        {/* Headline overlaid across the split */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 140,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 80px',
+            padding: '40px 80px 0',
           }}
         >
           <div
@@ -138,46 +102,46 @@ export default async function Image({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Bottom wordmark + optional scope */}
+        {/* Bottom wordmark — split bisects "bi" | "lateral" */}
         <div
           style={{
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: 40,
+            bottom: 48,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'baseline',
             justifyContent: 'center',
-            gap: 18,
+            fontFamily: 'Fraunces',
+            fontSize: 56,
+            fontWeight: 700,
+            color: PAPER,
+            letterSpacing: '-0.035em',
+            lineHeight: 1,
           }}
         >
-          <span
+          <span style={{ display: 'flex' }}>bi</span>
+          <span style={{ display: 'flex' }}>lateral</span>
+        </div>
+
+        {scopeLabel && (
+          <div
             style={{
-              fontFamily: 'Fraunces',
-              fontSize: 34,
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 24,
+              display: 'flex',
+              justifyContent: 'center',
+              fontSize: 12,
               fontWeight: 700,
-              color: PAPER,
-              letterSpacing: '-0.03em',
+              color: 'rgba(245,245,240,0.7)',
+              letterSpacing: '0.22em',
             }}
           >
-            bilateral
-          </span>
-          {scopeLabel && (
-            <>
-              <span style={{ fontSize: 22, color: 'rgba(245,245,240,0.55)' }}>·</span>
-              <span
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: 'rgba(245,245,240,0.75)',
-                  letterSpacing: '0.22em',
-                }}
-              >
-                {scopeLabel}
-              </span>
-            </>
-          )}
-        </div>
+            {scopeLabel}
+          </div>
+        )}
       </div>
     ),
     {

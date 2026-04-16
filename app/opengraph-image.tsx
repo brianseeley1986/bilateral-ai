@@ -33,77 +33,49 @@ export default async function Image() {
           position: 'relative',
         }}
       >
-        <div style={{ flex: 1, background: CONSERVATIVE, display: 'flex', padding: '44px 48px' }}>
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.82)',
-              letterSpacing: '0.22em',
-            }}
-          >
-            CONSERVATIVE
-          </span>
-        </div>
-        <div
-          style={{
-            flex: 1,
-            background: LIBERAL,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            padding: '44px 48px',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.82)',
-              letterSpacing: '0.22em',
-            }}
-          >
-            LIBERAL
-          </span>
-        </div>
+        <div style={{ flex: 1, background: CONSERVATIVE, display: 'flex' }} />
+        <div style={{ flex: 1, background: LIBERAL, display: 'flex' }} />
 
+        {/* Huge wordmark — split bisects "bi" | "lateral" */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 80px',
+            fontFamily: 'Fraunces',
+            fontSize: 180,
+            fontWeight: 700,
+            color: PAPER,
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
+            textShadow: '0 2px 24px rgba(0,0,0,0.22)',
           }}
         >
-          <div
-            style={{
-              fontFamily: 'Fraunces',
-              fontSize: 148,
-              fontWeight: 700,
-              color: PAPER,
-              letterSpacing: '-0.04em',
-              lineHeight: 1,
-              textShadow: '0 2px 24px rgba(0,0,0,0.25)',
-            }}
-          >
-            bilateral
-          </div>
-          <div
-            style={{
-              fontFamily: 'Fraunces',
-              fontSize: 32,
-              fontWeight: 500,
-              fontStyle: 'italic',
-              color: 'rgba(245,245,240,0.88)',
-              marginTop: 18,
-              letterSpacing: '0.01em',
-              textShadow: '0 1px 12px rgba(0,0,0,0.2)',
-            }}
-          >
-            The argument behind every headline.
-          </div>
+          <span style={{ display: 'flex' }}>bi</span>
+          <span style={{ display: 'flex' }}>lateral</span>
+        </div>
+
+        {/* Tagline */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 80,
+            display: 'flex',
+            justifyContent: 'center',
+            fontFamily: 'Fraunces',
+            fontSize: 30,
+            fontWeight: 500,
+            fontStyle: 'italic',
+            color: 'rgba(245,245,240,0.9)',
+            letterSpacing: '0.01em',
+            textShadow: '0 1px 12px rgba(0,0,0,0.2)',
+          }}
+        >
+          The argument behind every headline.
         </div>
 
         <div
@@ -111,12 +83,12 @@ export default async function Image() {
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: 40,
+            bottom: 36,
             display: 'flex',
             justifyContent: 'center',
-            fontSize: 16,
+            fontSize: 14,
             color: 'rgba(245,245,240,0.6)',
-            letterSpacing: '0.22em',
+            letterSpacing: '0.3em',
             fontWeight: 700,
           }}
         >
