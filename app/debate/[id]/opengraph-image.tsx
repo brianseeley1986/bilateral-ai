@@ -41,6 +41,11 @@ export default async function Image({ params }: { params: { id: string } }) {
     loadFraunces(700, false),
   ])
 
+  const fonts = [
+    frauncesMedium && { name: 'Fraunces', data: frauncesMedium, weight: 500 as const, style: 'normal' as const },
+    frauncesBold && { name: 'Fraunces', data: frauncesBold, weight: 700 as const, style: 'normal' as const },
+  ].filter(Boolean) as Array<{ name: string; data: ArrayBuffer; weight: 500 | 700; style: 'normal' }>
+
   const scopeLabel = scope
     ? scope === 'local'
       ? 'LOCAL'
@@ -177,10 +182,7 @@ export default async function Image({ params }: { params: { id: string } }) {
     ),
     {
       ...size,
-      fonts: [
-        { name: 'Fraunces', data: frauncesMedium, weight: 500, style: 'normal' },
-        { name: 'Fraunces', data: frauncesBold, weight: 700, style: 'normal' },
-      ],
+      fonts: fonts.length > 0 ? fonts : undefined,
     },
   )
 }

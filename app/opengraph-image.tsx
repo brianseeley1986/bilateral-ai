@@ -17,6 +17,12 @@ export default async function Image() {
     loadFraunces(500, true),
   ])
 
+  const fonts = [
+    frauncesMedium && { name: 'Fraunces', data: frauncesMedium, weight: 500 as const, style: 'normal' as const },
+    frauncesBold && { name: 'Fraunces', data: frauncesBold, weight: 700 as const, style: 'normal' as const },
+    frauncesItalic && { name: 'Fraunces', data: frauncesItalic, weight: 500 as const, style: 'italic' as const },
+  ].filter(Boolean) as Array<{ name: string; data: ArrayBuffer; weight: 500 | 700; style: 'normal' | 'italic' }>
+
   return new ImageResponse(
     (
       <div
@@ -120,11 +126,7 @@ export default async function Image() {
     ),
     {
       ...size,
-      fonts: [
-        { name: 'Fraunces', data: frauncesMedium, weight: 500, style: 'normal' },
-        { name: 'Fraunces', data: frauncesBold, weight: 700, style: 'normal' },
-        { name: 'Fraunces', data: frauncesItalic, weight: 500, style: 'italic' },
-      ],
+      fonts: fonts.length > 0 ? fonts : undefined,
     },
   )
 }
