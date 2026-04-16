@@ -684,7 +684,7 @@ export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
     WHERE publish_status = 'published'
       AND x_posted_at IS NULL
       AND (data->>'sourceType' IS NULL OR data->>'sourceType' != 'library')
-      AND (data->'qualityScore'->>'overallScore')::float >= 8.0
+      AND (data->'qualityScore'->>'overallScore')::float >= 7.5
       AND created_at > NOW() - INTERVAL '24 hours'
     ORDER BY created_at DESC
     LIMIT ${limit}
@@ -715,7 +715,7 @@ export async function getXPostingStats(): Promise<{
         WHERE x_posted_at IS NULL
           AND publish_status = 'published'
           AND (data->>'sourceType' IS NULL OR data->>'sourceType' != 'library')
-          AND (data->'qualityScore'->>'overallScore')::float >= 8.0
+          AND (data->'qualityScore'->>'overallScore')::float >= 7.5
           AND created_at > NOW() - INTERVAL '24 hours'
       ) as ready_to_post,
       MAX(x_posted_at) as last_posted_at

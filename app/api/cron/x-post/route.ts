@@ -55,6 +55,10 @@ export async function GET(req: NextRequest) {
 
     if (result.success) {
       await markAsPostedToX(debate.id, result.tweetId)
+    } else if (result.error && /duplicate content/i.test(result.error)) {
+      // X already saw this URL — mark the debate "posted" so the cron stops
+      // retrying it forever and moves to the next eligible one.
+      await markAsPostedToX(debate.id, undefined)
     }
 
     return NextResponse.json({
