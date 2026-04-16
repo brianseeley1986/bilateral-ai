@@ -1,5 +1,5 @@
 'use client'
-import { useState, CSSProperties } from 'react'
+import { useState } from 'react'
 import { cleanHeadline } from '@/lib/headline'
 import { colors, type as T, radius, shadow } from '@/lib/design'
 
@@ -44,12 +44,6 @@ function badgeFor(d: DebateCardData): { label: string; bg: string; color: string
   return { label: 'NATIONAL', bg: colors.accent.successBg, color: colors.accent.success }
 }
 
-const clamp3: CSSProperties = {
-  display: '-webkit-box',
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-}
 
 export function DebateCard({ debate, hideBadge, showScore }: Props) {
   const [copied, setCopied] = useState(false)
@@ -181,7 +175,7 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
               >
                 {conservativeLabel}
               </div>
-              <div style={{ fontSize: T.size.small, lineHeight: T.leading.normal, color: colors.neutral[700], ...clamp3 }}>
+              <div style={{ fontSize: T.size.small, lineHeight: T.leading.normal, color: colors.neutral[700] }}>
                 {cLine || '—'}
               </div>
             </div>
@@ -205,7 +199,7 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
               >
                 {liberalLabel}
               </div>
-              <div style={{ fontSize: T.size.small, lineHeight: T.leading.normal, color: colors.neutral[700], ...clamp3 }}>
+              <div style={{ fontSize: T.size.small, lineHeight: T.leading.normal, color: colors.neutral[700] }}>
                 {lLine || '—'}
               </div>
             </div>

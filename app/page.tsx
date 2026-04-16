@@ -333,12 +333,12 @@ export default function Home() {
             }}
           >
             <div
-              style={{ width: 16, height: 16, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }}
+              style={{ width: 12, height: 12, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }}
             />
             <span
               style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: '52px',
+                fontSize: '34px',
                 fontWeight: 700,
                 letterSpacing: '-0.035em',
                 color: '#0A0A0A',
@@ -348,7 +348,7 @@ export default function Home() {
               bilateral
             </span>
             <div
-              style={{ width: 16, height: 16, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }}
+              style={{ width: 12, height: 12, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }}
             />
           </div>
           <div
