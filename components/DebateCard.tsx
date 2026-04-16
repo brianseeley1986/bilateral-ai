@@ -94,10 +94,11 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
         style={{
           width: '100%',
           aspectRatio: '1200 / 630',
-          background: `center/cover no-repeat url(${debate.imageUrl || `/debate/${debate.id}/opengraph-image`})`,
+          background: `center/cover no-repeat url(${debate.imageUrl || `/debate/${debate.id}/opengraph-image?v=3`})`,
           borderBottom: `1px solid ${colors.line}`,
         }}
-        aria-hidden
+        role="img"
+        aria-label={cleanHeadline(debate.headline)}
       />
 
       <div style={{ padding: '20px 22px 22px' }}>
@@ -122,14 +123,15 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
 
         <h3
           style={{
-            fontFamily: T.display,
-            fontWeight: T.weight.medium,
-            fontSize: 22,
-            lineHeight: T.leading.snug,
-            letterSpacing: T.tracking.tight,
-            color: colors.ink,
-            margin: 0,
-            marginBottom: debate.suggestedHook ? 8 : 16,
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: 'hidden',
+            clip: 'rect(0,0,0,0)',
+            whiteSpace: 'nowrap',
+            border: 0,
           }}
         >
           {cleanHeadline(debate.headline)}
