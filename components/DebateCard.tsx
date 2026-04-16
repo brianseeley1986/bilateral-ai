@@ -90,26 +90,15 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
         ;(e.currentTarget as HTMLElement).style.boxShadow = shadow.card
       }}
     >
-      {debate.imageUrl ? (
-        <div
-          style={{
-            width: '100%',
-            aspectRatio: '16 / 9',
-            background: `center/cover no-repeat url(${debate.imageUrl})`,
-            borderBottom: `1px solid ${colors.line}`,
-          }}
-          aria-hidden
-        />
-      ) : (
-        <div
-          style={{
-            width: '100%',
-            aspectRatio: '16 / 5',
-            background: `linear-gradient(90deg, ${colors.conservative} 0%, ${colors.conservative} 50%, ${colors.liberal} 50%, ${colors.liberal} 100%)`,
-          }}
-          aria-hidden
-        />
-      )}
+      <div
+        style={{
+          width: '100%',
+          aspectRatio: '1200 / 630',
+          background: `center/cover no-repeat url(${debate.imageUrl || `/debate/${debate.id}/opengraph-image`})`,
+          borderBottom: `1px solid ${colors.line}`,
+        }}
+        aria-hidden
+      />
 
       <div style={{ padding: '20px 22px 22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
