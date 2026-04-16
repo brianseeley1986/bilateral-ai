@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { HeadlineInput } from '@/components/HeadlineInput'
 import { EmailCapture } from '@/components/EmailCapture'
 import { useLocation } from '@/components/LocationDetector'
+import { DebateCard } from '@/components/DebateCard'
 import { cleanHeadline } from '@/lib/headline'
 
 const clamp2: React.CSSProperties = {
@@ -12,7 +13,7 @@ const clamp2: React.CSSProperties = {
   overflow: 'hidden',
 }
 
-interface DebateCard {
+interface DebateCardData {
   id: string
   headline: string
   track: string
@@ -31,14 +32,15 @@ interface DebateCard {
   factionAlert?: { detected: boolean; dividedSide: string | null; summary?: string } | null
   viewCount?: number
   overallScore?: number | null
+  imageUrl?: string | null
 }
 
 interface ZoneData {
-  national: DebateCard[]
-  international: DebateCard[]
-  state: DebateCard[]
-  local: DebateCard[]
-  userSubmitted: DebateCard[]
+  national: DebateCardData[]
+  international: DebateCardData[]
+  state: DebateCardData[]
+  local: DebateCardData[]
+  userSubmitted: DebateCardData[]
   counts: {
     national: number
     international: number
@@ -50,205 +52,26 @@ interface ZoneData {
 
 const ZONE_STYLES = {
   label: {
-    fontSize: '22px' as const,
-    fontWeight: 600,
-    letterSpacing: '-0.01em',
+    fontFamily: 'var(--font-serif)',
+    fontSize: '26px' as const,
+    fontWeight: 500,
+    letterSpacing: '-0.02em',
     color: '#0A0A0A',
     marginBottom: '4px',
   },
   subtitle: {
     fontSize: '13px' as const,
     color: '#6B6B6B',
-    marginBottom: '18px',
+    marginBottom: '20px',
     marginTop: '0',
-    paddingBottom: '14px',
-    borderBottom: '0.5px solid #e0e0e0',
-  },
-  card: {
-    padding: '16px 0',
-    borderBottom: '0.5px solid #ebebeb',
-    cursor: 'pointer',
-  },
-  headline: {
-    fontSize: '16px',
-    fontWeight: 500,
-    lineHeight: 1.4,
-    marginBottom: '8px',
-    color: '#0A0A0A',
+    paddingBottom: '16px',
+    borderBottom: '0.5px solid #e0e0dc',
   },
   preview: {
     fontSize: '13px',
     lineHeight: 1.6,
     marginBottom: '4px',
   },
-  goDeeper: {
-    fontSize: '12px',
-    color: '#6B6B6B',
-    textAlign: 'right' as const,
-    marginTop: '8px',
-  },
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-}
-
-function geoBadge(d: DebateCard): { label: string; bg: string; color: string } | null {
-  if (d.sourceType === 'library') return { label: 'LIBRARY', bg: '#f0f4ff', color: '#1e3a8a' }
-  if (d.track === 'satire') return { label: 'SATIRE', bg: '#fef3c7', color: '#92400e' }
-  if (d.geographicScope === 'local') return { label: 'LOCAL', bg: '#dbeafe', color: '#1e3a5f' }
-  if (d.geographicScope === 'state') return { label: 'STATE', bg: '#e0f2fe', color: '#0c4a6e' }
-  if (d.geographicScope === 'international') return { label: 'WORLD', bg: '#f3f4f6', color: '#374151' }
-  return { label: 'NATIONAL', bg: '#f0fdf4', color: '#166534' }
-}
-
-function FeedCard({ debate, showScore, hideBadge }: { debate: DebateCard; showScore?: boolean; hideBadge?: boolean }) {
-  const [copied, setCopied] = useState(false)
-  const isSatire = debate.track === 'satire'
-
-  // Prefer feed hooks, fall back to exchange preview lines
-  const cLine = debate.conservativeFeedHook || debate.conservativeOneLine || ''
-  const lLine = debate.liberalFeedHook || debate.liberalOneLine || ''
-
-  const badge = hideBadge ? null : geoBadge(debate)
-  const timestamp = showScore && debate.overallScore != null
-    ? `${debate.overallScore.toFixed(1)} · ${timeAgo(debate.createdAt)}`
-    : timeAgo(debate.createdAt)
-
-  return (
-    <div
-      style={{
-        ...ZONE_STYLES.card,
-        background: isSatire ? '#fffdf5' : 'transparent',
-        padding: isSatire ? '16px 12px' : '16px 0',
-        borderRadius: isSatire ? '8px' : '0',
-        marginBottom: isSatire ? '8px' : '0',
-      }}
-      onClick={() => (window.location.href = `/debate/${debate.id}`)}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-        {badge && (
-          <span
-            style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 8px',
-              borderRadius: '4px',
-              background: badge.bg,
-              color: badge.color,
-              letterSpacing: '0.05em',
-            }}
-          >
-            {badge.label}
-          </span>
-        )}
-        <span style={{ fontSize: '11px', color: '#9B9B9B' }}>{timestamp}</span>
-      </div>
-
-      <div style={ZONE_STYLES.headline}>{cleanHeadline(debate.headline)}</div>
-
-      {cLine && (
-        <div
-          style={{
-            ...ZONE_STYLES.preview,
-            color: '#444',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '8px',
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: isSatire ? '#f1f1ef' : '#fee2e2',
-              color: isSatire ? '#444' : '#7f1d1d',
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 6px',
-              borderRadius: '4px',
-              flexShrink: 0,
-              marginTop: '2px',
-            }}
-          >
-            {isSatire ? 'A' : 'C'}
-          </span>
-          <span style={clamp2}>{cLine}</span>
-        </div>
-      )}
-      {lLine && (
-        <div
-          style={{
-            ...ZONE_STYLES.preview,
-            color: '#444',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '8px',
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: isSatire ? '#f1f1ef' : '#dbeafe',
-              color: isSatire ? '#444' : '#1e3a5f',
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '2px 6px',
-              borderRadius: '4px',
-              flexShrink: 0,
-              marginTop: '2px',
-            }}
-          >
-            {isSatire ? 'B' : 'L'}
-          </span>
-          <span style={clamp2}>{lLine}</span>
-        </div>
-      )}
-
-      <div
-        style={{
-          ...ZONE_STYLES.goDeeper,
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          gap: '14px',
-        }}
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            navigator.clipboard
-              .writeText(
-                `https://bilateral.news/debate/${debate.id}?h=${encodeURIComponent(debate.headline)}`,
-              )
-              .then(() => {
-                setCopied(true)
-                setTimeout(() => setCopied(false), 2000)
-              })
-              .catch(() => {})
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            padding: 0,
-            fontSize: '12px',
-            color: '#9B9B9B',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          {copied ? 'Copied!' : 'Share'}
-        </button>
-        <span>Read debate →</span>
-      </div>
-    </div>
-  )
 }
 
 function ZoneSection({
@@ -261,7 +84,7 @@ function ZoneSection({
 }: {
   label: string
   subtitle: string
-  debates: DebateCard[]
+  debates: DebateCardData[]
   count?: number
   emptyState?: string
   showScore?: boolean
@@ -280,7 +103,7 @@ function ZoneSection({
       {debates.length === 0 && emptyState ? (
         <div style={{ fontSize: '12px', color: '#9B9B9B', padding: '12px 0' }}>{emptyState}</div>
       ) : (
-        visible.map((d) => <FeedCard key={d.id} debate={d} showScore={showScore} hideBadge={hideBadge} />)
+        visible.map((d) => <DebateCard key={d.id} debate={d} showScore={showScore} hideBadge={hideBadge} />)
       )}
       {!expanded && extra > 0 && (
         <button
@@ -480,7 +303,7 @@ export default function Home() {
   )
 
   return (
-    <main style={{ minHeight: '100vh', background: '#F5F5F0', fontFamily: 'system-ui, sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: '#F5F5F0', fontFamily: 'var(--font-sans)' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 20px' }}>
         {/* Top nav */}
         <div
@@ -513,7 +336,14 @@ export default function Home() {
               style={{ width: 10, height: 10, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }}
             />
             <span
-              style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', color: '#0A0A0A' }}
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '32px',
+                fontWeight: 500,
+                letterSpacing: '-0.03em',
+                color: '#0A0A0A',
+                lineHeight: 1,
+              }}
             >
               bilateral
             </span>
@@ -521,7 +351,17 @@ export default function Home() {
               style={{ width: 10, height: 10, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }}
             />
           </div>
-          <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '24px' }}>
+          <div
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: '15px',
+              color: '#6B6B6B',
+              marginTop: '10px',
+              marginBottom: '28px',
+              letterSpacing: '0.01em',
+            }}
+          >
             The argument behind every headline.
           </div>
           <HeadlineInput />
