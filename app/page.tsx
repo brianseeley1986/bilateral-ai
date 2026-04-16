@@ -6,13 +6,6 @@ import { useLocation } from '@/components/LocationDetector'
 import { DebateCard } from '@/components/DebateCard'
 import { cleanHeadline } from '@/lib/headline'
 
-const clamp2: React.CSSProperties = {
-  display: '-webkit-box',
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-}
-
 interface DebateCardData {
   id: string
   headline: string
@@ -153,7 +146,7 @@ function LibraryFeaturedSection() {
   if (items.length === 0) return null
 
   return (
-    <div style={{ marginBottom: '36px' }}>
+    <div style={{ marginBottom: '48px' }}>
       <div style={ZONE_STYLES.label}>The Fault Lines</div>
       <div style={ZONE_STYLES.subtitle}>The questions America keeps fighting about.</div>
       {items.map((item) => (
@@ -164,19 +157,22 @@ function LibraryFeaturedSection() {
             display: 'block',
             textDecoration: 'none',
             color: 'inherit',
-            padding: '16px 0',
-            borderBottom: '0.5px solid #ebebeb',
+            background: '#FFFFFF',
+            borderRadius: 14,
+            boxShadow: '0 1px 2px rgba(10,10,10,0.04)',
+            padding: '22px 24px',
+            marginBottom: 16,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <span
               style={{
-                fontSize: '10px',
+                fontSize: 11,
                 fontWeight: 600,
-                padding: '2px 8px',
-                borderRadius: '4px',
-                background: '#f0f4ff',
-                color: '#1e3a8a',
+                padding: '3px 9px',
+                borderRadius: 6,
+                background: '#F0F4FF',
+                color: '#1E3A8A',
                 letterSpacing: '0.05em',
               }}
             >
@@ -184,79 +180,97 @@ function LibraryFeaturedSection() {
             </span>
             <span
               style={{
-                fontSize: '11px',
-                color: '#6B6B6B',
-                textTransform: 'capitalize',
+                fontSize: 11,
+                color: '#9B9B96',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontWeight: 600,
               }}
             >
               {item.category?.replace(/_/g, ' ')}
             </span>
           </div>
           <div
-            style={{ fontSize: '16px', fontWeight: 500, lineHeight: 1.4, color: '#0A0A0A', marginBottom: '8px' }}
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 22,
+              fontWeight: 500,
+              lineHeight: 1.25,
+              letterSpacing: '-0.02em',
+              color: '#0A0A0A',
+              marginBottom: 14,
+            }}
           >
             {cleanHeadline(item.question)}
           </div>
-          {item.conservativePreview && (
+          {(item.conservativePreview || item.liberalPreview) && (
             <div
               style={{
-                ...ZONE_STYLES.preview,
-                color: '#444',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '8px',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+                marginBottom: 14,
               }}
             >
-              <span
+              <div
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  background: '#fee2e2',
-                  color: '#7f1d1d',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  flexShrink: 0,
-                  marginTop: '2px',
+                  background: '#FFF0F0',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  minHeight: 72,
                 }}
               >
-                C
-              </span>
-              <span style={clamp2}>{item.conservativePreview}</span>
-            </div>
-          )}
-          {item.liberalPreview && (
-            <div
-              style={{
-                ...ZONE_STYLES.preview,
-                color: '#444',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '8px',
-              }}
-            >
-              <span
+                <div
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: '#C1121F',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.12em',
+                    marginBottom: 6,
+                  }}
+                >
+                  Conservative
+                </div>
+                <div style={{ fontSize: 13, lineHeight: 1.5, color: '#1F1F1F' }}>
+                  {item.conservativePreview || '—'}
+                </div>
+              </div>
+              <div
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  background: '#dbeafe',
-                  color: '#1e3a5f',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  flexShrink: 0,
-                  marginTop: '2px',
+                  background: '#F0F4FF',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  minHeight: 72,
                 }}
               >
-                L
-              </span>
-              <span style={clamp2}>{item.liberalPreview}</span>
+                <div
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: '#1B4FBE',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.12em',
+                    marginBottom: 6,
+                  }}
+                >
+                  Liberal
+                </div>
+                <div style={{ fontSize: 13, lineHeight: 1.5, color: '#1F1F1F' }}>
+                  {item.liberalPreview || '—'}
+                </div>
+              </div>
             </div>
           )}
           <div
-            style={{ fontSize: '12px', color: '#6B6B6B', textAlign: 'right', marginTop: '8px' }}
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+              color: '#0A0A0A',
+              textAlign: 'right',
+            }}
           >
             Read the debate →
           </div>
@@ -386,35 +400,50 @@ export default function Home() {
 
         {!showSubscribe ? (
           <div
+            id="subscribe"
             style={{
-              background: '#f8f8f6',
-              borderRadius: '10px',
-              padding: '16px 18px',
-              marginBottom: '32px',
+              background: '#FFFFFF',
+              borderRadius: 14,
+              boxShadow: '0 1px 2px rgba(10,10,10,0.04)',
+              padding: '22px 24px',
+              marginBottom: 40,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '16px',
+              gap: 18,
+              flexWrap: 'wrap',
             }}
           >
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>
-                Get today&apos;s debates in your inbox.
+            <div style={{ flex: '1 1 260px', minWidth: 220 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: 20,
+                  fontWeight: 500,
+                  color: '#0A0A0A',
+                  letterSpacing: '-0.015em',
+                  lineHeight: 1.2,
+                  marginBottom: 4,
+                }}
+              >
+                Today&apos;s debates, every morning.
               </div>
-              <div style={{ fontSize: '12px', color: '#6B6B6B' }}>
-                Personalized by topic. Every morning.
+              <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.55 }}>
+                One email. The stories worth arguing about. Unsubscribe anytime.
               </div>
             </div>
             <button
               onClick={() => setShowSubscribe(true)}
               style={{
-                padding: '9px 18px',
-                background: '#0A0A0A',
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
                 color: '#F5F5F0',
+                background: '#0A0A0A',
                 border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 500,
+                padding: '11px 20px',
+                borderRadius: 999,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
@@ -424,102 +453,108 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div style={{ marginBottom: '32px' }}>
+          <div id="subscribe" style={{ marginBottom: 40 }}>
             <EmailCapture />
           </div>
         )}
 
-        {/* BEING DEBATED — user submitted, hidden when empty */}
+        {/* FROM READERS — user-submitted debates, hidden when empty */}
         {zones && zones.userSubmitted.length > 0 && (
           <ZoneSection
-            label="Being Debated"
-            subtitle="What people are asking bilateral."
+            label="From readers"
+            subtitle="Headlines people asked bilateral to debate."
             debates={zones.userSubmitted}
             count={zones.counts.userSubmitted}
             showScore
           />
         )}
 
-        {/* GLOBAL */}
+        {/* TODAY'S DEBATES — national + international merged */}
         <ZoneSection
-          label="Global"
-          subtitle="The arguments shaping the world."
-          debates={zones?.international ?? []}
-          count={zones?.counts.international ?? 0}
+          label="Today's debates"
+          subtitle="What the country — and the world — is arguing about."
+          debates={[...(zones?.national ?? []), ...(zones?.international ?? [])].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )}
+          count={(zones?.counts.national ?? 0) + (zones?.counts.international ?? 0)}
           emptyState={!zones ? 'Loading…' : undefined}
           hideBadge
         />
 
-        {/* NATIONAL */}
-        <ZoneSection
-          label="National"
-          subtitle="The biggest fights in America today."
-          debates={zones?.national ?? []}
-          count={zones?.counts.national ?? 0}
-          hideBadge
-        />
-
-        {/* STATE & REGIONAL */}
-        <ZoneSection
-          label="State & Regional"
-          subtitle="Your state in the national debate."
-          debates={zones?.state ?? []}
-          count={zones?.counts.state ?? 0}
-          hideBadge
-        />
-
-        {/* LOCAL & COMMUNITY */}
+        {/* YOUR AREA — state + local merged, with local CTA beneath */}
         <ZoneSection
           label={
             location.city
               ? `Near ${location.city}`
               : location.state
-              ? `In ${location.state}`
-              : 'Local & Community'
+                ? `In ${location.state}`
+                : 'Your area'
           }
-          subtitle="What's happening near you."
-          debates={zones?.local ?? []}
-          count={zones?.counts.local ?? 0}
-          emptyState={location.detected && zones?.local.length === 0
-            ? 'No local debates yet for your area.'
-            : undefined}
+          subtitle={
+            location.state
+              ? 'State and local stories in your region.'
+              : 'State and local stories — subscribe to see debates from your region.'
+          }
+          debates={[...(zones?.state ?? []), ...(zones?.local ?? [])].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )}
+          count={(zones?.counts.state ?? 0) + (zones?.counts.local ?? 0)}
+          emptyState={
+            location.detected && (zones?.state.length ?? 0) === 0 && (zones?.local.length ?? 0) === 0
+              ? 'No debates yet for your area.'
+              : undefined
+          }
           hideBadge
         />
 
         <div
           style={{
-            marginTop: '-24px',
-            marginBottom: '56px',
-            padding: '18px 20px',
-            border: '0.5px solid #d0d0d0',
-            borderRadius: '10px',
-            background: '#ffffff',
+            marginTop: '-28px',
+            marginBottom: '64px',
+            padding: '22px 24px',
+            borderRadius: 14,
+            background: '#FFFFFF',
+            boxShadow: '0 1px 2px rgba(10,10,10,0.04)',
             display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
+            alignItems: 'center',
+            gap: 18,
+            flexWrap: 'wrap',
           }}
         >
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#0A0A0A', letterSpacing: '-0.01em' }}>
-            Get local debates for {location.city || location.state || 'your area'}
-          </div>
-          <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.5 }}>
-            Subscribe and pick &quot;Local&quot; — Bilateral will generate debates on city-council, school-board, and county-level stories in your area, delivered in your daily digest.
+          <div style={{ flex: '1 1 260px', minWidth: 220 }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 20,
+                fontWeight: 500,
+                color: '#0A0A0A',
+                letterSpacing: '-0.015em',
+                lineHeight: 1.2,
+                marginBottom: 4,
+              }}
+            >
+              Get debates for {location.city || location.state || 'your area'}
+            </div>
+            <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.55 }}>
+              Subscribe and pick “Local.” Bilateral will generate debates on city-council, school-board, and regional stories near you.
+            </div>
           </div>
           <a
             href="#subscribe"
             style={{
-              marginTop: 4,
-              alignSelf: 'flex-start',
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
               color: '#F5F5F0',
               background: '#0A0A0A',
-              padding: '8px 14px',
-              borderRadius: 6,
+              padding: '11px 20px',
+              borderRadius: 999,
               textDecoration: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
-            Subscribe for local →
+            Subscribe
           </a>
         </div>
 
