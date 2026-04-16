@@ -1,3 +1,5 @@
+import { PERSONA_LIST } from '@/lib/personas'
+
 export default function AboutPage() {
   return (
     <main style={{
@@ -244,6 +246,66 @@ export default function AboutPage() {
             <p style={{ fontSize: '15px', lineHeight: 1.8, color: '#0A0A0A', marginTop: '12px' }}>
               You can also drop any headline or topic into the search bar and get a debate on demand.
             </p>
+          </section>
+
+          <div style={{ height: '0.5px', background: '#e0e0e0' }}/>
+
+          <section>
+            <h2 style={{
+              fontSize: '22px',
+              fontWeight: 700,
+              color: '#0A0A0A',
+              letterSpacing: '-0.02em',
+              marginBottom: '16px',
+              marginTop: '40px',
+            }}>
+              The analysts
+            </h2>
+            <p style={{ fontSize: '15px', lineHeight: 1.8, color: '#0A0A0A', marginBottom: '18px' }}>
+              Every debate is produced by a fixed cast of AI-driven analysts. Each has a defined brief and a published methodology. They are not people — consistency and transparency are the point.
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {PERSONA_LIST.map((p) => (
+                <li key={p.slug}>
+                  <a
+                    href={`/authors/${p.slug}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      textDecoration: 'none',
+                      color: '#0A0A0A',
+                      padding: '10px 0',
+                      borderBottom: '1px solid #eee',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: p.color,
+                        color: '#F5F5F0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {p.initials}
+                    </span>
+                    <span style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: 15, fontWeight: 700 }}>{p.name}</span>
+                      <span style={{ fontSize: 12, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>
+                        {p.title}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </section>
 
           <div style={{ height: '0.5px', background: '#e0e0e0' }}/>
