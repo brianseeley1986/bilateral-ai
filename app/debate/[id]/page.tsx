@@ -221,7 +221,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
         </div>
       </header>
 
-      {/* Cover hero — the same generated OG image */}
+      {/* Cover hero — CSS-rendered red/blue split with headline */}
       <div
         style={{
           maxWidth: 900,
@@ -231,13 +231,53 @@ export default async function DebatePage({ params }: { params: { id: string } })
       >
         <div
           style={{
+            position: 'relative',
             width: '100%',
             aspectRatio: '1200 / 630',
             borderRadius: 16,
             overflow: 'hidden',
-            background: `center/cover no-repeat url(/debate/${params.id}/opengraph-image?v=4)`,
+            background: 'linear-gradient(90deg, #C1121F 0%, #C1121F 50%, #1B4FBE 50%, #1B4FBE 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '32px 48px 56px',
           }}
-        />
+        >
+          <div
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 42,
+              fontWeight: 500,
+              color: '#F5F5F0',
+              textAlign: 'center',
+              lineHeight: 1.1,
+              letterSpacing: '-0.025em',
+              textShadow: '0 2px 20px rgba(0,0,0,0.22)',
+              maxWidth: 760,
+            }}
+          >
+            {debate.headline}
+          </div>
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 16,
+              display: 'flex',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-serif)',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#F5F5F0',
+              letterSpacing: '-0.035em',
+              lineHeight: 1,
+            }}
+          >
+            <span>bi</span>
+            <span>lateral</span>
+          </div>
+        </div>
       </div>
 
       <div style={{ padding: '0 24px 96px' }}>

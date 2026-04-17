@@ -2,19 +2,41 @@ import { ImageResponse } from 'next/og'
 import { neon } from '@neondatabase/serverless'
 import { loadFraunces } from '@/lib/og-fonts'
 
-// Edge runtime keeps cold starts tight — Twitter's scraper times out on slow OG renders.
-// Neon's serverless driver works at the edge, so we query the DB directly.
 export const runtime = 'edge'
 export const alt = 'Bilateral Debate'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-const CONSERVATIVE = '#C1121F'
-const LIBERAL = '#1B4FBE'
-const PAPER = '#F5F5F0'
+function smartTrim(text: string, max: number): string {
+  const clean = text.trim()
+  if (clean.length <= max) return clean
+  const SENTINEL = '\uE000'
+  const safe = clean.replace(/(\d)\.(\d)/g, `$1${SENTINEL}$2`)
+  const restore = (s: string) => s.replace(new RegExp(SENTINEL, 'g'), '.')
+  const sentences = safe.match(/[^.!?]+[.!?]+/g) || []
+  let built = ''
+  for (const s of sentences) {
+    const next = built + s
+    if (next.length > max) break
+    built = next
+  }
+  if (built.length >= 40) return restore(built).trim()
+  const cut = safe.slice(0, max)
+  const clause = Math.max(cut.lastIndexOf(';'), cut.lastIndexOf(' — '), cut.lastIndexOf(', '))
+  if (clause > 60) return restore(safe.slice(0, clause)).trim() + '…'
+  const space = cut.lastIndexOf(' ')
+  return restore(space > 0 ? cut.slice(0, space) : cut).trim() + '…'
+}
+
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 120): string {
+  const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
+  return smartTrim(source, max)
+}
 
 export default async function Image({ params }: { params: { id: string } }) {
   let headline = 'The argument behind every headline.'
+  let cLine = ''
+  let lLine = ''
 
   try {
     const sql = neon(process.env.DATABASE_URL!)
@@ -25,14 +47,25 @@ export default async function Image({ params }: { params: { id: string } }) {
     const debate: any = rows[0]?.data
     if (debate) {
       headline = debate.headline || headline
+      const cFallback =
+        debate.conservative?.previewLine ||
+        debate.exchanges?.[0]?.c ||
+        debate.conservative?.argument ||
+        ''
+      const lFallback =
+        debate.liberal?.previewLine ||
+        debate.exchanges?.[0]?.l ||
+        debate.liberal?.argument ||
+        ''
+      cLine = pickLine(debate.conservativeFeedHook, cFallback)
+      lLine = pickLine(debate.liberalFeedHook, lFallback)
     }
   } catch (err) {
     console.error('OG image DB query failed for', params.id, err)
   }
 
-  // Hard wrap display headline so the center of the card never overflows.
-  const displayHeadline = headline.length > 140 ? headline.slice(0, 137) + '…' : headline
-  const headlineSize = displayHeadline.length > 100 ? 64 : displayHeadline.length > 70 ? 76 : 86
+  const displayHeadline = headline.length > 110 ? headline.slice(0, 107) + '…' : headline
+  const headlineSize = displayHeadline.length > 85 ? 48 : displayHeadline.length > 55 ? 56 : 64
 
   const [frauncesMedium, frauncesBold] = await Promise.all([
     loadFraunces(500, false),
@@ -50,27 +83,56 @@ export default async function Image({ params }: { params: { id: string } }) {
         style={{
           width: '100%',
           height: '100%',
+          background: '#0A0A0A',
           display: 'flex',
-          position: 'relative',
+          flexDirection: 'column',
+          fontFamily: 'Fraunces, serif',
         }}
       >
-        {/* Red half */}
-        <div style={{ flex: 1, background: CONSERVATIVE, display: 'flex' }} />
-        {/* Blue half */}
-        <div style={{ flex: 1, background: LIBERAL, display: 'flex' }} />
-
-        {/* Headline overlaid across the split */}
+        {/* Top bar: wordmark left, CTA right */}
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 140,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '24px 44px 0',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#C1121F' }} />
+            <span
+              style={{
+                fontFamily: 'Fraunces',
+                fontSize: 22,
+                fontWeight: 700,
+                letterSpacing: '-0.035em',
+                color: '#F5F5F0',
+              }}
+            >
+              bilateral
+            </span>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#1B4FBE' }} />
+          </div>
+          <span
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: '#F5F5F0',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Read the full debate →
+          </span>
+        </div>
+
+        {/* Headline */}
+        <div
+          style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '40px 80px 0',
+            padding: '20px 56px 16px',
+            flex: cLine && lLine ? '0 0 auto' : '1',
           }}
         >
           <div
@@ -78,40 +140,87 @@ export default async function Image({ params }: { params: { id: string } }) {
               fontFamily: 'Fraunces',
               fontSize: headlineSize,
               fontWeight: 500,
-              color: PAPER,
-              textAlign: 'center',
+              color: '#F5F5F0',
               lineHeight: 1.08,
-              letterSpacing: '-0.025em',
-              textShadow: '0 2px 24px rgba(0,0,0,0.22)',
-              maxWidth: 1040,
+              letterSpacing: '-0.03em',
+              textAlign: 'center',
+              maxWidth: 1080,
             }}
           >
             {displayHeadline}
           </div>
         </div>
 
-        {/* Bottom wordmark — split bisects "bi" | "lateral" */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 48,
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'center',
-            fontFamily: 'Fraunces',
-            fontSize: 56,
-            fontWeight: 700,
-            color: PAPER,
-            letterSpacing: '-0.035em',
-            lineHeight: 1,
-          }}
-        >
-          <span style={{ display: 'flex' }}>bi</span>
-          <span style={{ display: 'flex' }}>lateral</span>
-        </div>
-
+        {/* C/L split panels */}
+        {(cLine || lLine) && (
+          <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '20px 44px 70px 44px',
+                overflow: 'hidden',
+                background: 'linear-gradient(180deg, rgba(193,18,31,0.35) 0%, rgba(193,18,31,0.10) 100%)',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#FF6B78',
+                  letterSpacing: '0.18em',
+                  marginBottom: 10,
+                }}
+              >
+                CONSERVATIVE
+              </span>
+              <div style={{ fontSize: 26, color: '#F5F5F0', lineHeight: 1.3, fontWeight: 500 }}>
+                {cLine}
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 56,
+                background: '#0A0A0A',
+                fontSize: 22,
+                fontWeight: 900,
+                color: '#F5F5F0',
+                letterSpacing: '0.05em',
+              }}
+            >
+              VS
+            </div>
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '20px 44px 70px 44px',
+                overflow: 'hidden',
+                background: 'linear-gradient(180deg, rgba(27,79,190,0.35) 0%, rgba(27,79,190,0.10) 100%)',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#6B93FF',
+                  letterSpacing: '0.18em',
+                  marginBottom: 10,
+                }}
+              >
+                LIBERAL
+              </span>
+              <div style={{ fontSize: 26, color: '#F5F5F0', lineHeight: 1.3, fontWeight: 500 }}>
+                {lLine}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     ),
     {

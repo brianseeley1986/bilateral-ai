@@ -17,7 +17,6 @@ export interface DebateCardData {
   liberalFeedHook?: string | null
   suggestedHook?: string
   overallScore?: number | null
-  imageUrl?: string | null
 }
 
 interface Props {
@@ -84,16 +83,56 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
         ;(e.currentTarget as HTMLElement).style.boxShadow = shadow.card
       }}
     >
+      {/* CSS-rendered cover — red/blue split with headline + bi|lateral */}
       <div
         style={{
+          position: 'relative',
           width: '100%',
           aspectRatio: '1200 / 630',
-          background: `center/cover no-repeat url(${debate.imageUrl || `/debate/${debate.id}/opengraph-image?v=4`})`,
-          borderBottom: `1px solid ${colors.line}`,
+          background: `linear-gradient(90deg, ${colors.conservative} 0%, ${colors.conservative} 50%, ${colors.liberal} 50%, ${colors.liberal} 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '28px 28px 48px',
         }}
         role="img"
         aria-label={cleanHeadline(debate.headline)}
-      />
+      >
+        <div
+          style={{
+            fontFamily: T.display,
+            fontSize: 26,
+            fontWeight: T.weight.medium,
+            color: colors.paper,
+            textAlign: 'center',
+            lineHeight: 1.12,
+            letterSpacing: T.tracking.tight,
+            textShadow: '0 2px 16px rgba(0,0,0,0.22)',
+            maxWidth: '90%',
+          }}
+        >
+          {cleanHeadline(debate.headline)}
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 12,
+            display: 'flex',
+            justifyContent: 'center',
+            fontFamily: T.display,
+            fontSize: 16,
+            fontWeight: T.weight.bold,
+            color: colors.paper,
+            letterSpacing: '-0.035em',
+            lineHeight: 1,
+          }}
+        >
+          <span>bi</span>
+          <span>lateral</span>
+        </div>
+      </div>
 
       <div style={{ padding: '20px 22px 22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
