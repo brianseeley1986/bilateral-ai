@@ -288,7 +288,7 @@ export function StoryExchange({
   const speech = useSpeech(script)
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', fontFamily: 'var(--font-sans)' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -316,20 +316,30 @@ export function StoryExchange({
         {showHeadline && (
           <h1
             style={{
-              fontSize: '30px',
-              fontWeight: 600,
-              lineHeight: 1.2,
-              margin: '0 0 16px',
-              letterSpacing: '-0.015em',
+              fontFamily: 'var(--font-serif)',
+              fontSize: 36,
+              fontWeight: 500,
+              lineHeight: 1.15,
+              margin: '0 0 20px',
+              letterSpacing: '-0.025em',
               color: '#0A0A0A',
             }}
           >
             {debate.headline}
           </h1>
         )}
-        <p style={{ fontSize: '14px', lineHeight: 1.65, color: '#6B6B6B', margin: '0 0 20px' }}>
-          {debate.context?.whatHappened}
-        </p>
+        {debate.context?.whatHappened && (
+          <p
+            style={{
+              fontSize: 17,
+              lineHeight: 1.7,
+              color: '#3A3A3A',
+              margin: '0 0 20px',
+            }}
+          >
+            {debate.context.whatHappened}
+          </p>
+        )}
         {!isSatire && (
           <div style={{ marginBottom: '20px' }}>
             <ListenBar speech={speech} />
@@ -392,12 +402,14 @@ export function StoryExchange({
         >
           <p
             style={{
-              fontSize: '16px',
-              lineHeight: 1.7,
+              fontFamily: 'var(--font-serif)',
+              fontSize: 18,
+              lineHeight: 1.65,
               color: '#6B6B6B',
               margin: '0 0 16px',
               fontWeight: 400,
               fontStyle: 'italic',
+              letterSpacing: '-0.005em',
             }}
           >
             {debate.suggestedHook || debate.context?.whatHappened}
@@ -543,26 +555,55 @@ export function StoryExchange({
       {!isSatire && debate.verdict && (
         <div
           style={{
-            marginTop: '40px',
+            marginTop: 44,
+            padding: '28px 24px',
+            background: '#FFFFFF',
+            borderRadius: 14,
+            boxShadow: '0 1px 2px rgba(10,10,10,0.04)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '14px',
-            textAlign: 'center',
+            gap: 20,
           }}
         >
+          <div
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 22,
+              fontWeight: 500,
+              letterSpacing: '-0.02em',
+              color: '#0A0A0A',
+            }}
+          >
+            The Verdict
+          </div>
           {debate.verdict.agreements?.[0] && (
-            <div style={{ fontSize: '13px', color: '#6B6B6B', lineHeight: 1.6 }}>
-              Both sides agree: {debate.verdict.agreements[0]}
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#166534', marginBottom: 6 }}>
+                Both sides agree
+              </div>
+              <div style={{ fontSize: 15, lineHeight: 1.65, color: '#3A3A3A' }}>
+                {debate.verdict.agreements[0]}
+              </div>
             </div>
           )}
           {debate.verdict.conflicts?.[0] && (
-            <div style={{ fontSize: '13px', color: '#6B6B6B', lineHeight: 1.6 }}>
-              The real conflict: {debate.verdict.conflicts[0]}
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C1121F', marginBottom: 6 }}>
+                The real conflict
+              </div>
+              <div style={{ fontSize: 15, lineHeight: 1.65, color: '#3A3A3A' }}>
+                {debate.verdict.conflicts[0]}
+              </div>
             </div>
           )}
           {debate.verdict.openQuestions?.[0] && (
-            <div style={{ fontSize: '13px', color: '#6B6B6B', lineHeight: 1.6 }}>
-              What nobody has answered: {debate.verdict.openQuestions[0]}
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 6 }}>
+                What nobody has answered
+              </div>
+              <div style={{ fontSize: 15, lineHeight: 1.65, color: '#3A3A3A' }}>
+                {debate.verdict.openQuestions[0]}
+              </div>
             </div>
           )}
         </div>
@@ -646,17 +687,19 @@ export function StoryExchange({
               style={{
                 background: deep ? 'transparent' : '#0A0A0A',
                 color: deep ? '#6B6B6B' : '#F5F5F0',
-                border: deep ? '0.5px solid #d0d0d0' : 'none',
-                borderRadius: '24px',
+                border: deep ? '1px solid #DCDCD6' : 'none',
+                borderRadius: 999,
                 padding: '12px 28px',
-                fontSize: '13px',
-                fontWeight: 500,
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
                 cursor: 'pointer',
-                letterSpacing: '0.02em',
                 transition: 'all 0.2s',
+                fontFamily: 'inherit',
               }}
             >
-              {deep ? 'Collapse ↑' : 'Go deeper →'}
+              {deep ? 'Collapse' : 'Go deeper →'}
             </button>
           </div>
 
@@ -684,18 +727,19 @@ function SeriousExchanges({ exchanges, leadingSide, activeKey }: { exchanges: Li
         <div key={i}>
           <div
             style={{
-              fontSize: '10px',
-              fontWeight: 700,
-              color: '#6B6B6B',
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '12px',
+              fontFamily: 'var(--font-serif)',
+              fontSize: 18,
+              fontWeight: 500,
+              color: '#0A0A0A',
+              letterSpacing: '-0.01em',
+              marginBottom: 14,
+              lineHeight: 1.3,
             }}
           >
             {ex.claim}
           </div>
-          <div style={{ borderTop: '0.5px solid #d0d0d0' }} />
-          <div style={{ padding: '6px 0' }}>
+          <div style={{ borderTop: '1px solid #E0E0DC' }} />
+          <div style={{ padding: '10px 0' }}>
             {leadingSide === 'liberal' ? (
               <>
                 <Turn side="l" text={ex.l} isActive={activeKey === `ex-${i}-l`} />
@@ -721,43 +765,43 @@ function SeriousExchanges({ exchanges, leadingSide, activeKey }: { exchanges: Li
 
 function Turn({ side, text, isActive }: { side: 'c' | 'l'; text: string; isActive?: boolean }) {
   const color = side === 'c' ? '#C1121F' : '#1B4FBE'
-  const label = side === 'c' ? 'C' : 'L'
+  const wash = side === 'c' ? '#FFF0F0' : '#F0F4FF'
+  const label = side === 'c' ? 'Conservative' : 'Liberal'
   return (
-    <div style={{
-      display: 'flex', gap: '14px', padding: '12px 0',
-      background: isActive ? (side === 'c' ? '#fff5f5' : '#f0f4ff') : 'transparent',
-      borderRadius: isActive ? '6px' : undefined,
-      transition: 'background 0.3s',
-    }}>
-      <div
-        style={{
-          width: '24px',
-          height: '24px',
-          borderRadius: '50%',
-          background: color,
-          color: '#F5F5F0',
-          fontSize: '11px',
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          marginTop: '1px',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          borderLeft: `2px solid ${color}`,
-          paddingLeft: '16px',
-          fontSize: '14.5px',
-          lineHeight: 1.7,
-          color: '#0A0A0A',
-          flex: 1,
-        }}
-      >
-        {text}
+    <div
+      style={{
+        display: 'flex',
+        gap: 14,
+        padding: '14px 18px',
+        marginBottom: 8,
+        background: isActive ? wash : 'transparent',
+        borderRadius: 10,
+        borderLeft: `3px solid ${color}`,
+        transition: 'background 0.25s',
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <div
+          style={{
+            fontSize: 9,
+            fontWeight: 700,
+            color,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            marginBottom: 6,
+          }}
+        >
+          {label}
+        </div>
+        <div
+          style={{
+            fontSize: 15,
+            lineHeight: 1.7,
+            color: '#0A0A0A',
+          }}
+        >
+          {text}
+        </div>
       </div>
     </div>
   )
