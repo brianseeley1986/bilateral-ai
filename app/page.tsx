@@ -95,7 +95,7 @@ function ZoneSection({
       <div style={ZONE_STYLES.label}>{label}</div>
       <div style={ZONE_STYLES.subtitle}>{subtitle}</div>
       {debates.length === 0 && emptyState ? (
-        <div style={{ fontSize: '12px', color: '#9B9B9B', padding: '12px 0' }}>{emptyState}</div>
+        <div style={{ fontSize: '12px', color: '#757571', padding: '12px 0' }}>{emptyState}</div>
       ) : (
         visible.map((d) => <DebateCard key={d.id} debate={d} showScore={showScore} hideBadge={hideBadge} />)
       )}
@@ -195,6 +195,7 @@ function LibraryFeaturedSection() {
               {cleanHeadline(item.question)}
             </div>
             <div
+              aria-label="bilateral"
               style={{
                 position: 'absolute',
                 left: 0,
@@ -211,8 +212,8 @@ function LibraryFeaturedSection() {
                 lineHeight: 1,
               }}
             >
-              <span>bi</span>
-              <span>lateral</span>
+              <span aria-hidden="true">bi</span>
+              <span aria-hidden="true">lateral</span>
             </div>
           </div>
 
@@ -234,7 +235,7 @@ function LibraryFeaturedSection() {
               <span
                 style={{
                   fontSize: 11,
-                  color: '#9B9B96',
+                  color: '#757571',
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   fontWeight: 600,
@@ -614,7 +615,7 @@ export default function Home() {
             paddingTop: '24px',
             marginTop: '24px',
             fontSize: '12px',
-            color: '#9B9B9B',
+            color: '#757571',
             textAlign: 'center',
             lineHeight: 1.8,
           }}

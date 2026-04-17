@@ -115,6 +115,7 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
           {debate.shortHeadline || cleanHeadline(debate.headline)}
         </div>
         <div
+          aria-label="bilateral"
           style={{
             position: 'absolute',
             left: 0,
@@ -130,8 +131,8 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
             lineHeight: 1,
           }}
         >
-          <span>bi</span>
-          <span>lateral</span>
+          <span aria-hidden="true">bi</span>
+          <span aria-hidden="true">lateral</span>
         </div>
       </div>
 

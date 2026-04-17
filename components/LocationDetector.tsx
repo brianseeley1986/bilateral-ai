@@ -11,21 +11,27 @@ interface LocationState {
   denied: boolean
 }
 
-async function resolveLocation(
-  lat: number,
-  lng: number
-): Promise<{ city?: string; state?: string }> {
+// IP-based geolocation — no browser permission prompt, city-level accuracy.
+// Uses the same BigDataCloud service the old reverse-geocode call used.
+async function detectViaIP(): Promise<LocationState> {
   try {
     const res = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+      'https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en'
     )
     const data = await res.json()
+    if (!data.principalSubdivision && !data.city && !data.locality) {
+      return { detected: false, denied: false }
+    }
     return {
-      city: data.city || data.locality || data.principalSubdivision || undefined,
+      detected: true,
+      city: data.city || data.locality || undefined,
       state: data.principalSubdivision || undefined,
+      latitude: data.latitude || undefined,
+      longitude: data.longitude || undefined,
+      denied: false,
     }
   } catch {
-    return {}
+    return { detected: false, denied: false }
   }
 }
 
@@ -44,30 +50,12 @@ export function useLocation() {
       return
     }
 
-    if (!navigator.geolocation) return
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { city, state } = await resolveLocation(
-          pos.coords.latitude,
-          pos.coords.longitude
-        )
-        const loc: LocationState = {
-          detected: true,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          city,
-          state,
-          denied: false,
-        }
-        setLocation(loc)
+    detectViaIP().then((loc) => {
+      setLocation(loc)
+      if (loc.detected) {
         localStorage.setItem('bilateral_location', JSON.stringify(loc))
-      },
-      () => {
-        setLocation({ detected: false, denied: true })
-      },
-      { timeout: 5000 }
-    )
+      }
+    })
   }, [])
 
   return location
