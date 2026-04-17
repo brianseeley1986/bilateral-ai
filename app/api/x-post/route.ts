@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
-import { getUnpostedDebates, markAsPostedToX } from '@/lib/db'
+import { getUnpostedDebates, markAsPostedToX, unmarkXPost } from '@/lib/db'
 import { postToX } from '@/lib/social'
 
 export const dynamic = 'force-dynamic'
@@ -47,8 +47,20 @@ export async function POST(req: NextRequest) {
     mockMode
   )
 
+  // Mark before posting to prevent duplicate posts on mid-flight kills.
+  if (!mockMode) {
+    await markAsPostedToX(debate.id, undefined)
+  }
+
+  // Already posted above — now update or rollback based on result.
   if (result.success && !result.mock) {
     await markAsPostedToX(debate.id, result.tweetId)
+  } else if (!result.success && !result.mock) {
+    if (result.error && /duplicate content/i.test(result.error)) {
+      // Keep marked — X already has it
+    } else {
+      await unmarkXPost(debate.id)
+    }
   }
 
   return NextResponse.json({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
-import { getUnpostedDebates, markAsPostedToX } from '@/lib/db'
+import { getUnpostedDebates, markAsPostedToX, unmarkXPost } from '@/lib/db'
 import { postToX } from '@/lib/social'
 
 async function readAutoPostToggle(): Promise<boolean> {
@@ -40,6 +40,10 @@ export async function GET(req: NextRequest) {
     const debate = unposted[0]
     const debateData = debate.data
 
+    // Mark BEFORE posting so if the function is killed mid-flight (deploy,
+    // timeout) the debate doesn't get re-posted. On failure we unmark.
+    await markAsPostedToX(debate.id, undefined)
+
     const result = await postToX(
       {
         id: debate.id,
@@ -54,11 +58,13 @@ export async function GET(req: NextRequest) {
     )
 
     if (result.success) {
+      // Update with the actual tweet ID
       await markAsPostedToX(debate.id, result.tweetId)
     } else if (result.error && /duplicate content/i.test(result.error)) {
-      // X already saw this URL — mark the debate "posted" so the cron stops
-      // retrying it forever and moves to the next eligible one.
-      await markAsPostedToX(debate.id, undefined)
+      // X already saw this URL — keep it marked so the cron moves on.
+    } else {
+      // Real failure — unmark so the cron retries next run.
+      await unmarkXPost(debate.id)
     }
 
     return NextResponse.json({
