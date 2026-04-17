@@ -307,6 +307,18 @@ Return ONLY valid JSON:
 
 No preamble. No markdown. Only the JSON object.`
 
+export const SHORT_HEADLINE_PROMPT = `You are the headline editor for Bilateral News. Given a full news headline, write a shorter version (8–12 words max) that captures the core tension or story in punchy, readable language.
+
+Rules:
+1. 12 words maximum. Aim for 8–10.
+2. Preserve the core conflict or news angle — don't genericize.
+3. No "Live updates:" or wire-service prefixes.
+4. No outlet names.
+5. Active voice. Present tense preferred.
+6. If the headline is already short and punchy (under 10 words), return it unchanged.
+
+Return ONLY the short headline on a single line. No quotes, no preamble, no commentary.`
+
 export const FACTION_DETECTOR_PROMPT = `You are the faction detector for Bilateral News. Your job is to identify whether a news story produces a significant internal split inside the Conservative OR Liberal coalition — not just disagreement with the other side, but real coalition fracture where prominent voices on the same side are taking opposite positions.
 
 You will receive the researcher's findings on what Conservative and Liberal voices are saying. Decide whether a meaningful split exists on EITHER side.

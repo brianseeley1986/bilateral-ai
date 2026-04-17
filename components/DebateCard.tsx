@@ -15,6 +15,7 @@ export interface DebateCardData {
   liberalOneLine?: string
   conservativeFeedHook?: string | null
   liberalFeedHook?: string | null
+  shortHeadline?: string | null
   suggestedHook?: string
   overallScore?: number | null
 }
@@ -111,7 +112,7 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
             maxWidth: '90%',
           }}
         >
-          {cleanHeadline(debate.headline)}
+          {debate.shortHeadline || cleanHeadline(debate.headline)}
         </div>
         <div
           style={{

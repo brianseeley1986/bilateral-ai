@@ -28,6 +28,7 @@ function formatCard(d: any, viewCount?: number) {
     conservativeFeedHook: d.conservativeFeedHook || null,
     liberalFeedHook: d.liberalFeedHook || null,
     leadingSide: d.leadingSide || null,
+    shortHeadline: d.shortHeadline || null,
     suggestedHook: d.suggestedHook,
     exchanges: d.exchanges?.slice(0, 1),
     satireExchanges: d.satireExchanges?.slice(0, 1),

@@ -46,7 +46,7 @@ export default async function Image({ params }: { params: { id: string } }) {
       : await sql`SELECT data FROM debates WHERE slug = ${params.id} LIMIT 1`
     const debate: any = rows[0]?.data
     if (debate) {
-      headline = debate.headline || headline
+      headline = debate.shortHeadline || debate.headline || headline
       const cFallback =
         debate.conservative?.previewLine ||
         debate.exchanges?.[0]?.c ||

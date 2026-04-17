@@ -19,6 +19,7 @@ interface DebateCardData {
   conservativeFeedHook?: string | null
   liberalFeedHook?: string | null
   leadingSide?: string | null
+  shortHeadline?: string | null
   suggestedHook?: string
   exchanges?: Array<{ c: string; l: string }>
   satireExchanges?: Array<{ a: string; b: string }>
