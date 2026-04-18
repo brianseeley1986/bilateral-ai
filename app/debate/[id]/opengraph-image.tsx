@@ -36,6 +36,7 @@ function pickLine(hook: string | undefined, fallback: string | undefined, max = 
 export default async function Image({ params }: { params: { id: string } }) {
   let headline = 'The argument behind every headline.'
   let shortHeadline: string | undefined
+  let hook = ''
   let cLine = ''
   let lLine = ''
 
@@ -49,6 +50,7 @@ export default async function Image({ params }: { params: { id: string } }) {
     if (debate) {
       headline = debate.headline || headline
       shortHeadline = debate.shortHeadline || undefined
+      hook = smartTrim(debate.suggestedHook || debate.context?.whatHappened || '', 160)
       const cFallback =
         debate.conservative?.previewLine ||
         debate.exchanges?.[0]?.c ||
@@ -91,36 +93,49 @@ export default async function Image({ params }: { params: { id: string } }) {
           fontFamily: 'Fraunces, Georgia, serif',
         }}
       >
-        {/* Top bar: wordmark */}
+        {/* Top bar: wordmark left, CTA right */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '32px 48px 0',
-            gap: 10,
+            justifyContent: 'space-between',
+            padding: '28px 44px 0',
           }}
         >
-          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#C1121F' }} />
+            <span
+              style={{
+                fontFamily: 'Fraunces',
+                fontSize: 24,
+                fontWeight: 700,
+                letterSpacing: '-0.035em',
+                color: '#0A0A0A',
+              }}
+            >
+              bilateral
+            </span>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
+          </div>
           <span
             style={{
-              fontFamily: 'Fraunces',
-              fontSize: 26,
-              fontWeight: 700,
-              letterSpacing: '-0.035em',
-              color: '#0A0A0A',
+              fontSize: 16,
+              fontWeight: 600,
+              color: '#6B6B6B',
+              letterSpacing: '0.02em',
             }}
           >
-            bilateral
+            Read the full debate →
           </span>
-          <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#1B4FBE' }} />
         </div>
 
-        {/* Headline — dominates the card */}
+        {/* Headline + hook — centered in available space */}
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
-            padding: '28px 48px 24px',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '16px 44px 12px',
             flex: '1',
           }}
         >
@@ -130,39 +145,54 @@ export default async function Image({ params }: { params: { id: string } }) {
               fontSize: headlineSize,
               fontWeight: 500,
               color: '#0A0A0A',
-              lineHeight: 1.08,
+              lineHeight: 1.1,
               letterSpacing: '-0.03em',
               maxWidth: 1100,
+              marginBottom: hook ? 14 : 0,
             }}
           >
             {displayHeadline}
           </div>
+          {hook && (
+            <div
+              style={{
+                fontSize: 22,
+                color: '#6B6B6B',
+                lineHeight: 1.4,
+                fontStyle: 'italic',
+                maxWidth: 1000,
+              }}
+            >
+              {hook}
+            </div>
+          )}
         </div>
 
-        {/* C/L blocks — two solid colored panels at the bottom */}
+        {/* C/L blocks — leave 56px at bottom for X's overlay bar */}
         {(cLine || lLine) && (
-          <div style={{ display: 'flex', gap: 0 }}>
+          <div style={{ display: 'flex', gap: 12, padding: '0 44px 56px' }}>
             <div
               style={{
                 flex: 1,
                 background: '#C1121F',
-                padding: '20px 36px 28px',
+                borderRadius: 12,
+                padding: '16px 24px 18px',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: 700,
-                  color: 'rgba(255,255,255,0.85)',
-                  letterSpacing: '0.18em',
-                  marginBottom: 8,
+                  color: 'rgba(255,255,255,0.8)',
+                  letterSpacing: '0.16em',
+                  marginBottom: 6,
                 }}
               >
                 CONSERVATIVE
               </span>
-              <div style={{ fontSize: 22, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
+              <div style={{ fontSize: 19, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
                 {cLine}
               </div>
             </div>
@@ -170,23 +200,24 @@ export default async function Image({ params }: { params: { id: string } }) {
               style={{
                 flex: 1,
                 background: '#1B4FBE',
-                padding: '20px 36px 28px',
+                borderRadius: 12,
+                padding: '16px 24px 18px',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: 700,
-                  color: 'rgba(255,255,255,0.85)',
-                  letterSpacing: '0.18em',
-                  marginBottom: 8,
+                  color: 'rgba(255,255,255,0.8)',
+                  letterSpacing: '0.16em',
+                  marginBottom: 6,
                 }}
               >
                 LIBERAL
               </span>
-              <div style={{ fontSize: 22, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
+              <div style={{ fontSize: 19, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
                 {lLine}
               </div>
             </div>
