@@ -84,60 +84,8 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
         ;(e.currentTarget as HTMLElement).style.boxShadow = shadow.card
       }}
     >
-      {/* CSS-rendered cover — red/blue split with headline + bi|lateral */}
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '1200 / 630',
-          background: `linear-gradient(90deg, ${colors.conservative} 0%, ${colors.conservative} 50%, ${colors.liberal} 50%, ${colors.liberal} 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '28px 28px 48px',
-        }}
-        role="img"
-        aria-label={cleanHeadline(debate.headline)}
-      >
-        <div
-          style={{
-            fontFamily: T.display,
-            fontSize: 26,
-            fontWeight: T.weight.medium,
-            color: colors.paper,
-            textAlign: 'center',
-            lineHeight: 1.12,
-            letterSpacing: T.tracking.tight,
-            textShadow: '0 2px 16px rgba(0,0,0,0.22)',
-            maxWidth: '90%',
-          }}
-        >
-          {debate.shortHeadline || cleanHeadline(debate.headline)}
-        </div>
-        <div
-          aria-label="bilateral"
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 12,
-            display: 'flex',
-            justifyContent: 'center',
-            fontFamily: T.display,
-            fontSize: 16,
-            fontWeight: T.weight.bold,
-            color: colors.paper,
-            letterSpacing: '-0.035em',
-            lineHeight: 1,
-          }}
-        >
-          <span aria-hidden="true">bi</span>
-          <span aria-hidden="true">lateral</span>
-        </div>
-      </div>
-
-      <div style={{ padding: '20px 22px 22px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      <div style={{ padding: '22px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           {badge && (
             <span
               style={{
@@ -158,15 +106,14 @@ export function DebateCard({ debate, hideBadge, showScore }: Props) {
 
         <h3
           style={{
-            position: 'absolute',
-            width: 1,
-            height: 1,
-            padding: 0,
-            margin: -1,
-            overflow: 'hidden',
-            clip: 'rect(0,0,0,0)',
-            whiteSpace: 'nowrap',
-            border: 0,
+            fontFamily: T.display,
+            fontWeight: T.weight.medium,
+            fontSize: 22,
+            lineHeight: T.leading.snug,
+            letterSpacing: T.tracking.tight,
+            color: colors.ink,
+            margin: 0,
+            marginBottom: debate.suggestedHook ? 10 : 16,
           }}
         >
           {cleanHeadline(debate.headline)}

@@ -353,59 +353,8 @@ export function HomeClient({
                 marginBottom: 16,
               }}
             >
-              <div
-                style={{
-                  position: 'relative',
-                  width: '100%',
-                  aspectRatio: '1200 / 630',
-                  background:
-                    'linear-gradient(90deg, #C1121F 0%, #C1121F 50%, #1B4FBE 50%, #1B4FBE 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '32px 36px 56px',
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: 32,
-                    fontWeight: 500,
-                    color: '#F5F5F0',
-                    textAlign: 'center',
-                    lineHeight: 1.12,
-                    letterSpacing: '-0.025em',
-                    textShadow: '0 2px 18px rgba(0,0,0,0.22)',
-                    maxWidth: 560,
-                  }}
-                >
-                  {cleanHeadline(item.question)}
-                </div>
-                <div
-                  aria-label="bilateral"
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: 14,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: 0,
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: '#F5F5F0',
-                    letterSpacing: '-0.035em',
-                    lineHeight: 1,
-                  }}
-                >
-                  <span aria-hidden="true">bi</span>
-                  <span aria-hidden="true">lateral</span>
-                </div>
-              </div>
-
-              <div style={{ padding: '20px 24px 22px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ padding: '22px 24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <span
                     style={{
                       fontSize: 11,
@@ -430,6 +379,19 @@ export function HomeClient({
                   >
                     {item.category?.replace(/_/g, ' ')}
                   </span>
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 22,
+                    fontWeight: 500,
+                    lineHeight: 1.25,
+                    letterSpacing: '-0.02em',
+                    color: '#0A0A0A',
+                    marginBottom: 14,
+                  }}
+                >
+                  {cleanHeadline(item.question)}
                 </div>
                 {(item.conservativePreview || item.liberalPreview) && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
