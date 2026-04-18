@@ -145,6 +145,14 @@ function ListenBar({ speech }: { speech: ReturnType<typeof useSpeech> }) {
   )
 }
 
+// Safely extract string from either "text" or {text: "..."} format.
+// The arbiter sometimes returns structured objects instead of plain strings.
+function str(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (v && typeof v === 'object' && 'text' in v) return String((v as any).text)
+  return String(v ?? '')
+}
+
 function resolveBadge(
   track: string,
   sourceType?: string,
@@ -582,7 +590,7 @@ export function StoryExchange({
                 Both sides agree
               </div>
               <div style={{ fontSize: 15, lineHeight: 1.65, color: '#3A3A3A' }}>
-                {debate.verdict.agreements[0]}
+                {str(debate.verdict.agreements[0])}
               </div>
             </div>
           )}
@@ -592,7 +600,7 @@ export function StoryExchange({
                 The real conflict
               </div>
               <div style={{ fontSize: 15, lineHeight: 1.65, color: '#3A3A3A' }}>
-                {debate.verdict.conflicts[0]}
+                {str(debate.verdict.conflicts[0])}
               </div>
             </div>
           )}
@@ -602,7 +610,7 @@ export function StoryExchange({
                 What nobody has answered
               </div>
               <div style={{ fontSize: 15, lineHeight: 1.65, color: '#3A3A3A' }}>
-                {debate.verdict.openQuestions[0]}
+                {str(debate.verdict.openQuestions[0])}
               </div>
             </div>
           )}
