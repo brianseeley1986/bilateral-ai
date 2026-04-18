@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
-import { getUnpostedDebates, markAsPostedToX, unmarkXPost } from '@/lib/db'
+import { getUnpostedDebates, markAsPostedToX } from '@/lib/db'
 import { postToX } from '@/lib/social'
 
 async function readAutoPostToggle(): Promise<boolean> {
@@ -60,12 +60,10 @@ export async function GET(req: NextRequest) {
     if (result.success) {
       // Update with the actual tweet ID
       await markAsPostedToX(debate.id, result.tweetId)
-    } else if (result.error && /duplicate content/i.test(result.error)) {
-      // X already saw this URL — keep it marked so the cron moves on.
-    } else {
-      // Real failure — unmark so the cron retries next run.
-      await unmarkXPost(debate.id)
     }
+    // On any failure (duplicate, rate limit, timeout): keep it marked.
+    // A skipped debate is better than a duplicate post. The admin panel
+    // can manually retry if needed.
 
     return NextResponse.json({
       success: true,
