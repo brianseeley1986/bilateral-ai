@@ -394,7 +394,7 @@ export function HomeClient({
                   {cleanHeadline(item.question)}
                 </div>
                 {(item.conservativePreview || item.liberalPreview) && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10, marginBottom: 14 }}>
                     <div style={{ background: '#FFF0F0', borderRadius: 10, padding: '12px 14px', minHeight: 72 }}>
                       <div style={{ fontSize: 9, fontWeight: 700, color: '#C1121F', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>
                         Conservative
