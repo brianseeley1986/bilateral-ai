@@ -82,11 +82,11 @@ export function HeadlineInput() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 14,
+          gap: 10,
           background: '#fff',
           border: `1px solid ${focused ? '#0A0A0A' : '#DCDCD6'}`,
           borderRadius: 999,
-          padding: '14px 10px 14px 26px',
+          padding: '10px 8px 10px 20px',
           transition: 'border-color 140ms ease, box-shadow 140ms ease',
           boxShadow: focused ? '0 6px 24px rgba(10,10,10,0.08)' : '0 1px 2px rgba(10,10,10,0.04)',
         }}
@@ -104,7 +104,7 @@ export function HeadlineInput() {
           disabled={loading}
           style={{
             flex: 1,
-            fontSize: 19,
+            fontSize: 16,
             fontFamily: 'var(--font-serif)',
             fontWeight: 400,
             fontStyle: headline ? 'normal' : 'italic',
@@ -112,7 +112,8 @@ export function HeadlineInput() {
             outline: 'none',
             background: 'transparent',
             color: '#0A0A0A',
-            padding: '2px 0',
+            padding: '4px 0',
+            minWidth: 0,
             letterSpacing: '-0.01em',
           }}
         />
@@ -125,8 +126,8 @@ export function HeadlineInput() {
             color: enabled ? '#F5F5F0' : '#9B9B96',
             border: 'none',
             borderRadius: 999,
-            padding: '10px 22px',
-            fontSize: 13,
+            padding: '10px 18px',
+            fontSize: 12,
             fontWeight: 600,
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
