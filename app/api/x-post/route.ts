@@ -20,9 +20,16 @@ export async function POST(req: NextRequest) {
   if (body.debateId) {
     const sql = neon(process.env.DATABASE_URL!)
     const rows = await sql`
-      SELECT id, headline, slug, data FROM debates WHERE id = ${body.debateId}
+      SELECT id, headline, slug, data, x_posted_at FROM debates WHERE id = ${body.debateId}
     `
     debate = rows[0]
+    if (debate?.x_posted_at) {
+      return NextResponse.json({
+        error: 'Already posted',
+        debateId: body.debateId,
+        postedAt: debate.x_posted_at,
+      }, { status: 409 })
+    }
   } else {
     const unposted = await getUnpostedDebates(1)
     debate = unposted[0]
@@ -33,6 +40,12 @@ export async function POST(req: NextRequest) {
   }
 
   const debateData = debate.data
+
+  // Mark BEFORE posting so concurrent requests or mid-flight kills
+  // don't cause duplicate posts.
+  if (!mockMode) {
+    await markAsPostedToX(debate.id, undefined)
+  }
 
   const result = await postToX(
     {
@@ -46,11 +59,6 @@ export async function POST(req: NextRequest) {
     },
     mockMode
   )
-
-  // Mark before posting to prevent duplicate posts on mid-flight kills.
-  if (!mockMode) {
-    await markAsPostedToX(debate.id, undefined)
-  }
 
   // Update with actual tweet ID on success. On failure: keep marked.
   if (result.success && !result.mock) {

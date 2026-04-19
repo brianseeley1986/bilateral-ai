@@ -168,7 +168,7 @@ function robustJSONParse(raw: string): any {
   return JSON.parse(cleaned)
 }
 
-async function checkSemanticSimilarity(
+export async function checkSemanticSimilarity(
   newHeadline: string,
   existingRecords: Array<{ headline: string; context?: string }>
 ): Promise<{
@@ -220,7 +220,7 @@ ${existingRecords.map((r, i) => `${i + 1}. "${r.headline}"${r.context ? `\n   Co
   try {
     const result = robustJSONParse(content.text)
     return {
-      isDuplicate: !!result.isDuplicate && result.confidence >= 0.80,
+      isDuplicate: !!result.isDuplicate && result.confidence >= 0.65,
       matchedHeadline: result.matchedHeadline || undefined,
       confidence: typeof result.confidence === 'number' ? result.confidence : 0,
       reasoning: result.reasoning,

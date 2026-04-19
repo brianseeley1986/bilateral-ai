@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { getUnpostedDebates, markAsPostedToX, getRecentXPostedHeadlines } from '@/lib/db'
 import { postToX } from '@/lib/social'
-import { compareHeadlines } from '@/lib/deduplication'
+import { checkSemanticSimilarity } from '@/lib/deduplication'
 
 async function readAutoPostToggle(): Promise<boolean> {
   try {
@@ -40,21 +40,35 @@ export async function GET(req: NextRequest) {
 
     // Check each candidate against recently posted headlines to avoid
     // posting the same story twice (different headline, same topic).
+    // Uses Claude Haiku for semantic comparison — Jaccard bag-of-words
+    // was too weak and let rewording of the same story through.
     const recentHeadlines = await getRecentXPostedHeadlines(72)
     let debate: (typeof unposted)[0] | null = null
     const skippedDupes: string[] = []
 
     for (const candidate of unposted) {
       const candidateHeadline = candidate.headline || candidate.data?.headline || ''
-      const isTooSimilar = recentHeadlines.some(
-        (posted) => compareHeadlines(candidateHeadline, posted) >= 0.35
-      )
-      if (isTooSimilar) {
-        // Mark it so it doesn't clog the queue forever
-        await markAsPostedToX(candidate.id, 'skipped-duplicate')
-        skippedDupes.push(candidateHeadline)
-        continue
+
+      if (recentHeadlines.length > 0) {
+        try {
+          const semantic = await checkSemanticSimilarity(
+            candidateHeadline,
+            recentHeadlines.map((h) => ({ headline: h }))
+          )
+          if (semantic.isDuplicate) {
+            await markAsPostedToX(candidate.id, 'skipped-duplicate')
+            skippedDupes.push(`${candidateHeadline} (matched: ${semantic.matchedHeadline})`)
+            continue
+          }
+        } catch (e) {
+          // If semantic check fails, skip this candidate to be safe —
+          // a missed post is better than a duplicate post
+          console.error('X dedup semantic check failed:', e)
+          skippedDupes.push(`${candidateHeadline} (semantic check error)`)
+          continue
+        }
       }
+
       debate = candidate
       break
     }
