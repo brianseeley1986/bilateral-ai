@@ -177,7 +177,7 @@ export async function acquireIngestionLock(
 ): Promise<boolean> {
   try {
     // First clean expired locks so we don't stay blocked indefinitely
-    await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW()`
+    await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW() OR expires_at IS NULL`
     const result = await sql()`
       INSERT INTO ingestion_locks (key, locked_at, expires_at)
       VALUES (${key}, NOW(), NOW() + make_interval(mins => ${ttlMinutes}))
@@ -198,7 +198,7 @@ export async function releaseIngestionLock(key: string): Promise<void> {
 
 export async function cleanExpiredLocks(): Promise<void> {
   try {
-    await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW()`
+    await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW() OR expires_at IS NULL`
   } catch {}
 }
 
