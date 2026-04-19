@@ -129,14 +129,13 @@ export default async function Image({ params }: { params: { id: string } }) {
           </span>
         </div>
 
-        {/* Headline + hook — centered in available space */}
+        {/* Headline + hook */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            padding: '16px 44px 12px',
-            flex: '1',
+            justifyContent: 'flex-start',
+            padding: '20px 44px 0',
           }}
         >
           <div
@@ -168,9 +167,12 @@ export default async function Image({ params }: { params: { id: string } }) {
           )}
         </div>
 
-        {/* C/L blocks — leave 56px at bottom for X's overlay bar */}
+        {/* Spacer — pushes cards toward the middle, not the very bottom */}
+        <div style={{ flex: '1' }} />
+
+        {/* C/L blocks — positioned mid-lower with generous bottom margin */}
         {(cLine || lLine) && (
-          <div style={{ display: 'flex', gap: 12, padding: '0 44px 56px' }}>
+          <div style={{ display: 'flex', gap: 12, padding: '0 44px 80px' }}>
             <div
               style={{
                 flex: 1,

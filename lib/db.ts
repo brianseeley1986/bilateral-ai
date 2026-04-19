@@ -180,7 +180,7 @@ export async function acquireIngestionLock(
     await sql()`DELETE FROM ingestion_locks WHERE expires_at < NOW()`
     const result = await sql()`
       INSERT INTO ingestion_locks (key, locked_at, expires_at)
-      VALUES (${key}, NOW(), NOW() + (${ttlMinutes} || ' minutes')::interval)
+      VALUES (${key}, NOW(), NOW() + make_interval(mins => ${ttlMinutes}))
       ON CONFLICT (key) DO NOTHING
       RETURNING key
     `
@@ -710,6 +710,17 @@ export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
     ORDER BY created_at DESC
     LIMIT ${limit}
   `
+}
+
+export async function getRecentXPostedHeadlines(hours: number = 72): Promise<string[]> {
+  const rows = await sql()`
+    SELECT headline FROM debates
+    WHERE x_posted_at IS NOT NULL
+      AND x_posted_at > NOW() - make_interval(hours => ${hours})
+    ORDER BY x_posted_at DESC
+    LIMIT 30
+  `
+  return rows.map((r: any) => r.headline as string)
 }
 
 export async function getXPostingStats(): Promise<{
