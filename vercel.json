@@ -1,10 +1,10 @@
 {
   "crons": [
-    { "path": "/api/cron/ingest",       "schedule": "0 6,9,12,15,18,21 * * *" },
+    { "path": "/api/cron/ingest",       "schedule": "0 8,12,18 * * *" },
     { "path": "/api/cron/digest",       "schedule": "0 13 * * *" },
     { "path": "/api/cron/journalists",  "schedule": "0 9 * * *" },
     { "path": "/api/cron/local-daily",  "schedule": "0 10 * * *" },
     { "path": "/api/cron/local-digest", "schedule": "0 12 * * 0" },
-    { "path": "/api/cron/x-post",       "schedule": "30 7,10,13,16,19,22 * * *" }
+    { "path": "/api/cron/x-post",       "schedule": "0 13,17,22 * * *" }
   ]
 }
