@@ -28,7 +28,7 @@ function smartTrim(text: string, max: number): string {
   return restore(space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 90): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 120): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }
@@ -67,7 +67,7 @@ export default async function Image({ params }: { params: { id: string } }) {
   }
 
   const displayHeadline = shortHeadline || (headline.length > 80 ? headline.slice(0, 77) + '…' : headline)
-  const headlineSize = displayHeadline.length > 60 ? 54 : displayHeadline.length > 40 ? 64 : 76
+  const headlineSize = displayHeadline.length > 60 ? 48 : displayHeadline.length > 40 ? 56 : 64
 
   const [frauncesMedium, frauncesBold] = await Promise.all([
     loadFraunces(500, false),
@@ -89,61 +89,55 @@ export default async function Image({ params }: { params: { id: string } }) {
           display: 'flex',
           flexDirection: 'column',
           fontFamily: 'Fraunces, Georgia, serif',
-          padding: '36px 48px',
         }}
       >
-        {/* Brand bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#C1121F' }} />
-          <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: '#F5F5F0' }}>
-            bilateral
-          </span>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#1B4FBE' }} />
+        {/* Top section: brand + headline */}
+        <div style={{ padding: '32px 48px 24px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#C1121F' }} />
+            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.03em', color: '#F5F5F0' }}>
+              bilateral
+            </span>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#1B4FBE' }} />
+          </div>
+          <div
+            style={{
+              fontSize: headlineSize,
+              fontWeight: 700,
+              color: '#F5F5F0',
+              lineHeight: 1.1,
+              letterSpacing: '-0.025em',
+              maxWidth: 1050,
+            }}
+          >
+            {displayHeadline}
+          </div>
         </div>
 
-        {/* Headline — large, left-aligned, takes what it needs */}
-        <div
-          style={{
-            fontSize: headlineSize,
-            fontWeight: 700,
-            color: '#F5F5F0',
-            lineHeight: 1.12,
-            letterSpacing: '-0.03em',
-            marginTop: 28,
-            maxWidth: 1050,
-          }}
-        >
-          {displayHeadline}
-        </div>
-
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
-
-        {/* C/L cards — sit above X's overlay zone */}
+        {/* Bottom section: two big red/blue panels filling remaining space */}
         {(cLine || lLine) && (
-          <div style={{ display: 'flex', gap: 16, marginBottom: 48 }}>
+          <div style={{ display: 'flex', flex: 1, gap: 4 }}>
             <div
               style={{
                 flex: 1,
                 background: '#C1121F',
-                borderRadius: 14,
-                padding: '20px 24px',
+                padding: '28px 36px',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 700,
-                  color: 'rgba(255,255,255,0.7)',
-                  letterSpacing: '0.14em',
-                  marginBottom: 8,
+                  color: 'rgba(255,255,255,0.65)',
+                  letterSpacing: '0.16em',
+                  marginBottom: 12,
                 }}
               >
                 CONSERVATIVE
               </span>
-              <div style={{ fontSize: 22, color: '#FFFFFF', lineHeight: 1.3, fontWeight: 500 }}>
+              <div style={{ fontSize: 24, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
                 {cLine}
               </div>
             </div>
@@ -151,24 +145,23 @@ export default async function Image({ params }: { params: { id: string } }) {
               style={{
                 flex: 1,
                 background: '#1B4FBE',
-                borderRadius: 14,
-                padding: '20px 24px',
+                padding: '28px 36px',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 700,
-                  color: 'rgba(255,255,255,0.7)',
-                  letterSpacing: '0.14em',
-                  marginBottom: 8,
+                  color: 'rgba(255,255,255,0.65)',
+                  letterSpacing: '0.16em',
+                  marginBottom: 12,
                 }}
               >
                 LIBERAL
               </span>
-              <div style={{ fontSize: 22, color: '#FFFFFF', lineHeight: 1.3, fontWeight: 500 }}>
+              <div style={{ fontSize: 24, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
                 {lLine}
               </div>
             </div>
