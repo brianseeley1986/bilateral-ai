@@ -146,9 +146,9 @@ function safeParseJSON<T>(raw: string, fallback: T): T {
   }
 }
 
-function classificationToStatus(classification: string): PublishStatus {
-  if (classification === 'PUBLISH') return 'published'
-  if (classification === 'REVIEW') return 'review'
+function scoreToStatus(score: number): PublishStatus {
+  if (score >= 7.5) return 'published'
+  if (score >= 6.0) return 'review'
   return 'held'
 }
 
@@ -414,16 +414,19 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
     : {}
 
   const qualityFallback: QualityScore = {
-    overallScore: 0,
-    classification: 'HOLD',
+    overallScore: 7.5,
+    classification: 'PUBLISH',
     weakestDimension: '',
-    scoringNotes: '',
+    scoringNotes: 'quality scorer failed — defaulting to publish',
     scores: { argumentSpecificity: 0, evidenceQuality: 0, genuineTension: 0, intellectualHonesty: 0, depthBeyondHeadlines: 0 },
   }
   const qualityScore: QualityScore = qualityResult.status === 'fulfilled' && qualityResult.value
     ? safeParseJSON<QualityScore>(qualityResult.value, qualityFallback)
     : qualityFallback
-  const publishStatus = classificationToStatus(qualityScore.classification)
+  if (qualityScore === qualityFallback) {
+    console.warn('Quality scorer failed for debate — defaulting to PUBLISH:', headline)
+  }
+  const publishStatus = scoreToStatus(qualityScore.overallScore)
 
   let conservativeFeedHook: string | undefined
   let liberalFeedHook: string | undefined

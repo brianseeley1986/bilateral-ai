@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
-import { getUnpostedDebates, markAsPostedToX } from '@/lib/db'
+import { getUnpostedDebates, markAsPostedToX, getRecentXPostedHeadlines } from '@/lib/db'
 import { postToX } from '@/lib/social'
+import { checkSemanticSimilarity } from '@/lib/deduplication'
 
 async function readAutoPostToggle(): Promise<boolean> {
   try {
@@ -31,14 +32,56 @@ export async function GET(req: NextRequest) {
   const mockMode = process.env.X_MOCK_MODE === 'true'
 
   try {
-    const unposted = await getUnpostedDebates(5)
+    const unposted = await getUnpostedDebates(10)
 
     if (unposted.length === 0) {
       return NextResponse.json({ success: true, message: 'No unposted debates', posted: 0 })
     }
 
-    const debate = unposted[0]
+    // Check each candidate against recently posted headlines to avoid
+    // posting the same story twice (different headline, same topic).
+    const recentHeadlines = await getRecentXPostedHeadlines(72)
+    let debate: (typeof unposted)[0] | null = null
+    const skippedDupes: string[] = []
+
+    for (const candidate of unposted) {
+      const candidateHeadline = candidate.headline || candidate.data?.headline || ''
+
+      if (recentHeadlines.length > 0) {
+        try {
+          const semantic = await checkSemanticSimilarity(
+            candidateHeadline,
+            recentHeadlines.map((h) => ({ headline: h }))
+          )
+          if (semantic.isDuplicate) {
+            await markAsPostedToX(candidate.id, 'skipped-duplicate')
+            skippedDupes.push(`${candidateHeadline} (matched: ${semantic.matchedHeadline})`)
+            continue
+          }
+        } catch (e) {
+          console.error('X dedup semantic check failed:', e)
+          skippedDupes.push(`${candidateHeadline} (semantic check error)`)
+          continue
+        }
+      }
+
+      debate = candidate
+      break
+    }
+
+    if (!debate) {
+      return NextResponse.json({
+        success: true,
+        message: 'All candidates were duplicates of recent posts',
+        skippedDupes,
+        posted: 0,
+      })
+    }
+
     const debateData = debate.data
+
+    // Mark BEFORE posting to prevent duplicates on mid-flight kills.
+    await markAsPostedToX(debate.id, undefined)
 
     const result = await postToX(
       {
@@ -54,12 +97,10 @@ export async function GET(req: NextRequest) {
     )
 
     if (result.success) {
+      // Update with actual tweet ID
       await markAsPostedToX(debate.id, result.tweetId)
-    } else if (result.error && /duplicate content/i.test(result.error)) {
-      // X already saw this URL — mark the debate "posted" so the cron stops
-      // retrying it forever and moves to the next eligible one.
-      await markAsPostedToX(debate.id, undefined)
     }
+    // On failure: keep marked. A missed post is better than a duplicate.
 
     return NextResponse.json({
       success: true,
