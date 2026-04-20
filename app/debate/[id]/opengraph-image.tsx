@@ -137,7 +137,7 @@ export default async function Image({ params }: { params: { id: string } }) {
               >
                 CONSERVATIVE
               </span>
-              <div style={{ fontSize: 24, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
+              <div style={{ fontSize: 32, color: '#FFFFFF', lineHeight: 1.3, fontWeight: 500 }}>
                 {cLine}
               </div>
             </div>
@@ -161,7 +161,7 @@ export default async function Image({ params }: { params: { id: string } }) {
               >
                 LIBERAL
               </span>
-              <div style={{ fontSize: 24, color: '#FFFFFF', lineHeight: 1.35, fontWeight: 500 }}>
+              <div style={{ fontSize: 32, color: '#FFFFFF', lineHeight: 1.3, fontWeight: 500 }}>
                 {lLine}
               </div>
             </div>
