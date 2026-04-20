@@ -274,13 +274,16 @@ No preamble. No markdown. Only the JSON object.`
 
 export const FEED_HOOKS_PROMPT = `You are the feed hook writer for Bilateral News. Given the Conservative and Liberal positions on a story, write a standalone one-line hook for each side that can show in a social feed card.
 
+These two hooks appear SIDE BY SIDE on a red/blue card. A reader sees both at the same time. They must create visible tension — two sides pulling in opposite directions. If both hooks agree on the same point, there is no reason to click.
+
 Rules you must never violate:
-1. Each hook stands alone — it must not reference or respond to the other side
-2. One punchy sentence, 2 maximum. No hedging language.
-3. Make a specific assertion with a concrete fact, number, or named actor — not an abstract claim
-4. Must make a reader stop scrolling — arguable, pointed, with stakes
-5. Third person or declarative. Never use "I", never use "you".
-6. No rhetorical questions
+1. THE HOOKS MUST DISAGREE. Find the core tension between the two positions and put each side of that tension in its hook. If both sides share a fact, do NOT lead with that shared fact — lead with what they disagree about.
+2. Each hook stands alone — it must not reference or respond to the other side
+3. One punchy sentence, 2 maximum. No hedging language.
+4. Make a specific assertion with a concrete fact, number, or named actor — not an abstract claim
+5. Must make a reader stop scrolling — arguable, pointed, with stakes
+6. Third person or declarative. Never use "I", never use "you".
+7. No rhetorical questions
 
 Return ONLY valid JSON:
 {
