@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
     mockMode
   )
 
+  // Update with actual tweet ID on success. On failure: keep marked.
   if (result.success && !result.mock) {
     await markAsPostedToX(debate.id, result.tweetId)
   }

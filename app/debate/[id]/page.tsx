@@ -172,8 +172,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
       style={{
         minHeight: '100vh',
         background: '#F5F5F0',
-        padding: '24px 24px 96px',
-        fontFamily: 'system-ui, sans-serif',
+        fontFamily: 'var(--font-sans)',
       }}
     >
       <header
@@ -181,9 +180,9 @@ export default async function DebatePage({ params }: { params: { id: string } })
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '56px',
-          maxWidth: '1100px',
-          margin: '0 auto 56px',
+          maxWidth: 1100,
+          margin: '0 auto',
+          padding: '24px 24px 0',
         }}
       >
         <Link
@@ -191,44 +190,39 @@ export default async function DebatePage({ params }: { params: { id: string } })
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: 8,
             textDecoration: 'none',
           }}
         >
-          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#C1121F', flexShrink: 0 }} />
           <span
             style={{
-              fontSize: '17px',
+              fontFamily: 'var(--font-serif)',
+              fontSize: 22,
               fontWeight: 700,
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.035em',
               color: '#0A0A0A',
             }}
           >
             bilateral
           </span>
-          <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#1B4FBE', flexShrink: 0 }} />
         </Link>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <Link
-            href="/topics"
-            style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}
-          >
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Link href="/topics" style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'none' }}>
             Topics
           </Link>
-          <a
-            href="/about"
-            style={{ fontSize: '13px', color: '#6B6B6B', textDecoration: 'none' }}
-          >
+          <a href="/about" style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'none' }}>
             About
           </a>
-          <Link
-            href="/"
-            style={{ fontSize: '12px', color: '#6B6B6B', textDecoration: 'none' }}
-          >
-            ← Back to feed
+          <Link href="/" style={{ fontSize: 12, color: '#6B6B6B', textDecoration: 'none' }}>
+            ← Feed
           </Link>
         </div>
       </header>
+
+
+      <div style={{ padding: '0 24px 96px' }}>
       {(debate.publishStatus === 'generating' ||
         debate.publishStatus === 'failed' ||
         (!debate.exchanges && !debate.satireExchanges)) ? (
@@ -238,7 +232,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
           <div
             style={{
               maxWidth: 720,
-              margin: '0 auto 24px',
+              margin: '32px auto 28px',
               display: 'flex',
               flexWrap: 'wrap',
               alignItems: 'center',
@@ -247,7 +241,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
               color: '#6B6B6B',
             }}
           >
-            <span style={{ fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            <span style={{ fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 10 }}>
               By
             </span>
             {[PERSONAS.researcher, PERSONAS.conservative, PERSONAS.liberal, PERSONAS.arbiter].map((p, i) => (
@@ -264,8 +258,8 @@ export default async function DebatePage({ params }: { params: { id: string } })
               >
                 <span
                   style={{
-                    width: 18,
-                    height: 18,
+                    width: 20,
+                    height: 20,
                     borderRadius: '50%',
                     background: p.color,
                     color: '#F5F5F0',
@@ -278,7 +272,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
                 >
                   {p.initials}
                 </span>
-                <span style={{ fontWeight: 600 }}>{p.name}</span>
+                <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                 {i < 3 && <span style={{ color: '#C4C4BE', marginLeft: 4 }}>·</span>}
               </Link>
             ))}
@@ -290,37 +284,38 @@ export default async function DebatePage({ params }: { params: { id: string } })
       {related.length > 0 && (
         <section
           style={{
-            maxWidth: '720px',
+            maxWidth: 720,
             margin: '64px auto 0',
-            paddingTop: '32px',
+            paddingTop: 32,
             borderTop: '1px solid #E5E5DD',
           }}
         >
           <h2
             style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: '#6B6B6B',
+              fontFamily: 'var(--font-serif)',
+              fontSize: 26,
+              fontWeight: 500,
+              letterSpacing: '-0.02em',
+              color: '#0A0A0A',
               margin: '0 0 20px',
             }}
           >
             More debates
           </h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {related.map((r) => (
               <li key={r.id}>
                 <Link
                   href={`/debate/${r.slug || r.id}`}
                   style={{
                     display: 'block',
-                    fontSize: '17px',
-                    fontWeight: 600,
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 20,
+                    fontWeight: 500,
                     color: '#0A0A0A',
                     textDecoration: 'none',
-                    lineHeight: 1.35,
-                    letterSpacing: '-0.01em',
+                    lineHeight: 1.3,
+                    letterSpacing: '-0.015em',
                   }}
                 >
                   {r.headline}
@@ -330,6 +325,7 @@ export default async function DebatePage({ params }: { params: { id: string } })
           </ul>
         </section>
       )}
+      </div>
     </main>
     </>
   )

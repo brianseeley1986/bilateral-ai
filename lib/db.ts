@@ -676,6 +676,15 @@ export async function markAsPostedToX(debateId: string, tweetId?: string): Promi
   `
 }
 
+export async function unmarkXPost(debateId: string): Promise<void> {
+  await sql()`
+    UPDATE debates
+    SET x_posted_at = NULL,
+        data = data - 'xTweetId'
+    WHERE id = ${debateId}
+  `
+}
+
 export async function getUnpostedDebates(limit: number = 5): Promise<any[]> {
   // Prefer fresh news debates (< 24h, quality ≥ 8.0, not library)
   const fresh = await sql()`

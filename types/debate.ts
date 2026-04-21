@@ -106,6 +106,7 @@ export interface DebateOutput {
   createdAt: string
   track: Track
   geographicScope: GeoScope
+  shortHeadline?: string
   suggestedHook: string
   context: ContextBrief
   timeline: TimelineEvent[]

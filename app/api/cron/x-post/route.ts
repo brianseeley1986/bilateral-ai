@@ -40,6 +40,8 @@ export async function GET(req: NextRequest) {
 
     // Check each candidate against recently posted headlines to avoid
     // posting the same story twice (different headline, same topic).
+    // Uses Claude Haiku for semantic comparison — Jaccard bag-of-words
+    // was too weak and let rewording of the same story through.
     const recentHeadlines = await getRecentXPostedHeadlines(72)
     let debate: (typeof unposted)[0] | null = null
     const skippedDupes: string[] = []
@@ -59,6 +61,8 @@ export async function GET(req: NextRequest) {
             continue
           }
         } catch (e) {
+          // If semantic check fails, skip this candidate to be safe —
+          // a missed post is better than a duplicate post
           console.error('X dedup semantic check failed:', e)
           skippedDupes.push(`${candidateHeadline} (semantic check error)`)
           continue
@@ -80,7 +84,8 @@ export async function GET(req: NextRequest) {
 
     const debateData = debate.data
 
-    // Mark BEFORE posting to prevent duplicates on mid-flight kills.
+    // Mark BEFORE posting so if the function is killed mid-flight (deploy,
+    // timeout) the debate doesn't get re-posted. On failure we unmark.
     await markAsPostedToX(debate.id, undefined)
 
     const result = await postToX(
@@ -97,10 +102,12 @@ export async function GET(req: NextRequest) {
     )
 
     if (result.success) {
-      // Update with actual tweet ID
+      // Update with the actual tweet ID
       await markAsPostedToX(debate.id, result.tweetId)
     }
-    // On failure: keep marked. A missed post is better than a duplicate.
+    // On any failure (duplicate, rate limit, timeout): keep it marked.
+    // A skipped debate is better than a duplicate post. The admin panel
+    // can manually retry if needed.
 
     return NextResponse.json({
       success: true,

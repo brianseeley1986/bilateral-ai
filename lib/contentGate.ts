@@ -54,7 +54,7 @@ async function mainstreamCheck(headline: string): Promise<GateResult> {
       max_tokens: 400,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }] as any,
       system:
-        'You evaluate whether a news topic is currently or historically covered by established mainstream press (AP, Reuters, NYT, WaPo, WSJ, BBC, NPR, Politico, The Hill, The Atlantic, major university or government sources). Debunkings and critical coverage count as coverage. Long-running historical conspiracy topics with decades of mainstream press attention (moon landing skepticism, JFK assassination theories, MK-Ultra, COINTELPRO, lab-leak hypothesis, Epstein network) all qualify. Reject only when the topic appears exclusively in fringe blogs, conspiracy forums, or anonymous social-media posts with zero established-press coverage.\n\nRespond ONLY with JSON: {"covered": true|false, "reason": "<one sentence>"}.',
+        'You evaluate whether a topic is legitimate for public debate. A topic passes if ANY of these are true:\n\n1. It is currently or historically covered by established mainstream press (AP, Reuters, NYT, WaPo, WSJ, BBC, NPR, Politico, The Hill, The Atlantic, major university or government sources). Debunkings and critical coverage count.\n2. It is a genuine policy question that reasonable people disagree about (education policy, zoning, healthcare, immigration, etc.) — even if phrased as a question rather than a news headline.\n3. It is a long-running historical or political topic with decades of public discourse.\n\nReject ONLY when the topic appears exclusively in fringe blogs, conspiracy forums, or anonymous social-media posts with zero established-press or academic coverage. When in doubt, allow it — Bilateral\'s researcher agent will find relevant sources.\n\nRespond ONLY with JSON: {"covered": true|false, "reason": "<one sentence>"}.',
       messages: [{ role: 'user', content: `Headline: ${headline}` }],
     })
     const text = res.content
@@ -68,7 +68,7 @@ async function mainstreamCheck(headline: string): Promise<GateResult> {
       allow: false,
       reason: `no mainstream coverage: ${parsed.reason}`,
       userMessage:
-        "We couldn't find established reporting on this story. Bilateral debates topics that are in the news cycle or have a documented history. Try a current headline.",
+        "We couldn't find mainstream coverage or public debate on this topic. Bilateral can debate any question with genuine public disagreement — try rephrasing or picking a different angle.",
     }
   } catch {
     // Fail open on infrastructure errors — don't block real users because the model 500'd.

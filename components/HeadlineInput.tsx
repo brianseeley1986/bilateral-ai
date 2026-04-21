@@ -3,26 +3,27 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 const placeholders = [
-  'Iran ceasefire...',
-  'Costco hot dog...',
-  'Your school board...',
-  'Anything at all...',
+  'Iran ceasefire…',
+  'Costco hot dog…',
+  'Your school board…',
+  'Anything at all…',
 ]
 
 const statuses = [
-  'Analyzing the story...',
-  'Researching context...',
-  'Building the Conservative case...',
-  'Building the Liberal case...',
-  'Running the rebuttal round...',
-  'Mapping where they agree and disagree...',
-  'Finalizing the debate...',
+  'Analyzing the story…',
+  'Researching context…',
+  'Building the Conservative case…',
+  'Building the Liberal case…',
+  'Running the rebuttal round…',
+  'Mapping where they agree and disagree…',
+  'Finalizing the debate…',
 ]
 
 export function HeadlineInput() {
   const [headline, setHeadline] = useState('')
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
+  const [focused, setFocused] = useState(false)
   const [placeholder, setPlaceholder] = useState(placeholders[0])
   const router = useRouter()
   const pIdx = useRef(0)
@@ -59,7 +60,6 @@ export function HeadlineInput() {
         setLoading(false)
         return
       }
-      // Same redirect for all three cases: existing, duplicate, or newly-pending
       const targetId = data.id || data.existingDebateId
       if (targetId) {
         router.push(`/debate/${targetId}`)
@@ -74,24 +74,29 @@ export function HeadlineInput() {
     }
   }
 
+  const enabled = !loading && headline.trim().length > 0
+
   return (
-    <div style={{ width: '100%', maxWidth: '640px', margin: '0 auto' }}>
-      <div
+    <div style={{ width: '100%', maxWidth: 640, margin: '0 auto' }}>
+      <label
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: 10,
           background: '#fff',
-          border: '0.5px solid #d0d0d0',
-          borderRadius: '32px',
-          padding: '14px 22px',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+          border: `1px solid ${focused ? '#0A0A0A' : '#DCDCD6'}`,
+          borderRadius: 999,
+          padding: '10px 8px 10px 20px',
+          transition: 'border-color 140ms ease, box-shadow 140ms ease',
+          boxShadow: focused ? '0 6px 24px rgba(10,10,10,0.08)' : '0 1px 2px rgba(10,10,10,0.04)',
         }}
       >
         <input
           type="text"
           value={headline}
           onChange={(e) => setHeadline(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSubmit()
           }}
@@ -99,40 +104,51 @@ export function HeadlineInput() {
           disabled={loading}
           style={{
             flex: 1,
-            fontSize: '17px',
+            fontSize: 16,
+            fontFamily: 'var(--font-serif)',
+            fontWeight: 400,
+            fontStyle: headline ? 'normal' : 'italic',
             border: 'none',
             outline: 'none',
             background: 'transparent',
             color: '#0A0A0A',
-            fontFamily: 'inherit',
             padding: '4px 0',
+            minWidth: 0,
+            letterSpacing: '-0.01em',
           }}
         />
         <button
           onClick={handleSubmit}
-          disabled={loading || !headline.trim()}
+          disabled={!enabled}
+          aria-label="Generate debate"
           style={{
-            background: loading || !headline.trim() ? '#e5e5e5' : '#0A0A0A',
-            color: loading || !headline.trim() ? '#9B9B9B' : '#F5F5F0',
+            background: enabled ? '#0A0A0A' : '#ECECE6',
+            color: enabled ? '#F5F5F0' : '#9B9B96',
             border: 'none',
-            borderRadius: '20px',
-            padding: '8px 18px',
-            fontSize: '13px',
-            fontWeight: 500,
-            cursor: loading || !headline.trim() ? 'default' : 'pointer',
+            borderRadius: 999,
+            padding: '10px 18px',
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            cursor: enabled ? 'pointer' : 'default',
             flexShrink: 0,
+            transition: 'background 140ms ease',
           }}
         >
-          {loading ? '...' : 'Run'}
+          {loading ? '…' : 'Debate'}
         </button>
-      </div>
+      </label>
       <div
         style={{
           textAlign: 'center',
-          marginTop: '14px',
-          fontSize: '13px',
+          marginTop: 14,
+          fontFamily: 'var(--font-serif)',
+          fontStyle: 'italic',
+          fontSize: 14,
           color: '#6B6B6B',
-          minHeight: '18px',
+          minHeight: 18,
+          letterSpacing: '0.005em',
         }}
       >
         {loading ? status : ''}

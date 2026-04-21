@@ -11,6 +11,7 @@ import {
   ADVERTISING_AGENT_PROMPT,
   QUALITY_SCORER_PROMPT,
   FEED_HOOKS_PROMPT,
+  SHORT_HEADLINE_PROMPT,
   DIVIDE_CARD_PROMPT,
 } from './agents'
 import type {
@@ -396,9 +397,12 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
 
   const hooksInput = `Conservative position:\n${conservative.argument}\n\nLiberal position:\n${liberal.argument}`
 
-  const [lblResult, hooksResult, chainResult] = await Promise.allSettled([
+  const [lblResult, hooksResult, shortHeadlineResult, chainResult] = await Promise.allSettled([
     runAgent(LINE_BY_LINE_PROMPT, lblInput, SONNET),
     runAgent(FEED_HOOKS_PROMPT, hooksInput, HAIKU, 400),
+    headline.length > 60
+      ? runAgent(SHORT_HEADLINE_PROMPT, headline, HAIKU, 100)
+      : Promise.resolve(headline),
     rebuttalArbiterQualityChain,
   ])
 
@@ -435,6 +439,11 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
     conservativeFeedHook = hooks.conservativeFeedHook || undefined
     liberalFeedHook = hooks.liberalFeedHook || undefined
   }
+
+  const shortHeadline: string | undefined =
+    shortHeadlineResult.status === 'fulfilled' && shortHeadlineResult.value
+      ? shortHeadlineResult.value.trim().replace(/^["']|["']$/g, '').split('\n')[0].trim()
+      : undefined
 
   // Build factionAlert from researcher's findings (moved from separate agent call)
   const cSplit = cPositions?.factionSplit
@@ -486,6 +495,7 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
     verdict,
     exchanges: lbl.exchanges,
     leadingSide,
+    shortHeadline,
     conservativeFeedHook,
     liberalFeedHook,
     factionAlert,
