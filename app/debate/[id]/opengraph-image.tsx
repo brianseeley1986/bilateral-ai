@@ -49,18 +49,24 @@ export default async function Image({ params }: { params: { id: string } }) {
     if (debate) {
       headline = debate.headline || headline
       shortHeadline = debate.shortHeadline || undefined
-      const cFallback =
+      // previewLine is designed to be short and punchy (under 20 words) —
+      // perfect for the tight OG image panels. feedHook is longer (full
+      // sentences) and gets butchered by the 120-char trim. So prefer
+      // previewLine for OG, fall back to feedHook, then raw argument.
+      const cSource =
         debate.conservative?.previewLine ||
+        debate.conservativeFeedHook ||
         debate.exchanges?.[0]?.c ||
         debate.conservative?.argument ||
         ''
-      const lFallback =
+      const lSource =
         debate.liberal?.previewLine ||
+        debate.liberalFeedHook ||
         debate.exchanges?.[0]?.l ||
         debate.liberal?.argument ||
         ''
-      cLine = pickLine(debate.conservativeFeedHook, cFallback)
-      lLine = pickLine(debate.liberalFeedHook, lFallback)
+      cLine = pickLine(cSource, undefined)
+      lLine = pickLine(lSource, undefined)
     }
   } catch (err) {
     console.error('OG image DB query failed for', params.id, err)
