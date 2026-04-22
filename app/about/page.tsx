@@ -1,4 +1,11 @@
 import { PERSONA_LIST } from '@/lib/personas'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'About — Bilateral',
+  description: 'How Bilateral works: AI-powered debates with conservative and liberal analysts arguing every major story at full depth.',
+  alternates: { canonical: 'https://bilateral.news/about' },
+}
 
 export default function AboutPage() {
   return (

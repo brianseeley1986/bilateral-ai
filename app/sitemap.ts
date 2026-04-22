@@ -37,12 +37,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       LIMIT 5000
     ` as Array<{ id: string; slug: string | null; last_modified: Date }>
 
-    const debateEntries = rows.map((row) => ({
-      url: `${base}/debate/${row.slug || row.id}`,
-      lastModified: new Date(row.last_modified),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }))
+    // Only include debates that have a slug — ID-only URLs 301 redirect to
+    // slug URLs, so including them in the sitemap sends mixed signals to Google.
+    const debateEntries = rows
+      .filter((row) => row.slug)
+      .map((row) => ({
+        url: `${base}/debate/${row.slug}`,
+        lastModified: new Date(row.last_modified),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }))
 
     return [...staticEntries, ...debateEntries]
   } catch {

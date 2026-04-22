@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'From Readers — Bilateral',
   description: 'Debates generated from questions submitted by Bilateral readers.',
+  alternates: { canonical: 'https://bilateral.news/debates/readers' },
 }
 
 export default async function ReadersPage() {

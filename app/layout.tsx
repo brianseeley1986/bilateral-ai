@@ -47,6 +47,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
+    canonical: 'https://bilateral.news',
     types: { 'application/rss+xml': '/feed.xml' },
   },
 };

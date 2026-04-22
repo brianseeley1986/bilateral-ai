@@ -3,16 +3,30 @@ import { getRelatedDebates } from '@/lib/db'
 import { PERSONAS } from '@/lib/personas'
 import { StoryExchange } from '@/components/StoryExchange'
 import { PendingDebateView } from '@/components/PendingDebateView'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
+// 301 redirect ID-based URLs to slug-based URLs so Google only indexes one.
+// Returns the debate if no redirect is needed.
+async function loadDebateOrRedirect(id: string, searchParams?: { og?: string }) {
+  const debate = await getDebate(id)
+  if (!debate) return null
+  const slug = (debate as { slug?: string }).slug
+  // If the URL uses the numeric ID but a slug exists, 301 → slug URL.
+  if (slug && id !== slug && /^\d+$/.test(id)) {
+    const qs = searchParams?.og ? `?og=${encodeURIComponent(searchParams.og)}` : ''
+    redirect(`/debate/${slug}${qs}`)
+  }
+  return debate
+}
+
 export async function generateMetadata(
   { params, searchParams }: { params: { id: string }; searchParams: { og?: string } }
 ): Promise<Metadata> {
-  const debate = await getDebate(params.id)
+  const debate = await loadDebateOrRedirect(params.id, searchParams)
   if (!debate) return {}
   const rawDescription =
     debate.suggestedHook ||
@@ -24,11 +38,10 @@ export async function generateMetadata(
   // Propagate the ?og= cache-buster from the page URL into the image URL so X's
   // image cache (keyed by image URL) refetches when the design changes.
   const og = searchParams?.og
-  // Canonical always points to the slug URL when one exists, so search engines
-  // dedupe id-based and ?og-busted variants to the SEO-friendly slug version.
+  // Canonical always points to the slug URL.
   const canonicalSlug = (debate as { slug?: string }).slug || params.id
   const canonicalUrl = `https://bilateral.news/debate/${canonicalSlug}`
-  const imageUrl = `https://bilateral.news/debate/${params.id}/opengraph-image${og ? `?og=${encodeURIComponent(og)}` : ''}`
+  const imageUrl = `https://bilateral.news/debate/${canonicalSlug}/opengraph-image${og ? `?og=${encodeURIComponent(og)}` : ''}`
 
   return {
     title: `${debate.headline} — Bilateral`,
@@ -55,14 +68,15 @@ export async function generateMetadata(
   }
 }
 
-export default async function DebatePage({ params }: { params: { id: string } }) {
-  const debate = await getDebate(params.id)
+export default async function DebatePage({ params, searchParams }: { params: { id: string }; searchParams: { og?: string } }) {
+  const debate = await loadDebateOrRedirect(params.id, searchParams)
   if (!debate) notFound()
   const related = await getRelatedDebates(debate.id || params.id, 4)
 
   // Structured data: NewsArticle + Question/Answer so Google and AI search
   // engines can identify both the news context and the two-sided debate.
-  const url = `https://bilateral.news/debate/${params.id}`
+  const slugOrId = (debate as { slug?: string }).slug || params.id
+  const url = `https://bilateral.news/debate/${slugOrId}`
   const datePublished = debate.createdAt || new Date().toISOString()
   const cAnswer: string =
     debate.conservative?.argument || debate.conservative?.previewLine || debate.exchanges?.[0]?.c || ''

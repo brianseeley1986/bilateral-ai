@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'Latest debates — Bilateral',
   description:
     'Every Bilateral debate in chronological order. Conservative and liberal arguments at full depth on today\u2019s headlines.',
+  alternates: { canonical: 'https://bilateral.news/debates/latest' },
   openGraph: {
     title: 'Latest debates — Bilateral',
     description: 'Every Bilateral debate in chronological order.',
