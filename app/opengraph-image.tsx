@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { loadFraunces } from '@/lib/og-fonts'
 
 export const runtime = 'edge'
-export const alt = 'Bilateral — The argument behind every headline.'
+export const alt = 'Bilateral — Every satisfying political debate.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -75,7 +75,7 @@ export default async function Image() {
             textShadow: '0 1px 12px rgba(0,0,0,0.2)',
           }}
         >
-          The argument behind every headline.
+          Every satisfying political debate.
         </div>
 
         <div

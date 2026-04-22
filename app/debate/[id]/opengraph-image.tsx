@@ -34,7 +34,7 @@ function pickLine(hook: string | undefined, fallback: string | undefined, max = 
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
-  let headline = 'The argument behind every headline.'
+  let headline = 'Every satisfying political debate.'
   let shortHeadline: string | undefined
   let cLine = ''
   let lLine = ''

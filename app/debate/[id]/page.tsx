@@ -47,7 +47,7 @@ export async function generateMetadata(
       // X renders twitter:title as an overlay bar at the bottom of the card on
       // mobile. Since the headline is already inside the OG image, we use the
       // overlay as a universal CTA instead of duplicating content.
-      title: 'The argument behind every headline.',
+      title: 'Every satisfying political debate.',
       description,
       site: '@bilateralnews',
       images: [imageUrl],
