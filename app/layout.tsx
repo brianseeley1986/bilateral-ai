@@ -24,12 +24,12 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Bilateral — The argument behind every headline.",
-  description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
+  title: "Bilateral — Every satisfying political debate.",
+  description: "Drop any headline. Watch conservative and liberal analysts debate it at full depth — arguments, rebuttals, and where they actually agree.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://bilateral.news"),
   openGraph: {
     title: "Bilateral",
-    description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
+    description: "Drop any headline. Watch conservative and liberal analysts debate it at full depth — arguments, rebuttals, and where they actually agree.",
     url: "https://bilateral.news",
     siteName: "Bilateral",
     type: "website",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Bilateral",
-    description: "Conservative and liberal analysts debate every major story at full depth. See the argument, not just the headline.",
+    description: "Drop any headline. Watch conservative and liberal analysts debate it at full depth — arguments, rebuttals, and where they actually agree.",
     site: "@bilateralnews",
   },
   verification: {

@@ -153,7 +153,7 @@ export function HomeClient({
             letterSpacing: '0.01em',
           }}
         >
-          The argument behind every headline.
+          Every satisfying political debate.
         </div>
         <HeadlineInput />
       </div>
@@ -203,10 +203,10 @@ export function HomeClient({
                 marginBottom: 4,
               }}
             >
-              Today&apos;s debates, every morning.
+              Fresh debates, every morning.
             </div>
             <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.55 }}>
-              One email. The stories worth arguing about. Unsubscribe anytime.
+              One email. The debates worth reading. Unsubscribe anytime.
             </div>
           </div>
           <button
@@ -238,7 +238,7 @@ export function HomeClient({
       {zones.userSubmitted.length > 0 && (
         <ZoneSection
           label="From readers"
-          subtitle="Headlines people asked bilateral to debate."
+          subtitle="Headlines readers submitted for debate."
           debates={zones.userSubmitted}
           count={zones.counts.userSubmitted}
           showScore
@@ -247,7 +247,7 @@ export function HomeClient({
 
       <ZoneSection
         label="Today's debates"
-        subtitle="What the country — and the world — is arguing about."
+        subtitle="The debates the country is having right now."
         debates={todaysDebates}
         count={(zones.counts.national) + (zones.counts.international)}
         hideBadge
@@ -263,8 +263,8 @@ export function HomeClient({
         }
         subtitle={
           location.state
-            ? 'State and local stories in your region.'
-            : 'State and local stories — subscribe to see debates from your region.'
+            ? 'State and local debates in your region.'
+            : 'State and local debates — subscribe to see your region.'
         }
         debates={yourArea}
         count={(zones.counts.state) + (zones.counts.local)}
@@ -305,7 +305,7 @@ export function HomeClient({
             Get debates for {location.city || location.state || 'your area'}
           </div>
           <div style={{ fontSize: 13, color: '#6B6B6B', lineHeight: 1.55 }}>
-            Subscribe and pick &quot;Local.&quot; Bilateral will generate debates on city-council, school-board, and regional stories near you.
+            Subscribe and pick &quot;Local.&quot; Bilateral will generate debates on city-council, school-board, and regional issues near you.
           </div>
         </div>
         <a
@@ -433,7 +433,7 @@ export function HomeClient({
           lineHeight: 1.8,
         }}
       >
-        bilateral.news — two minds, every story
+        bilateral.news — two sides, every debate
         <br />
         AI-powered. Editorially neutral. Intellectually honest.
       </div>
