@@ -27,6 +27,10 @@ export async function normalizeUserHeadline(raw: string): Promise<string> {
     if (content.type !== 'text') return input
     const cleaned = content.text.trim().replace(/^["']|["']$/g, '').split('\n')[0].trim()
     if (!cleaned || cleaned.length > input.length * 2 + 20 || cleaned.length < 3) return input
+    // Detect model going meta instead of cleaning — if output contains refusal
+    // language or shares almost no words with the input, discard it.
+    const metaPhrases = /\b(please provide|not a headline|I can'?t|I'?m unable|as an ai|user-submitted|no headline|provide a|give me)\b/i
+    if (metaPhrases.test(cleaned)) return input
     return cleaned
   } catch (e) {
     console.error('normalizeUserHeadline failed, using raw:', e)
