@@ -5,7 +5,7 @@ import { neon } from '@neondatabase/serverless'
 // broken cached client whose errors get swallowed downstream. Creating a fresh
 // neon() per call is cheap because the underlying transport is HTTP.
 function sql() {
-  return neon(process.env.DATABASE_URL!)
+  return neon(process.env.DATABASE_URL!, { fetchOptions: { cache: 'no-store' } })
 }
 
 export async function initDb() {
