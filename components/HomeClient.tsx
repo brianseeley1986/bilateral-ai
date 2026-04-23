@@ -153,7 +153,7 @@ export function HomeClient({
             letterSpacing: '0.01em',
           }}
         >
-          Every satisfying political debate.
+          The debate behind every headline.
         </div>
         <HeadlineInput />
       </div>

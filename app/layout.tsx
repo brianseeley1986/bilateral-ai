@@ -24,7 +24,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Bilateral — Every satisfying political debate.",
+  title: "Bilateral — The debate behind every headline.",
   description: "Drop any headline. Watch conservative and liberal analysts debate it at full depth — arguments, rebuttals, and where they actually agree.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://bilateral.news"),
   openGraph: {

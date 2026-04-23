@@ -42,7 +42,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Bilateral — Every satisfying political debate.</title>
+    <title>Bilateral — The debate behind every headline.</title>
     <link>${base}</link>
     <description>Conservative and liberal analysts debate every major story at full depth.</description>
     <language>en-us</language>
