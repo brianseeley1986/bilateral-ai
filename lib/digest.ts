@@ -129,8 +129,8 @@ export async function sendDailyDigests(): Promise<{
           const rawHeadline: string = d.headline || debate.headline || ''
           const headline = cleanHeadline(rawHeadline)
           const id: string = debate.id || d.id
-          const cLine: string = debate.conservative?.previewLine || ''
-          const lLine: string = debate.liberal?.previewLine || ''
+          const cLine: string = debate.conservative?.previewLine || debate.conservativeFeedHook || ''
+          const lLine: string = debate.liberal?.previewLine || debate.liberalFeedHook || ''
           const hook: string = debate.suggestedHook || ''
           const geoScope: string = d.geographic_scope || debate.geographicScope || 'national'
           const track: string = d.track || debate.track || 'serious'
@@ -176,7 +176,7 @@ export async function sendDailyDigests(): Promise<{
   <div style="max-width: 560px; margin: 0 auto; padding: 32px 20px;">
     <div style="margin-bottom: 28px;">
       <div style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; color: #0A0A0A;">bilateral</div>
-      <div style="font-size: 12px; color: #9B9B9B;">${date} · The argument behind every headline.</div>
+      <div style="font-size: 12px; color: #9B9B9B;">${date} · Every satisfying political debate.</div>
     </div>
     <div style="background: white; border-radius: 12px; padding: 0 20px; margin-bottom: 24px;">${debateCards}</div>
     <div style="font-size: 11px; color: #9B9B9B; text-align: center; line-height: 1.8;">

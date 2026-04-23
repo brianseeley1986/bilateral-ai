@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     'Browse the most contested questions in American life and the chronological archive of every Bilateral debate.',
   openGraph: {
     title: 'The Bilateral Debates',
-    description: 'The argument behind every headline. Browse by topic or by date.',
+    description: 'Every satisfying political debate. Browse by topic or by date.',
     url: 'https://bilateral.news/debates',
     siteName: 'Bilateral',
     type: 'website',

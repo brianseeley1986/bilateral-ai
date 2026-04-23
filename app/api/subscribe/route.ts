@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family: system-ui; max-width: 500px; margin: 0 auto; padding: 40px 20px;">
           <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">bilateral</div>
-          <div style="font-size: 14px; color: #6B6B6B; margin-bottom: 32px;">The argument behind every headline.</div>
+          <div style="font-size: 14px; color: #6B6B6B; margin-bottom: 32px;">Every satisfying political debate.</div>
           <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
             Click below to confirm your digest. You'll start receiving your personalized debate briefing tomorrow morning.
           </p>

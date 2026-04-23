@@ -60,7 +60,7 @@ export default function AboutPage() {
           marginBottom: '8px',
           lineHeight: 1.2
         }}>
-          The argument behind every headline.
+          Every satisfying political debate.
         </h1>
 
         <p style={{
@@ -435,7 +435,7 @@ export default function AboutPage() {
             bilateral.news
           </a>
           {' · '}
-          The argument behind every headline.
+          Every satisfying political debate.
         </div>
 
       </div>

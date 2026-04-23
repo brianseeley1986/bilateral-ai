@@ -42,8 +42,8 @@ export function generateLocalDigestHTML(params: {
       const debate = d.data || d
       const headline = escapeHtml(cleanHeadline(d.headline || debate.headline || ''))
       const id: string = debate.id || d.id
-      const cLine: string = debate.conservative?.previewLine || ''
-      const lLine: string = debate.liberal?.previewLine || ''
+      const cLine: string = debate.conservative?.previewLine || debate.conservativeFeedHook || ''
+      const lLine: string = debate.liberal?.previewLine || debate.liberalFeedHook || ''
       const cityState = [d.city || debate.city, d.state || debate.state].filter(Boolean).join(', ')
       const link = `${baseUrl}/debate/${id}?h=${encodeURIComponent(cleanHeadline(d.headline || debate.headline || ''))}`
 

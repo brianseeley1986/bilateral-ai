@@ -387,14 +387,10 @@ export function StoryExchange({
           <span style={{ fontSize: '14px' }}>⚡</span>
           <span>
             {debate.factionAlert.dividedSide === 'conservative'
-              ? `The conservative argument in this debate represents the dominant ${
-                  debate.factionAlert.dominantPosition?.conservative || 'MAGA'
-                } position. A significant conservative faction disagrees — see The Divide below.`
+              ? `The conservative argument represents the dominant position. A significant conservative faction disagrees — see The Divide below.`
               : debate.factionAlert.dividedSide === 'liberal'
-              ? `The liberal argument in this debate represents the dominant ${
-                  debate.factionAlert.dominantPosition?.liberal || 'mainstream'
-                } position. A significant liberal faction disagrees — see The Divide below.`
-              : `Both sides have significant internal splits on this story. Arguments below represent the dominant positions on each side — see The Divide below for the full picture.`}
+              ? `The liberal argument represents the dominant position. A significant liberal faction disagrees — see The Divide below.`
+              : `Both sides have significant internal splits on this story. Arguments below represent the dominant positions — see The Divide below for the full picture.`}
           </span>
         </div>
       )}
