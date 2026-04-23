@@ -28,7 +28,7 @@ function smartTrim(text: string, max: number): string {
   return restore(space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 120): string {
+function pickLine(hook: string | undefined, fallback: string | undefined, max = 160): string {
   const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
   return smartTrim(source, max)
 }

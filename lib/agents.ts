@@ -136,7 +136,7 @@ VOICE AND STYLE REQUIREMENTS:
 Return ONLY valid JSON:
 {
   "argument": "3-4 paragraph argument in clear prose",
-  "previewLine": "one punchy sentence that works as a standalone hook on a news feed card — the most interesting, opinionated, scroll-stopping version of this position in under 20 words",
+  "previewLine": "one punchy sentence (MAX 120 characters, under 18 words) that works as a standalone hook — the most interesting, opinionated, scroll-stopping version of this position. If it won't fit in a tweet-sized space, it's too long. Cut ruthlessly.",
   "evidence": [
     { "tag": "hist|data|prec|econ", "text": "one sentence evidence item" }
   ],
@@ -175,7 +175,7 @@ VOICE AND STYLE REQUIREMENTS:
 Return ONLY valid JSON:
 {
   "argument": "3-4 paragraph argument in clear prose",
-  "previewLine": "one punchy sentence that works as a standalone hook on a news feed card — the most interesting, opinionated, scroll-stopping version of this position in under 20 words",
+  "previewLine": "one punchy sentence (MAX 120 characters, under 18 words) that works as a standalone hook — the most interesting, opinionated, scroll-stopping version of this position. If it won't fit in a tweet-sized space, it's too long. Cut ruthlessly.",
   "evidence": [
     { "tag": "hist|data|prec|econ", "text": "one sentence evidence item" }
   ],
