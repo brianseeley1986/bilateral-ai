@@ -75,6 +75,29 @@ export async function postToX(
     return { success: true, tweetText, mock: true }
   }
 
+  // Warm the OG image before posting. X's crawler scrapes the card
+  // immediately after the tweet goes live. If the edge function is cold
+  // or mid-deploy the image 500s and X caches the broken card forever.
+  // Fetching it ourselves first ensures the function is warm and the
+  // image is in Vercel's edge cache when X comes knocking.
+  // Also warm the page itself so meta tags are cached for X's crawler.
+  const pageUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
+  try { await fetch(pageUrl, { method: 'GET' }) } catch {}
+
+  const ogImageUrl = `${baseUrl}/debate/${debate.slug || debate.id}/opengraph-image`
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const warm = await fetch(ogImageUrl, { method: 'GET' })
+      if (warm.ok) {
+        console.log(`OG image warmed (${warm.status}, attempt ${attempt + 1})`)
+        break
+      }
+      console.warn(`OG image warm attempt ${attempt + 1} returned ${warm.status}`)
+    } catch (e) {
+      console.warn(`OG image warm attempt ${attempt + 1} failed:`, e)
+    }
+  }
+
   try {
     const url = 'https://api.twitter.com/2/tweets'
     const body = { text: tweetText }
