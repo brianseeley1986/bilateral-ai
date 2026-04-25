@@ -165,6 +165,30 @@ export function HomeClient({
         <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 20px' }}>
           <DebateHeroFeed debates={heroDebates} />
         </div>
+
+        {/* Primary CTA → Feed */}
+        <div style={{ textAlign: 'center', padding: '32px 20px 0' }}>
+          <a
+            href="/feed"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              color: '#FFFFFF',
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              padding: '14px 32px',
+              borderRadius: 999,
+              textDecoration: 'none',
+              transition: 'all 150ms ease',
+            }}
+          >
+            Start the feed &rarr;
+          </a>
+        </div>
       </section>
 
       {/* ══════════ BELOW HERO — light background ══════════ */}
@@ -247,6 +271,52 @@ export function HomeClient({
 
           {/* Fault Lines */}
           <FaultLinesChips library={library} />
+
+          {/* Secondary feed CTA */}
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '32px 20px',
+              marginBottom: 32,
+              background: '#FFFFFF',
+              borderRadius: 16,
+              boxShadow: '0 1px 2px rgba(10,10,10,0.04)',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 20,
+                fontWeight: 600,
+                color: '#0A0A0A',
+                letterSpacing: '-0.015em',
+                marginBottom: 6,
+              }}
+            >
+              Ready to see both sides?
+            </div>
+            <div style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 18 }}>
+              Jump into the feed and explore debates that challenge your perspective.
+            </div>
+            <a
+              href="/feed"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                color: '#F5F5F0',
+                background: '#0A0A0A',
+                padding: '12px 28px',
+                borderRadius: 999,
+                textDecoration: 'none',
+              }}
+            >
+              Start the feed &rarr;
+            </a>
+          </div>
 
           {/* Footer */}
           <div
