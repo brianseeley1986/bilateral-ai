@@ -102,6 +102,21 @@ export const shadow = {
   none: 'none',
   card: '0 1px 2px rgba(10,10,10,0.04), 0 1px 1px rgba(10,10,10,0.03)',
   lift: '0 4px 12px rgba(10,10,10,0.06), 0 2px 4px rgba(10,10,10,0.04)',
+  hero: '0 8px 32px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2)',
 } as const
 
-export const tokens = { colors, type, space, radius, shadow }
+export const dark = {
+  bg: '#0A0A0A',
+  surface: '#141414',
+  surfaceLight: '#1C1C1C',
+  border: '#2A2A2A',
+  text: '#F5F5F0',
+  textMuted: '#999999',
+  textDim: '#666666',
+  glowRed: 'rgba(193,18,31,0.15)',
+  glowBlue: 'rgba(27,79,190,0.15)',
+  glowRedStrong: 'rgba(193,18,31,0.3)',
+  glowBlueStrong: 'rgba(27,79,190,0.3)',
+} as const
+
+export const tokens = { colors, type, space, radius, shadow, dark }

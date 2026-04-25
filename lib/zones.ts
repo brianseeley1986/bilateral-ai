@@ -37,6 +37,16 @@ function formatCard(d: any, viewCount?: number) {
       : null,
     viewCount: viewCount ?? d.viewCount ?? 0,
     overallScore: d.qualityScore?.overallScore ?? null,
+    // Hero card fields
+    whatHappened: d.context?.whatHappened || null,
+    whyItMatters: d.context?.whyItMatters || null,
+    conservativeArgument: d.conservative?.argument
+      ? d.conservative.argument.slice(0, 300)
+      : null,
+    liberalArgument: d.liberal?.argument
+      ? d.liberal.argument.slice(0, 300)
+      : null,
+    slug: d.slug || null,
   }
 }
 
@@ -60,18 +70,18 @@ export async function fetchZoneData(): Promise<ZoneData> {
 
   const [natRows, natCount, intlRows, intlCount, stateRows, stateCount,
          localRows, localCount, userRows, userCount] = await Promise.all([
-    db`SELECT data, view_count FROM debates
+    db`SELECT data, view_count, slug FROM debates
        WHERE publish_status='published' AND track!='satire'
        AND geographic_scope NOT IN ('local','state','international')
        AND data->>'sourceType' IS DISTINCT FROM 'library'
        AND data->>'sourceType' IS DISTINCT FROM 'user_submitted'
-       ORDER BY created_at DESC LIMIT 5`,
+       ORDER BY created_at DESC LIMIT 8`,
     db`SELECT COUNT(*)::int AS n FROM debates
        WHERE publish_status='published' AND track!='satire'
        AND geographic_scope NOT IN ('local','state','international')
        AND data->>'sourceType' IS DISTINCT FROM 'library'
        AND data->>'sourceType' IS DISTINCT FROM 'user_submitted'`,
-    db`SELECT data, view_count FROM debates
+    db`SELECT data, view_count, slug FROM debates
        WHERE publish_status='published' AND track!='satire'
        AND geographic_scope='international'
        AND data->>'sourceType' IS DISTINCT FROM 'library'
@@ -82,7 +92,7 @@ export async function fetchZoneData(): Promise<ZoneData> {
        AND geographic_scope='international'
        AND data->>'sourceType' IS DISTINCT FROM 'library'
        AND data->>'sourceType' IS DISTINCT FROM 'user_submitted'`,
-    db`SELECT data, view_count FROM debates
+    db`SELECT data, view_count, slug FROM debates
        WHERE publish_status='published' AND track!='satire'
        AND geographic_scope='state'
        AND data->>'sourceType' IS DISTINCT FROM 'library'
@@ -93,7 +103,7 @@ export async function fetchZoneData(): Promise<ZoneData> {
        AND geographic_scope='state'
        AND data->>'sourceType' IS DISTINCT FROM 'library'
        AND data->>'sourceType' IS DISTINCT FROM 'user_submitted'`,
-    db`SELECT data, view_count FROM debates
+    db`SELECT data, view_count, slug FROM debates
        WHERE publish_status='published' AND track!='satire'
        AND geographic_scope='local'
        AND data->>'sourceType' IS DISTINCT FROM 'library'
@@ -114,11 +124,11 @@ export async function fetchZoneData(): Promise<ZoneData> {
   ])
 
   return {
-    national:      natRows.map((r: any) => formatCard(r.data, r.view_count)),
-    international: intlRows.map((r: any) => formatCard(r.data, r.view_count)),
-    state:         stateRows.map((r: any) => formatCard(r.data, r.view_count)),
-    local:         localRows.map((r: any) => formatCard(r.data, r.view_count)),
-    userSubmitted: userRows.map((r: any) => formatCard(r.data, r.view_count)),
+    national:      natRows.map((r: any) => formatCard({ ...r.data, slug: r.slug || r.data.slug }, r.view_count)),
+    international: intlRows.map((r: any) => formatCard({ ...r.data, slug: r.slug || r.data.slug }, r.view_count)),
+    state:         stateRows.map((r: any) => formatCard({ ...r.data, slug: r.slug || r.data.slug }, r.view_count)),
+    local:         localRows.map((r: any) => formatCard({ ...r.data, slug: r.slug || r.data.slug }, r.view_count)),
+    userSubmitted: userRows.map((r: any) => formatCard({ ...r.data, slug: r.slug || r.data.slug }, r.view_count)),
     counts: {
       national:      natCount[0]?.n ?? 0,
       international: intlCount[0]?.n ?? 0,
