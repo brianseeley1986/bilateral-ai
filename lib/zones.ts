@@ -9,6 +9,19 @@ function sql() {
   return neon(process.env.DATABASE_URL!, { fetchOptions: { cache: 'no-store' } })
 }
 
+/** Trim text to the last complete sentence within max chars */
+function trimToSentence(text: string, max: number): string {
+  if (!text || text.length <= max) return text
+  // Search for sentence-ending punctuation followed by space or end
+  for (let i = max; i >= max * 0.4; i--) {
+    if ((text[i] === '.' || text[i] === '?' || text[i] === '!') &&
+        (i === text.length - 1 || text[i + 1] === ' ' || text[i + 1] === '\n')) {
+      return text.slice(0, i + 1)
+    }
+  }
+  return text.slice(0, max)
+}
+
 function formatCard(d: any, viewCount?: number) {
   return {
     id: d.id,
@@ -41,10 +54,10 @@ function formatCard(d: any, viewCount?: number) {
     whatHappened: d.context?.whatHappened || null,
     whyItMatters: d.context?.whyItMatters || null,
     conservativeArgument: d.conservative?.argument
-      ? d.conservative.argument.slice(0, 300)
+      ? trimToSentence(d.conservative.argument, 500)
       : null,
     liberalArgument: d.liberal?.argument
-      ? d.liberal.argument.slice(0, 300)
+      ? trimToSentence(d.liberal.argument, 500)
       : null,
     slug: d.slug || null,
     imageUrl: d.imageUrl || null,
