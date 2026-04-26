@@ -43,13 +43,17 @@ function HeroContainer({ debates }: { debates: any[] }) {
         onScroll={handleScroll}
         className="hero-vscroll"
         style={{
-          height: 'calc(100vh - 64px)', // full viewport minus header
+          height: '80vh',
+          maxHeight: 680,
+          minHeight: 480,
           overflowY: 'auto',
           scrollSnapType: 'y mandatory',
           WebkitOverflowScrolling: 'touch',
           scrollbarWidth: 'none',
+          borderRadius: 20,
           background: dark.bg,
           overscrollBehavior: 'contain',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)',
         }}
       >
         <style>{`.hero-vscroll::-webkit-scrollbar { display: none; }`}</style>
@@ -175,8 +179,12 @@ export function HomeClient({
           </div>
         )}
 
-        {/* Hero — full-width stage */}
-        {heroDebates.length > 0 && <HeroContainer debates={heroDebates} />}
+        {/* Hero — contained preview stage */}
+        {heroDebates.length > 0 && (
+          <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px' }}>
+            <HeroContainer debates={heroDebates} />
+          </div>
+        )}
 
         {/* CTA */}
         <div style={{ textAlign: 'center', padding: '28px 20px 40px', background: dark.bg }}>
