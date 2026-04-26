@@ -2,11 +2,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { colors, dark } from '@/lib/design'
 
-/**
- * DebateStage — the ONE shared debate experience.
- * Used by both homepage hero and /feed.
- */
-
 export interface StageDebate {
   id: string
   headline: string
@@ -31,7 +26,6 @@ interface DebateStageProps {
   showNextCue?: boolean
 }
 
-
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const hours = Math.floor(diff / 3600000)
@@ -40,6 +34,14 @@ function timeAgo(dateStr: string): string {
   const days = Math.floor(hours / 24)
   if (days === 1) return 'Yesterday'
   return `${days}d ago`
+}
+
+function smartTrim(text: string, max: number): string {
+  if (!text || text.length <= max) return text
+  const sentenceEnd = text.slice(0, max + 20).lastIndexOf('.')
+  if (sentenceEnd > max * 0.4) return text.slice(0, sentenceEnd + 1)
+  const wordEnd = text.lastIndexOf(' ', max)
+  return text.slice(0, wordEnd > 0 ? wordEnd : max)
 }
 
 export function DebateStage({ debate }: DebateStageProps) {
@@ -93,32 +95,25 @@ export function DebateStage({ debate }: DebateStageProps) {
     }
   }
 
-  // Show full sentences, not truncated fragments. Cap at ~200 chars but end at a sentence boundary.
-  const rawContext = debate.whatHappened || debate.suggestedHook || ''
-  let context = rawContext
-  if (rawContext.length > 200) {
-    const sentenceEnd = rawContext.slice(0, 220).lastIndexOf('.')
-    context = sentenceEnd > 80 ? rawContext.slice(0, sentenceEnd + 1) : rawContext.slice(0, 200)
-  }
+  const context = smartTrim(debate.whatHappened || debate.suggestedHook || '', 200)
   const con = debate.conservativeOneLine || debate.conservativeFeedHook || ''
+  const conDetail = debate.conservativeArgument ? smartTrim(debate.conservativeArgument, 180) : null
   const lib = debate.liberalOneLine || debate.liberalFeedHook || ''
+  const libDetail = debate.liberalArgument ? smartTrim(debate.liberalArgument, 180) : null
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: dark.bg }}>
 
-      {/* ═══ Horizontal panels — takes remaining space ═══ */}
+      {/* ═══ Horizontal panels ═══ */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
         className="stage-hscroll"
         style={{
-          flex: 1,
-          display: 'flex',
-          overflowX: 'auto',
+          flex: 1, display: 'flex', overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none',
-          minHeight: 0, // allow flex shrink
+          scrollbarWidth: 'none', minHeight: 0,
         }}
       >
         {/* ── LIBERAL (left) ── */}
@@ -126,16 +121,21 @@ export function DebateStage({ debate }: DebateStageProps) {
           <div style={{
             height: '100%', display: 'flex', flexDirection: 'column',
             justifyContent: 'center', alignItems: 'center',
-            padding: '24px 40px', boxSizing: 'border-box',
-            background: `radial-gradient(ellipse at center, ${dark.surface} 0%, #0c1428 100%)`,
-            boxShadow: 'inset 0 0 120px rgba(27,79,190,0.2)',
+            padding: '24px 48px', boxSizing: 'border-box',
+            background: `radial-gradient(ellipse at 30% 50%, rgba(27,79,190,0.12) 0%, ${dark.surface} 60%, #080e1a 100%)`,
+            boxShadow: 'inset 0 0 160px rgba(27,79,190,0.15)',
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: colors.liberal, background: 'rgba(27,79,190,0.18)', padding: '5px 16px', borderRadius: 999, marginBottom: 20, textTransform: 'uppercase' }}>
               Liberal
             </div>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 600, lineHeight: 1.2, letterSpacing: '-0.02em', color: '#FFFFFF', textAlign: 'center', margin: 0, maxWidth: 460 }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 600, lineHeight: 1.25, letterSpacing: '-0.02em', color: '#FFFFFF', textAlign: 'center', margin: 0, marginBottom: 14, maxWidth: 460 }}>
               {lib}
             </h2>
+            {libDetail && (
+              <p style={{ fontSize: 14, lineHeight: 1.55, color: 'rgba(255,255,255,0.55)', textAlign: 'center', margin: 0, maxWidth: 400 }}>
+                {libDetail}
+              </p>
+            )}
           </div>
         </div>
 
@@ -144,36 +144,36 @@ export function DebateStage({ debate }: DebateStageProps) {
           <div style={{
             height: '100%', display: 'flex', flexDirection: 'column',
             justifyContent: 'center', alignItems: 'center',
-            padding: '24px 40px', boxSizing: 'border-box',
+            padding: '24px 48px', boxSizing: 'border-box',
             background: dark.bg, position: 'relative',
           }}>
-            {/* Blue glow — left */}
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 60, background: 'linear-gradient(to right, rgba(27,79,190,0.25), transparent)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, pointerEvents: 'none', zIndex: 2 }}>
-              <span style={{ fontSize: 12, color: colors.liberal, opacity: 0.6 }}>&larr;</span>
-              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.liberal, opacity: 0.5 }}>Liberal</span>
+            {/* ── Strong blue glow — left ── */}
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 120, background: 'linear-gradient(to right, rgba(27,79,190,0.35), rgba(27,79,190,0.08) 60%, transparent)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, pointerEvents: 'none', zIndex: 2 }}>
+              <span style={{ fontSize: 14, color: colors.liberal, opacity: 0.7 }}>&larr;</span>
+              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.liberal, opacity: 0.6 }}>Liberal</span>
             </div>
 
-            {/* Red glow — right */}
-            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 60, background: 'linear-gradient(to left, rgba(193,18,31,0.25), transparent)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, pointerEvents: 'none', zIndex: 2 }}>
-              <span style={{ fontSize: 12, color: colors.conservative, opacity: 0.6 }}>&rarr;</span>
-              <span style={{ writingMode: 'vertical-rl', fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.conservative, opacity: 0.5 }}>Conservative</span>
+            {/* ── Strong red glow — right ── */}
+            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 120, background: 'linear-gradient(to left, rgba(193,18,31,0.35), rgba(193,18,31,0.08) 60%, transparent)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, pointerEvents: 'none', zIndex: 2 }}>
+              <span style={{ fontSize: 14, color: colors.conservative, opacity: 0.7 }}>&rarr;</span>
+              <span style={{ writingMode: 'vertical-rl', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: colors.conservative, opacity: 0.6 }}>Conservative</span>
             </div>
 
             {/* Content */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: dark.textMuted, background: dark.surfaceLight, padding: '3px 9px', borderRadius: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: dark.textMuted, background: dark.surfaceLight, padding: '4px 10px', borderRadius: 6 }}>
                 {(debate.geographicScope || 'national').toUpperCase()}
               </span>
-              <span style={{ fontSize: 9, color: dark.textDim }}>{timeAgo(debate.createdAt)}</span>
+              <span style={{ fontSize: 10, color: dark.textDim }}>{timeAgo(debate.createdAt)}</span>
             </div>
 
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.025em', color: '#FFFFFF', textAlign: 'center', margin: 0, marginBottom: 12, maxWidth: 460 }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.025em', color: '#FFFFFF', textAlign: 'center', margin: 0, marginBottom: 14, maxWidth: 480 }}>
               {debate.headline}
             </h2>
 
-            <p style={{ fontSize: 13, lineHeight: 1.5, color: dark.textMuted, textAlign: 'center', margin: 0, maxWidth: 380 }}>
+            <p style={{ fontSize: 14, lineHeight: 1.55, color: dark.textMuted, textAlign: 'center', margin: 0, maxWidth: 400 }}>
               {context}
             </p>
           </div>
@@ -184,16 +184,21 @@ export function DebateStage({ debate }: DebateStageProps) {
           <div style={{
             height: '100%', display: 'flex', flexDirection: 'column',
             justifyContent: 'center', alignItems: 'center',
-            padding: '24px 40px', boxSizing: 'border-box',
-            background: `radial-gradient(ellipse at center, ${dark.surface} 0%, #1a0a0a 100%)`,
-            boxShadow: 'inset 0 0 120px rgba(193,18,31,0.2)',
+            padding: '24px 48px', boxSizing: 'border-box',
+            background: `radial-gradient(ellipse at 70% 50%, rgba(193,18,31,0.12) 0%, ${dark.surface} 60%, #1a0808 100%)`,
+            boxShadow: 'inset 0 0 160px rgba(193,18,31,0.15)',
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: colors.conservative, background: 'rgba(193,18,31,0.18)', padding: '5px 16px', borderRadius: 999, marginBottom: 20, textTransform: 'uppercase' }}>
               Conservative
             </div>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 600, lineHeight: 1.2, letterSpacing: '-0.02em', color: '#FFFFFF', textAlign: 'center', margin: 0, maxWidth: 460 }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 600, lineHeight: 1.25, letterSpacing: '-0.02em', color: '#FFFFFF', textAlign: 'center', margin: 0, marginBottom: 14, maxWidth: 460 }}>
               {con}
             </h2>
+            {conDetail && (
+              <p style={{ fontSize: 14, lineHeight: 1.55, color: 'rgba(255,255,255,0.55)', textAlign: 'center', margin: 0, maxWidth: 400 }}>
+                {conDetail}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -208,41 +213,47 @@ export function DebateStage({ debate }: DebateStageProps) {
         <button onClick={() => goTo(2)} style={tabStyle(panel === 2, colors.conservative)}>Conservative</button>
       </div>
 
-      {/* ═══ Vote + Actions — clean layout ═══ */}
+      {/* ═══ Vote + Actions ═══ */}
       <div style={{
         padding: '12px 16px', paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
         background: dark.bg, flexShrink: 0,
       }}>
-        {/* Vote section */}
-        {!voted ? (
-          <div style={{ textAlign: 'center', marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 500, color: dark.textMuted, marginBottom: 8 }}>
-              Where do you lean?
-            </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <button onClick={() => handleVote('liberal')} style={voteBtn(colors.liberal)}>Liberal</button>
-              <button onClick={() => handleVote('unsure')} style={voteBtn('#444', true)}>Not sure</button>
-              <button onClick={() => handleVote('conservative')} style={voteBtn(colors.conservative)}>Conservative</button>
-            </div>
+        {/* Vote */}
+        <div style={{ textAlign: 'center', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: dark.textMuted, marginBottom: 8 }}>
+            Where do you lean?
           </div>
-        ) : (
-          <div style={{ textAlign: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: voted === 'conservative' ? colors.conservative : voted === 'liberal' ? colors.liberal : '#888' }}>
-              {voted === 'conservative' ? '← Leaning conservative' : voted === 'liberal' ? 'Leaning liberal →' : 'Not sure yet'}
-            </span>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <button
+              onClick={() => handleVote('liberal')}
+              style={voteBtn(colors.liberal, voted === 'liberal')}
+            >
+              {voted === 'liberal' ? '← Leaning liberal' : 'Liberal'}
+            </button>
+            <button
+              onClick={() => handleVote('unsure')}
+              style={voteBtn('#444', voted === 'unsure', true)}
+            >
+              {voted === 'unsure' ? 'Not sure' : 'Not sure'}
+            </button>
+            <button
+              onClick={() => handleVote('conservative')}
+              style={voteBtn(colors.conservative, voted === 'conservative')}
+            >
+              {voted === 'conservative' ? 'Leaning right →' : 'Conservative'}
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Action row */}
+        {/* Actions */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, borderTop: `1px solid ${dark.border}`, paddingTop: 10 }}>
           <ActionIcon label="Comment" icon={<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />} />
           <ActionIcon label={copied ? 'Copied!' : 'Share'} onClick={handleShare} icon={<><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></>} />
           <a
             href={`/debate/${debate.slug || debate.id}`}
             style={{
-              fontSize: 11, fontWeight: 600, color: dark.textMuted,
-              textDecoration: 'none', letterSpacing: '0.02em',
-              padding: '4px 0',
+              fontSize: 12, fontWeight: 600, color: dark.textMuted,
+              textDecoration: 'none', letterSpacing: '0.02em', padding: '4px 0',
             }}
           >
             Read full debate &rarr;
@@ -252,10 +263,6 @@ export function DebateStage({ debate }: DebateStageProps) {
 
       <style>{`
         .stage-hscroll::-webkit-scrollbar { display: none; }
-        @keyframes stagePulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.7; }
-        }
       `}</style>
     </div>
   )
@@ -272,12 +279,16 @@ function tabStyle(active: boolean, color: string): React.CSSProperties {
   }
 }
 
-function voteBtn(bg: string, outline?: boolean): React.CSSProperties {
+function voteBtn(bg: string, selected?: boolean, outline?: boolean): React.CSSProperties {
   return {
-    padding: '6px 12px', borderRadius: 999, border: outline ? '1px solid rgba(255,255,255,0.2)' : 'none',
-    background: outline ? 'transparent' : bg, color: '#FFFFFF',
-    fontSize: 9, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em',
-    textTransform: 'uppercase', transition: 'all 120ms ease',
+    padding: '7px 14px', borderRadius: 999,
+    border: outline && !selected ? '1px solid rgba(255,255,255,0.2)' : 'none',
+    background: selected ? bg : (outline ? 'transparent' : `${bg}88`),
+    color: '#FFFFFF', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+    letterSpacing: '0.04em', textTransform: 'uppercase',
+    transition: 'all 120ms ease',
+    opacity: selected ? 1 : 0.7,
+    boxShadow: selected ? `0 0 12px ${bg}44` : 'none',
   }
 }
 
@@ -286,7 +297,7 @@ function ActionIcon({ label, icon, onClick }: { label: string; icon: React.React
     <button onClick={onClick} style={{
       background: 'none', border: 'none', cursor: 'pointer',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-      color: dark.textDim, fontSize: 8, fontWeight: 600,
+      color: dark.textDim, fontSize: 9, fontWeight: 600,
       letterSpacing: '0.06em', textTransform: 'uppercase', padding: '4px 6px',
     }}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{icon}</svg>
