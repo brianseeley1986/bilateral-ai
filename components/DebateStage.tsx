@@ -38,10 +38,21 @@ function timeAgo(dateStr: string): string {
 
 function smartTrim(text: string, max: number): string {
   if (!text || text.length <= max) return text
-  const sentenceEnd = text.slice(0, max + 20).lastIndexOf('.')
-  if (sentenceEnd > max * 0.4) return text.slice(0, sentenceEnd + 1)
+  // Find the last sentence-ending punctuation within range
+  const window = text.slice(0, max + 40)
+  // Look for ". " or "." at end, or "? " or "! " — real sentence boundaries
+  let best = -1
+  for (let i = Math.min(window.length - 1, max + 30); i >= max * 0.35; i--) {
+    if ((window[i] === '.' || window[i] === '?' || window[i] === '!') &&
+        (i === window.length - 1 || window[i + 1] === ' ' || window[i + 1] === '\n')) {
+      best = i
+      break
+    }
+  }
+  if (best > 0) return text.slice(0, best + 1)
+  // No sentence boundary — fall back to word boundary
   const wordEnd = text.lastIndexOf(' ', max)
-  return text.slice(0, wordEnd > 0 ? wordEnd : max)
+  return (wordEnd > max * 0.5 ? text.slice(0, wordEnd) : text.slice(0, max)) + '...'
 }
 
 export function DebateStage({ debate }: DebateStageProps) {
@@ -95,11 +106,11 @@ export function DebateStage({ debate }: DebateStageProps) {
     }
   }
 
-  const context = smartTrim(debate.whatHappened || debate.suggestedHook || '', 200)
+  const context = smartTrim(debate.whatHappened || debate.suggestedHook || '', 220)
   const con = debate.conservativeOneLine || debate.conservativeFeedHook || ''
-  const conDetail = debate.conservativeArgument ? smartTrim(debate.conservativeArgument, 180) : null
+  const conDetail = debate.conservativeArgument ? smartTrim(debate.conservativeArgument, 300) : null
   const lib = debate.liberalOneLine || debate.liberalFeedHook || ''
-  const libDetail = debate.liberalArgument ? smartTrim(debate.liberalArgument, 180) : null
+  const libDetail = debate.liberalArgument ? smartTrim(debate.liberalArgument, 300) : null
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: dark.bg }}>
