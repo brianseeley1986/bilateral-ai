@@ -116,20 +116,21 @@ export function HomeClient({
       <section style={{ background: dark.bg, paddingBottom: 40 }}>
         <header style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 24px',
+          padding: '18px 28px',
+          maxWidth: 1000, margin: '0 auto',
         }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: colors.conservative }} />
-            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: '#FFFFFF' }}>bilateral</span>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: colors.liberal }} />
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors.conservative }} />
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em', color: '#FFFFFF' }}>bilateral</span>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: colors.liberal }} />
           </a>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <a href="/debates" style={{ fontSize: 12, color: dark.textMuted, textDecoration: 'none', fontWeight: 500 }}>Debates</a>
-            <a href="/about" style={{ fontSize: 12, color: dark.textMuted, textDecoration: 'none', fontWeight: 500 }}>About</a>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <a href="/debates" style={{ fontSize: 14, color: '#CCCCCC', textDecoration: 'none', fontWeight: 400 }}>Debates</a>
+            <a href="/about" style={{ fontSize: 14, color: '#CCCCCC', textDecoration: 'none', fontWeight: 400 }}>About</a>
             <a href="/feed" style={{
-              fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
-              color: '#FFFFFF', background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.15)', padding: '6px 14px',
+              fontSize: 12, fontWeight: 600, letterSpacing: '0.04em',
+              color: '#FFFFFF', background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)', padding: '8px 18px',
               borderRadius: 999, textDecoration: 'none',
             }}>Start the feed &rarr;</a>
           </nav>

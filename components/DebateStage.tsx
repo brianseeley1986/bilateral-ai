@@ -31,12 +31,6 @@ interface DebateStageProps {
   showNextCue?: boolean
 }
 
-function truncate(text: string, max: number): string {
-  if (!text) return ''
-  if (text.length <= max) return text
-  const cut = text.lastIndexOf(' ', max)
-  return text.slice(0, cut > 0 ? cut : max) + '...'
-}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -99,7 +93,13 @@ export function DebateStage({ debate }: DebateStageProps) {
     }
   }
 
-  const context = debate.whatHappened ? truncate(debate.whatHappened, 120) : debate.suggestedHook || ''
+  // Show full sentences, not truncated fragments. Cap at ~200 chars but end at a sentence boundary.
+  const rawContext = debate.whatHappened || debate.suggestedHook || ''
+  let context = rawContext
+  if (rawContext.length > 200) {
+    const sentenceEnd = rawContext.slice(0, 220).lastIndexOf('.')
+    context = sentenceEnd > 80 ? rawContext.slice(0, sentenceEnd + 1) : rawContext.slice(0, 200)
+  }
   const con = debate.conservativeOneLine || debate.conservativeFeedHook || ''
   const lib = debate.liberalOneLine || debate.liberalFeedHook || ''
 
@@ -220,9 +220,9 @@ export function DebateStage({ debate }: DebateStageProps) {
               Where do you lean?
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <button onClick={() => handleVote('conservative')} style={voteBtn(colors.conservative)}>Conservative</button>
-              <button onClick={() => handleVote('unsure')} style={voteBtn('#444', true)}>Not sure</button>
               <button onClick={() => handleVote('liberal')} style={voteBtn(colors.liberal)}>Liberal</button>
+              <button onClick={() => handleVote('unsure')} style={voteBtn('#444', true)}>Not sure</button>
+              <button onClick={() => handleVote('conservative')} style={voteBtn(colors.conservative)}>Conservative</button>
             </div>
           </div>
         ) : (
