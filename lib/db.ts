@@ -56,6 +56,8 @@ export async function initDb() {
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_publish_status_idx ON debates (publish_status)` } catch {}
   try { await sql()`CREATE INDEX IF NOT EXISTS debates_state_idx ON debates (state)` } catch {}
   try { await sql()`CREATE UNIQUE INDEX IF NOT EXISTS debates_headline_unique_idx ON debates (LOWER(TRIM(headline)))` } catch {}
+  try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS image_url TEXT` } catch {}
+  try { await sql()`ALTER TABLE debates ADD COLUMN IF NOT EXISTS image_source TEXT` } catch {}
 
   await sql()`
     CREATE TABLE IF NOT EXISTS journalists (
@@ -227,6 +229,8 @@ export async function saveDebate(debate: any): Promise<void> {
       city,
       state,
       slug,
+      image_url,
+      image_source,
       data
     ) VALUES (
       ${debate.id},
@@ -238,6 +242,8 @@ export async function saveDebate(debate: any): Promise<void> {
       ${debate.city || null},
       ${debate.state || null},
       ${slug},
+      ${debate.imageUrl || null},
+      ${debate.imageSource || null},
       ${JSON.stringify(debate)}
     )
     ON CONFLICT (id) DO UPDATE SET
@@ -245,7 +251,9 @@ export async function saveDebate(debate: any): Promise<void> {
       publish_status = EXCLUDED.publish_status,
       city = EXCLUDED.city,
       state = EXCLUDED.state,
-      slug = COALESCE(debates.slug, EXCLUDED.slug)
+      slug = COALESCE(debates.slug, EXCLUDED.slug),
+      image_url = COALESCE(EXCLUDED.image_url, debates.image_url),
+      image_source = COALESCE(EXCLUDED.image_source, debates.image_source)
   `
 }
 

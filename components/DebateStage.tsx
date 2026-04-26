@@ -22,6 +22,8 @@ export interface StageDebate {
   whyItMatters?: string | null
   suggestedHook?: string
   slug?: string | null
+  imageUrl?: string | null
+  imageSource?: string | null
 }
 
 interface DebateStageProps {
@@ -46,7 +48,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
-export function DebateStage({ debate, showNextCue }: DebateStageProps) {
+export function DebateStage({ debate }: DebateStageProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [panel, setPanel] = useState(1)
   const [voted, setVoted] = useState<string | null>(null)
@@ -196,19 +198,7 @@ export function DebateStage({ debate, showNextCue }: DebateStageProps) {
         </div>
       </div>
 
-      {/* ═══ Swipe-up cue ═══ */}
-      {showNextCue && (
-        <div style={{
-          textAlign: 'center', padding: '6px 0 2px', background: dark.bg,
-          animation: 'stagePulse 2s ease-in-out infinite', flexShrink: 0,
-        }}>
-          <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
-            Swipe up for next debate ↑
-          </span>
-        </div>
-      )}
-
-      {/* ═══ Tab bar — in flow, not absolute ═══ */}
+      {/* ═══ Tab bar ═══ */}
       <div style={{
         display: 'flex', borderTop: `1px solid ${dark.border}`,
         background: dark.surface, flexShrink: 0,
@@ -218,44 +208,46 @@ export function DebateStage({ debate, showNextCue }: DebateStageProps) {
         <button onClick={() => goTo(2)} style={tabStyle(panel === 2, colors.conservative)}>Conservative</button>
       </div>
 
-      {/* ═══ Action bar — in flow, always visible ═══ */}
+      {/* ═══ Vote + Actions — clean layout ═══ */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-        padding: '8px 12px', paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
-        background: dark.bg, borderTop: `1px solid ${dark.border}`, flexShrink: 0,
-        flexWrap: 'wrap',
+        padding: '12px 16px', paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+        background: dark.bg, flexShrink: 0,
       }}>
-        {/* Vote — primary */}
+        {/* Vote section */}
         {!voted ? (
-          <div style={{ display: 'flex', gap: 5 }}>
-            <button onClick={() => handleVote('conservative')} style={voteBtn(colors.conservative)}>Conservative</button>
-            <button onClick={() => handleVote('unsure')} style={voteBtn('#555', true)}>Not sure</button>
-            <button onClick={() => handleVote('liberal')} style={voteBtn(colors.liberal)}>Liberal</button>
+          <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 500, color: dark.textMuted, marginBottom: 8 }}>
+              Where do you lean?
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button onClick={() => handleVote('conservative')} style={voteBtn(colors.conservative)}>Conservative</button>
+              <button onClick={() => handleVote('unsure')} style={voteBtn('#444', true)}>Not sure</button>
+              <button onClick={() => handleVote('liberal')} style={voteBtn(colors.liberal)}>Liberal</button>
+            </div>
           </div>
         ) : (
-          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: voted === 'conservative' ? colors.conservative : voted === 'liberal' ? colors.liberal : '#888', padding: '4px 12px' }}>
-            {voted === 'conservative' ? 'Leaning right' : voted === 'liberal' ? 'Leaning left' : 'Not sure'}
-          </span>
+          <div style={{ textAlign: 'center', marginBottom: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: voted === 'conservative' ? colors.conservative : voted === 'liberal' ? colors.liberal : '#888' }}>
+              {voted === 'conservative' ? '← Leaning conservative' : voted === 'liberal' ? 'Leaning liberal →' : 'Not sure yet'}
+            </span>
+          </div>
         )}
 
-        <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
-
-        {/* Secondary */}
-        <ActionIcon label="Comment" icon={<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />} />
-        <ActionIcon label={copied ? 'Copied' : 'Share'} onClick={handleShare} icon={<><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></>} />
-        <a
-          href={`/debate/${debate.slug || debate.id}`}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            color: dark.textDim, textDecoration: 'none', fontSize: 8, fontWeight: 600,
-            letterSpacing: '0.06em', textTransform: 'uppercase' as const, padding: '4px 6px',
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
-          </svg>
-          Read
-        </a>
+        {/* Action row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, borderTop: `1px solid ${dark.border}`, paddingTop: 10 }}>
+          <ActionIcon label="Comment" icon={<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />} />
+          <ActionIcon label={copied ? 'Copied!' : 'Share'} onClick={handleShare} icon={<><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></>} />
+          <a
+            href={`/debate/${debate.slug || debate.id}`}
+            style={{
+              fontSize: 11, fontWeight: 600, color: dark.textMuted,
+              textDecoration: 'none', letterSpacing: '0.02em',
+              padding: '4px 0',
+            }}
+          >
+            Read full debate &rarr;
+          </a>
+        </div>
       </div>
 
       <style>{`

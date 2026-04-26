@@ -50,9 +50,9 @@ export function FeedClient({ debates }: FeedClientProps) {
         <style>{`
           .feed-vertical::-webkit-scrollbar { display: none; }
         `}</style>
-        {debates.map((debate, i) => (
+        {debates.map((debate) => (
           <div key={debate.id} style={{ height: '100dvh', scrollSnapAlign: 'start' }}>
-            <DebateStage debate={debate} showNextCue={i < debates.length - 1} />
+            <DebateStage debate={debate} />
           </div>
         ))}
       </div>

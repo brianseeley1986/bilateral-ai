@@ -140,4 +140,6 @@ export interface DebateOutput {
   leadingSide?: 'conservative' | 'liberal' | null
   city?: string
   state?: string
+  imageUrl?: string | null
+  imageSource?: string | null
 }

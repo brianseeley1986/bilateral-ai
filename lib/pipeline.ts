@@ -129,6 +129,32 @@ async function searchForStory(headline: string): Promise<string> {
   return searchViaHaikuTool(headline)
 }
 
+/** Try to find a relevant image for a debate headline via Exa */
+async function fetchImageViaExa(headline: string): Promise<{ url: string; source: string } | null> {
+  const key = process.env.EXA_API_KEY
+  if (!key) return null
+  try {
+    const { default: Exa } = await import('exa-js')
+    const exa = new Exa(key)
+    const result = await exa.searchAndContents(headline, {
+      numResults: 3,
+      type: 'auto',
+      text: { maxCharacters: 100 } as any,
+      useAutoprompt: true,
+    } as any)
+    for (const r of result.results || []) {
+      const img = (r as any).image
+      if (img && typeof img === 'string' && img.startsWith('http')) {
+        const domain = new URL(r.url || '').hostname.replace('www.', '')
+        return { url: img, source: domain }
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 function parseJSON(raw: string): any {
   const cleaned = raw.replace(/```json|```/g, '').trim()
   const start = cleaned.indexOf('{')
@@ -477,6 +503,19 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
     }
   }
 
+  // 8. Try to fetch a relevant image via Exa (non-blocking)
+  let imageUrl: string | null = null
+  let imageSource: string | null = null
+  try {
+    const img = await fetchImageViaExa(headline)
+    if (img) {
+      imageUrl = img.url
+      imageSource = img.source
+    }
+  } catch {
+    // Image fetch is best-effort
+  }
+
   return {
     id,
     headline,
@@ -503,5 +542,7 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
     sources: research.sources || [],
     qualityScore,
     publishStatus,
+    imageUrl,
+    imageSource,
   }
 }
