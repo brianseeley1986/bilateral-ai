@@ -28,16 +28,10 @@ function smartTrim(text: string, max: number): string {
   return restore(space > 0 ? cut.slice(0, space) : cut).trim() + '…'
 }
 
-function pickLine(hook: string | undefined, fallback: string | undefined, max = 160): string {
-  const source = (hook && hook.trim()) || (fallback && fallback.trim()) || ''
-  return smartTrim(source, max)
-}
 
 export default async function Image({ params }: { params: { id: string } }) {
   let headline = 'The debate behind every headline.'
   let shortHeadline: string | undefined
-  let cLine = ''
-  let lLine = ''
   let context = ''
 
   try {
@@ -51,20 +45,6 @@ export default async function Image({ params }: { params: { id: string } }) {
       headline = debate.headline || headline
       shortHeadline = debate.shortHeadline || undefined
       context = smartTrim(debate.suggestedHook || debate.context?.whatHappened || '', 120)
-      const cSource =
-        debate.conservative?.previewLine ||
-        debate.conservativeFeedHook ||
-        debate.exchanges?.[0]?.c ||
-        debate.conservative?.argument ||
-        ''
-      const lSource =
-        debate.liberal?.previewLine ||
-        debate.liberalFeedHook ||
-        debate.exchanges?.[0]?.l ||
-        debate.liberal?.argument ||
-        ''
-      cLine = pickLine(cSource, undefined)
-      lLine = pickLine(lSource, undefined)
     }
   } catch (err) {
     console.error('OG image DB query failed for', params.id, err)
