@@ -42,6 +42,65 @@ function generateOAuthHeader(
   )
 }
 
+// Upload an image buffer to X via the v1.1 media/upload endpoint.
+async function uploadMediaToX(imageBuffer: Buffer): Promise<string | null> {
+  try {
+    const base64 = imageBuffer.toString('base64')
+    const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json'
+
+    const params: Record<string, string> = {
+      media_data: base64,
+    }
+
+    const authHeader = generateOAuthHeader('POST', uploadUrl, {})
+
+    const formBody = new URLSearchParams(params)
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formBody.toString(),
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+      console.error('X media upload error:', data)
+      return null
+    }
+
+    return data.media_id_string || null
+  } catch (err) {
+    console.error('X media upload failed:', err)
+    return null
+  }
+}
+
+// Generate a panel image via our internal API route.
+async function generatePanelImage(
+  side: 'conservative' | 'liberal',
+  headline: string,
+  hook: string
+): Promise<Buffer | null> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://bilateral.news'
+  const params = new URLSearchParams({ side, headline, hook })
+  const url = `${baseUrl}/api/x-panel?${params}`
+
+  try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      console.error(`Panel image generation failed (${side}):`, res.status)
+      return null
+    }
+    const arrayBuffer = await res.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  } catch (err) {
+    console.error(`Panel image fetch failed (${side}):`, err)
+    return null
+  }
+}
+
 export async function postToX(
   debate: {
     id: string
@@ -61,46 +120,48 @@ export async function postToX(
   mock?: boolean
 }> {
   const baseUrl = 'https://bilateral.news'
-  // ?og= bumps whenever the OG card design changes. X caches the scraped OG per
-  // exact URL, so a new query param forces a fresh scrape. Bump this on any
-  // opengraph-image.tsx change that should be reflected in already-posted-style tweets.
-  const debateUrl = `${baseUrl}/debate/${debate.slug || debate.id}?og=15`
+  const debateUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
 
-  // Tweet text = just the URL. The OG card renders headline + C/L + brand,
-  // so any additional text creates duplication when Twitter unfurls it.
-  const tweetText = debateUrl
+  // Pick the best hook for each side
+  const conHook = debate.conservative?.previewLine || debate.conservativeFeedHook || ''
+  const libHook = debate.liberal?.previewLine || debate.liberalFeedHook || ''
 
   if (mockMode) {
-    console.log('MOCK X POST:\n', tweetText)
+    const tweetText = `${debate.headline}\n\n${debateUrl}`
+    console.log('MOCK X POST:\n', tweetText, '\nImages: [conservative panel, liberal panel]')
     return { success: true, tweetText, mock: true }
   }
 
-  // Warm the OG image before posting. X's crawler scrapes the card
-  // immediately after the tweet goes live. If the edge function is cold
-  // or mid-deploy the image 500s and X caches the broken card forever.
-  // Fetching it ourselves first ensures the function is warm and the
-  // image is in Vercel's edge cache when X comes knocking.
-  // Also warm the page itself so meta tags are cached for X's crawler.
-  const pageUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
-  try { await fetch(pageUrl, { method: 'GET' }) } catch {}
+  // Generate both panel images in parallel
+  const [conImage, libImage] = await Promise.all([
+    generatePanelImage('conservative', debate.headline, conHook),
+    generatePanelImage('liberal', debate.headline, libHook),
+  ])
 
-  const ogImageUrl = `${baseUrl}/debate/${debate.slug || debate.id}/opengraph-image`
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const warm = await fetch(ogImageUrl, { method: 'GET' })
-      if (warm.ok) {
-        console.log(`OG image warmed (${warm.status}, attempt ${attempt + 1})`)
-        break
-      }
-      console.warn(`OG image warm attempt ${attempt + 1} returned ${warm.status}`)
-    } catch (e) {
-      console.warn(`OG image warm attempt ${attempt + 1} failed:`, e)
-    }
+  // Upload images to X
+  const mediaIds: string[] = []
+  if (libImage) {
+    const libMediaId = await uploadMediaToX(libImage)
+    if (libMediaId) mediaIds.push(libMediaId)
   }
+  if (conImage) {
+    const conMediaId = await uploadMediaToX(conImage)
+    if (conMediaId) mediaIds.push(conMediaId)
+  }
+
+  if (mediaIds.length === 0) {
+    console.warn('No panel images uploaded — falling back to URL-only post')
+  }
+
+  // Post tweet with images + headline + URL
+  const tweetText = `${debate.headline}\n\n${debateUrl}`
 
   try {
     const url = 'https://api.twitter.com/2/tweets'
-    const body = { text: tweetText }
+    const body: Record<string, unknown> = { text: tweetText }
+    if (mediaIds.length > 0) {
+      body.media = { media_ids: mediaIds }
+    }
     const authHeader = generateOAuthHeader('POST', url, {})
 
     const response = await fetch(url, {
@@ -119,7 +180,7 @@ export async function postToX(
       return { success: false, error: JSON.stringify(data) }
     }
 
-    console.log('Posted to X:', data.data?.id, tweetText)
+    console.log('Posted to X with', mediaIds.length, 'images:', data.data?.id, tweetText)
     return { success: true, tweetId: data.data?.id, tweetText }
   } catch (err) {
     console.error('X post failed:', err)
