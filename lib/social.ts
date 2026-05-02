@@ -43,33 +43,38 @@ function generateOAuthHeader(
 }
 
 // Upload an image buffer to X via the v1.1 media/upload endpoint.
+// Uses multipart/form-data — OAuth signature must exclude body params.
 async function uploadMediaToX(imageBuffer: Buffer): Promise<string | null> {
   try {
-    const base64 = imageBuffer.toString('base64')
     const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json'
 
-    const params: Record<string, string> = {
-      media_data: base64,
-    }
-
+    // OAuth signature is computed with NO body params for multipart uploads
     const authHeader = generateOAuthHeader('POST', uploadUrl, {})
 
-    const formBody = new URLSearchParams(params)
+    // Build multipart form with the raw image bytes
+    const boundary = `----bilateral${crypto.randomBytes(8).toString('hex')}`
+    const body = Buffer.concat([
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="media_data"\r\n\r\n`),
+      Buffer.from(imageBuffer.toString('base64')),
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ])
+
     const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
         Authorization: authHeader,
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
       },
-      body: formBody.toString(),
+      body,
     })
 
     const data = await response.json()
     if (!response.ok) {
-      console.error('X media upload error:', data)
+      console.error('X media upload error:', response.status, data)
       return null
     }
 
+    console.log('X media uploaded:', data.media_id_string)
     return data.media_id_string || null
   } catch (err) {
     console.error('X media upload failed:', err)
@@ -126,42 +131,38 @@ export async function postToX(
   const conHook = debate.conservative?.previewLine || debate.conservativeFeedHook || ''
   const libHook = debate.liberal?.previewLine || debate.liberalFeedHook || ''
 
+  // Tweet text = just the URL. The OG card renders headline + stage design,
+  // so additional text creates duplication when X unfurls it.
+  const tweetText = debateUrl
+
   if (mockMode) {
-    const tweetText = `${debate.headline}\n\n${debateUrl}`
-    console.log('MOCK X POST:\n', tweetText, '\nImages: [conservative panel, liberal panel]')
+    console.log('MOCK X POST:\n', tweetText)
     return { success: true, tweetText, mock: true }
   }
 
-  // Generate both panel images in parallel
-  const [conImage, libImage] = await Promise.all([
-    generatePanelImage('conservative', debate.headline, conHook),
-    generatePanelImage('liberal', debate.headline, libHook),
-  ])
+  // Warm the OG image before posting. X's crawler scrapes the card
+  // immediately after the tweet goes live. If the edge function is cold
+  // or mid-deploy the image 500s and X caches the broken card forever.
+  const pageUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
+  try { await fetch(pageUrl, { method: 'GET' }) } catch {}
 
-  // Upload images to X
-  const mediaIds: string[] = []
-  if (libImage) {
-    const libMediaId = await uploadMediaToX(libImage)
-    if (libMediaId) mediaIds.push(libMediaId)
+  const ogImageUrl = `${baseUrl}/debate/${debate.slug || debate.id}/opengraph-image`
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const warm = await fetch(ogImageUrl, { method: 'GET' })
+      if (warm.ok) {
+        console.log(`OG image warmed (${warm.status}, attempt ${attempt + 1})`)
+        break
+      }
+      console.warn(`OG image warm attempt ${attempt + 1} returned ${warm.status}`)
+    } catch (e) {
+      console.warn(`OG image warm attempt ${attempt + 1} failed:`, e)
+    }
   }
-  if (conImage) {
-    const conMediaId = await uploadMediaToX(conImage)
-    if (conMediaId) mediaIds.push(conMediaId)
-  }
-
-  if (mediaIds.length === 0) {
-    console.warn('No panel images uploaded — falling back to URL-only post')
-  }
-
-  // Post tweet with images + headline + URL
-  const tweetText = `${debate.headline}\n\n${debateUrl}`
 
   try {
     const url = 'https://api.twitter.com/2/tweets'
     const body: Record<string, unknown> = { text: tweetText }
-    if (mediaIds.length > 0) {
-      body.media = { media_ids: mediaIds }
-    }
     const authHeader = generateOAuthHeader('POST', url, {})
 
     const response = await fetch(url, {
