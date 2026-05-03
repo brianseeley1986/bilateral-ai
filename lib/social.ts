@@ -113,7 +113,7 @@ export async function postToX(
       return { success: false, error: JSON.stringify(data) }
     }
 
-    console.log('Posted to X with', mediaIds.length, 'images:', data.data?.id, tweetText)
+    console.log('Posted to X:', data.data?.id, tweetText)
     return { success: true, tweetId: data.data?.id, tweetText }
   } catch (err) {
     console.error('X post failed:', err)
