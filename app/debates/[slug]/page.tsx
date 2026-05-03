@@ -106,7 +106,7 @@ export default async function LibraryQuestionPage({
     <main
       style={{
         minHeight: '100vh',
-        background: '#F5F5F0',
+        background: '#FFFFFF',
         padding: '24px 24px 96px',
         fontFamily: 'system-ui, sans-serif',
       }}
@@ -296,7 +296,7 @@ function ComingSoon({ status }: { status: string }) {
           padding: '10px 20px',
           fontSize: '14px',
           fontWeight: 600,
-          color: '#F5F5F0',
+          color: '#FFFFFF',
           background: '#0A0A0A',
           borderRadius: '6px',
           textDecoration: 'none',

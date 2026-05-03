@@ -42,70 +42,6 @@ function generateOAuthHeader(
   )
 }
 
-// Upload an image buffer to X via the v1.1 media/upload endpoint.
-// Uses multipart/form-data — OAuth signature must exclude body params.
-async function uploadMediaToX(imageBuffer: Buffer): Promise<string | null> {
-  try {
-    const uploadUrl = 'https://upload.twitter.com/1.1/media/upload.json'
-
-    // OAuth signature is computed with NO body params for multipart uploads
-    const authHeader = generateOAuthHeader('POST', uploadUrl, {})
-
-    // Build multipart form with the raw image bytes
-    const boundary = `----bilateral${crypto.randomBytes(8).toString('hex')}`
-    const body = Buffer.concat([
-      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="media_data"\r\n\r\n`),
-      Buffer.from(imageBuffer.toString('base64')),
-      Buffer.from(`\r\n--${boundary}--\r\n`),
-    ])
-
-    const response = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: authHeader,
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-      },
-      body,
-    })
-
-    const data = await response.json()
-    if (!response.ok) {
-      console.error('X media upload error:', response.status, data)
-      return null
-    }
-
-    console.log('X media uploaded:', data.media_id_string)
-    return data.media_id_string || null
-  } catch (err) {
-    console.error('X media upload failed:', err)
-    return null
-  }
-}
-
-// Generate a panel image via our internal API route.
-async function generatePanelImage(
-  side: 'conservative' | 'liberal',
-  headline: string,
-  hook: string
-): Promise<Buffer | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://bilateral.news'
-  const params = new URLSearchParams({ side, headline, hook })
-  const url = `${baseUrl}/api/x-panel?${params}`
-
-  try {
-    const res = await fetch(url)
-    if (!res.ok) {
-      console.error(`Panel image generation failed (${side}):`, res.status)
-      return null
-    }
-    const arrayBuffer = await res.arrayBuffer()
-    return Buffer.from(arrayBuffer)
-  } catch (err) {
-    console.error(`Panel image fetch failed (${side}):`, err)
-    return null
-  }
-}
-
 export async function postToX(
   debate: {
     id: string
@@ -126,10 +62,6 @@ export async function postToX(
 }> {
   const baseUrl = 'https://bilateral.news'
   const debateUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
-
-  // Pick the best hook for each side
-  const conHook = debate.conservative?.previewLine || debate.conservativeFeedHook || ''
-  const libHook = debate.liberal?.previewLine || debate.liberalFeedHook || ''
 
   // Tweet text = just the URL. The OG card renders headline + stage design,
   // so additional text creates duplication when X unfurls it.

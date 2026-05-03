@@ -202,7 +202,7 @@ function Pill({
         borderRadius: '999px',
         border: active ? '1px solid #0A0A0A' : '1px solid #E5E5DD',
         background: active ? '#0A0A0A' : '#FFF',
-        color: active ? '#F5F5F0' : '#0A0A0A',
+        color: active ? '#FFFFFF' : '#0A0A0A',
         cursor: 'pointer',
       }}
     >

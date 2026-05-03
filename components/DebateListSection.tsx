@@ -91,7 +91,7 @@ export function DebateListSection({ title, subtitle, debates }: DebateListSectio
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     color: '#999',
-                    background: '#F5F5F0',
+                    background: '#FFFFFF',
                     padding: '2px 7px',
                     borderRadius: 4,
                   }}

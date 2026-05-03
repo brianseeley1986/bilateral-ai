@@ -61,7 +61,7 @@ export function SubscribeBlock() {
           fontWeight: 600,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          color: '#F5F5F0',
+          color: '#FFFFFF',
           background: '#0A0A0A',
           border: 'none',
           padding: '11px 22px',

@@ -100,7 +100,7 @@ function ListenBar({ speech }: { speech: ReturnType<typeof useSpeech> }) {
   const primary: React.CSSProperties = {
     fontSize: '13px',
     fontWeight: 500,
-    color: '#F5F5F0',
+    color: '#FFFFFF',
     background: '#0A0A0A',
     border: 'none',
     padding: '9px 16px',
@@ -690,7 +690,7 @@ export function StoryExchange({
               onClick={() => setDeep(!deep)}
               style={{
                 background: deep ? 'transparent' : '#0A0A0A',
-                color: deep ? '#6B6B6B' : '#F5F5F0',
+                color: deep ? '#6B6B6B' : '#FFFFFF',
                 border: deep ? '1px solid #DCDCD6' : 'none',
                 borderRadius: 999,
                 padding: '12px 28px',
@@ -858,7 +858,7 @@ function SatireExchanges({
             marginTop: '24px',
             padding: '18px 22px',
             background: '#0A0A0A',
-            color: '#F5F5F0',
+            color: '#FFFFFF',
             borderRadius: '12px',
             fontSize: '14.5px',
             lineHeight: 1.6,

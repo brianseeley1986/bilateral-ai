@@ -53,7 +53,7 @@ export default async function AuthorPage({ params }: { params: { slug: string } 
     <main
       style={{
         minHeight: '100vh',
-        background: '#F5F5F0',
+        background: '#FFFFFF',
         padding: '24px 24px 96px',
         fontFamily: 'system-ui, sans-serif',
       }}
@@ -87,7 +87,7 @@ export default async function AuthorPage({ params }: { params: { slug: string } 
               height: 72,
               borderRadius: '50%',
               background: p.color,
-              color: '#F5F5F0',
+              color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

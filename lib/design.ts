@@ -6,7 +6,7 @@
 
 export const colors = {
   ink: '#0A0A0A',
-  paper: '#F5F5F0',
+  paper: '#FFFFFF',
   surface: '#FFFFFF',
 
   conservative: '#C1121F',

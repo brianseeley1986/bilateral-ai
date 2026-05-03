@@ -127,7 +127,7 @@ export function HomeClient({
           <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
             <a href="/debates" style={{ fontSize: 14, color: '#CCCCCC', textDecoration: 'none', fontWeight: 400 }}>Debates</a>
             <a href="/about" style={{ fontSize: 14, color: '#CCCCCC', textDecoration: 'none', fontWeight: 400 }}>About</a>
-            <a href="/feed" style={{
+            <a href="#feed" style={{
               fontSize: 12, fontWeight: 600, letterSpacing: '0.04em',
               color: '#FFFFFF', background: 'rgba(255,255,255,0.12)',
               border: '1px solid rgba(255,255,255,0.2)', padding: '8px 18px',
@@ -177,7 +177,7 @@ export function HomeClient({
 
         {/* CTA */}
         <div style={{ textAlign: 'center', padding: '24px 20px 0' }}>
-          <a href="/feed" style={{
+          <a href="#feed" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             fontSize: 14, fontWeight: 700, letterSpacing: '0.02em',
             color: '#FFFFFF', background: 'rgba(255,255,255,0.08)',
@@ -193,7 +193,7 @@ export function HomeClient({
       <div style={{ height: 48, background: 'linear-gradient(to bottom, #0A0A0A, #FFFFFF)' }} />
 
       {/* ═══════════════ EDITORIAL NEWSSTAND ═══════════════ */}
-      <section style={{ background: '#FFFFFF', padding: '0 20px' }}>
+      <section id="feed" style={{ background: '#FFFFFF', padding: '0 20px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
           <div style={{ marginBottom: 40 }}><SubscribeBlock /></div>
@@ -346,7 +346,7 @@ export function HomeClient({
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>
               Jump into the feed and explore debates that challenge your perspective.
             </div>
-            <a href="/feed" style={{
+            <a href="#feed" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700,
               letterSpacing: '0.04em', color: '#0A0A0A', background: '#FFFFFF',
               padding: '14px 32px', borderRadius: 999, textDecoration: 'none',

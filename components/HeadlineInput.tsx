@@ -123,7 +123,7 @@ export function HeadlineInput() {
           aria-label="Generate debate"
           style={{
             background: enabled ? '#0A0A0A' : '#ECECE6',
-            color: enabled ? '#F5F5F0' : '#9B9B96',
+            color: enabled ? '#FFFFFF' : '#9B9B96',
             border: 'none',
             borderRadius: 999,
             padding: '10px 18px',

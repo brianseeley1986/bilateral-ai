@@ -32,7 +32,7 @@ export function ResolutionPanel({ debateId, headline, slug, onClose }: Resolutio
         position: 'absolute',
         inset: 0,
         zIndex: 20,
-        background: '#F5F5F0',
+        background: '#FFFFFF',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

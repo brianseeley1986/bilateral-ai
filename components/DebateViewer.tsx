@@ -41,7 +41,7 @@ export function DebateViewer({
               borderRadius: '20px',
               border: active === tab ? 'none' : '0.5px solid #d0d0d0',
               background: active === tab ? '#0A0A0A' : 'transparent',
-              color: active === tab ? '#F5F5F0' : '#6B6B6B',
+              color: active === tab ? '#FFFFFF' : '#6B6B6B',
               cursor: 'pointer',
               fontWeight: active === tab ? 500 : 400
             }}
@@ -155,7 +155,7 @@ export function DebateViewer({
           <div style={{ background: '#0A0A0A', borderRadius: '10px', padding: '16px 18px' }}>
             <div style={{ fontSize: '11px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Questions neither side has answered</div>
             {verdictData.openQuestions.map((q, i) => (
-              <div key={i} style={{ fontSize: '13px', lineHeight: 1.7, color: '#F5F5F0', padding: '6px 0', borderBottom: i < verdictData.openQuestions.length - 1 ? '0.5px solid #333' : 'none' }}>{q}</div>
+              <div key={i} style={{ fontSize: '13px', lineHeight: 1.7, color: '#FFFFFF', padding: '6px 0', borderBottom: i < verdictData.openQuestions.length - 1 ? '0.5px solid #333' : 'none' }}>{q}</div>
             ))}
           </div>
         </div>

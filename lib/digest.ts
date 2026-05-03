@@ -147,24 +147,31 @@ export async function sendDailyDigests(): Promise<{
                     : 'BREAKING'
           const badgeBg = badge === 'SATIRE' ? '#fef3c7' : badge === 'LOCAL' || badge === 'STATE' ? '#dbeafe' : '#fee2e2'
           const badgeColor = badge === 'SATIRE' ? '#92400e' : badge === 'LOCAL' || badge === 'STATE' ? '#1e3a5f' : '#7f1d1d'
-          const link = `${baseUrl}/debate/${id}?h=${encodeURIComponent(headline)}`
+          const slug: string = debate.slug || id
+          const link = `${baseUrl}/debate/${slug}`
+          const imageUrl = `${baseUrl}/debate/${slug}/opengraph-image`
 
           return `
-<div style="padding: 20px 0; border-bottom: 0.5px solid #e8e8e4;">
-  <div style="margin-bottom: 8px;">
-    <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; letter-spacing: 0.05em; text-transform: uppercase;">${badge}</span>
-  </div>
-  <div style="font-size: 17px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; color: #0A0A0A;">${escapeHtml(headline)}</div>
-  ${hook ? `<div style="font-size: 13px; color: #6B6B6B; font-style: italic; margin-bottom: 10px; line-height: 1.6;">${escapeHtml(hook)}</div>` : ''}
-  ${cLine ? `<div style="background: #fff0f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
-    <div style="font-size: 9px; font-weight: 700; color: #C1121F; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;">Conservative</div>
-    <div style="font-size: 13px; line-height: 1.5; color: #1a1a1a;">${escapeHtml(cLine)}</div>
-  </div>` : ''}
-  ${lLine ? `<div style="background: #f0f4ff; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
-    <div style="font-size: 9px; font-weight: 700; color: #1B4FBE; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;">Liberal</div>
-    <div style="font-size: 13px; line-height: 1.5; color: #1a1a1a;">${escapeHtml(lLine)}</div>
-  </div>` : ''}
-  <a href="${link}" style="font-size: 12px; color: #0A0A0A; text-decoration: none; font-weight: 500;">Read the debate →</a>
+<div style="padding: 24px 0; border-bottom: 1px solid #F0F0F0;">
+  <a href="${link}" style="text-decoration: none; color: inherit; display: block;">
+    <img src="${imageUrl}" alt="${escapeHtml(headline)}" style="width: 100%; border-radius: 10px; margin-bottom: 14px; display: block;" />
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+      <span style="font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; letter-spacing: 0.06em; text-transform: uppercase;">${badge}</span>
+    </div>
+    <div style="font-size: 18px; font-weight: 600; line-height: 1.35; margin-bottom: 8px; color: #0A0A0A;">${escapeHtml(headline)}</div>
+    ${hook ? `<div style="font-size: 14px; color: #666666; margin-bottom: 12px; line-height: 1.55;">${escapeHtml(hook)}</div>` : ''}
+    <div style="display: flex; gap: 8px;">
+      ${cLine ? `<div style="flex: 1; border-left: 3px solid #C1121F; padding: 8px 12px; background: #FAFAFA; border-radius: 0 6px 6px 0;">
+        <div style="font-size: 9px; font-weight: 700; color: #C1121F; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Conservative</div>
+        <div style="font-size: 12px; line-height: 1.45; color: #333333;">${escapeHtml(cLine.length > 100 ? cLine.slice(0, 97) + '...' : cLine)}</div>
+      </div>` : ''}
+      ${lLine ? `<div style="flex: 1; border-left: 3px solid #1B4FBE; padding: 8px 12px; background: #FAFAFA; border-radius: 0 6px 6px 0;">
+        <div style="font-size: 9px; font-weight: 700; color: #1B4FBE; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Liberal</div>
+        <div style="font-size: 12px; line-height: 1.45; color: #333333;">${escapeHtml(lLine.length > 100 ? lLine.slice(0, 97) + '...' : lLine)}</div>
+      </div>` : ''}
+    </div>
+    <div style="margin-top: 12px; font-size: 12px; font-weight: 600; color: #0A0A0A;">Read the debate →</div>
+  </a>
 </div>`
         })
         .join('')
@@ -172,16 +179,21 @@ export async function sendDailyDigests(): Promise<{
       const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin: 0; padding: 0; background: #F5F5F0; font-family: system-ui, -apple-system, sans-serif;">
-  <div style="max-width: 560px; margin: 0 auto; padding: 32px 20px;">
-    <div style="margin-bottom: 28px;">
-      <div style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; color: #0A0A0A;">bilateral</div>
-      <div style="font-size: 12px; color: #9B9B9B;">${date} · The debate behind every headline.</div>
+<body style="margin: 0; padding: 0; background: #FFFFFF; font-family: system-ui, -apple-system, sans-serif;">
+  <div style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
+    <div style="margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #F0F0F0;">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #C1121F; display: inline-block;"></span>
+        <span style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: #0A0A0A;">bilateral</span>
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #1B4FBE; display: inline-block;"></span>
+      </div>
+      <div style="font-size: 13px; color: #999999;">${date}</div>
     </div>
-    <div style="background: white; border-radius: 12px; padding: 0 20px; margin-bottom: 24px;">${debateCards}</div>
-    <div style="font-size: 11px; color: #9B9B9B; text-align: center; line-height: 1.8;">
-      <a href="${baseUrl}" style="color: #6B6B6B; text-decoration: none;">bilateral.news</a> ·
-      <a href="${unsubUrl}" style="color: #9B9B9B; text-decoration: none;">Unsubscribe</a>
+    ${debateCards}
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #F0F0F0; font-size: 12px; color: #999999; text-align: center; line-height: 2;">
+      <a href="${baseUrl}" style="color: #666666; text-decoration: none; font-weight: 500;">bilateral.news</a> · The debate behind every headline.
+      <br />
+      <a href="${unsubUrl}" style="color: #BBBBBB; text-decoration: none;">Unsubscribe</a>
     </div>
   </div>
 </body>

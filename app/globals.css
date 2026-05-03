@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #F5F5F0;
+  --background: #FFFFFF;
   --foreground: #0A0A0A;
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, Segoe UI, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, Cambria, "Times New Roman", serif;

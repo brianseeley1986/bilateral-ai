@@ -27,7 +27,7 @@ export default async function DebatesPage() {
     <main
       style={{
         minHeight: '100vh',
-        background: '#F5F5F0',
+        background: '#FFFFFF',
         padding: '24px 24px 96px',
         fontFamily: 'system-ui, sans-serif',
       }}

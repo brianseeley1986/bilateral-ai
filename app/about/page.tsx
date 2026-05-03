@@ -11,7 +11,7 @@ export default function AboutPage() {
   return (
     <main style={{
       minHeight: '100vh',
-      background: '#F5F5F0',
+      background: '#FFFFFF',
       fontFamily: 'system-ui, sans-serif',
       padding: '40px 20px'
     }}>
@@ -292,7 +292,7 @@ export default function AboutPage() {
                         height: 32,
                         borderRadius: '50%',
                         background: p.color,
-                        color: '#F5F5F0',
+                        color: '#FFFFFF',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

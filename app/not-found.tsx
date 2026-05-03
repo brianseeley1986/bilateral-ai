@@ -25,7 +25,7 @@ export default async function NotFound() {
     <main
       style={{
         minHeight: '100vh',
-        background: '#F5F5F0',
+        background: '#FFFFFF',
         padding: '24px 24px 96px',
         fontFamily: 'system-ui, sans-serif',
       }}
@@ -63,7 +63,7 @@ export default async function NotFound() {
             style={{
               padding: '10px 18px',
               background: '#0A0A0A',
-              color: '#F5F5F0',
+              color: '#FFFFFF',
               borderRadius: 6,
               fontSize: 14,
               fontWeight: 600,
@@ -76,7 +76,7 @@ export default async function NotFound() {
             href="/topics"
             style={{
               padding: '10px 18px',
-              background: '#F5F5F0',
+              background: '#FFFFFF',
               color: '#0A0A0A',
               border: '1px solid #0A0A0A',
               borderRadius: 6,
