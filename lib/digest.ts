@@ -129,8 +129,11 @@ export async function sendDailyDigests(): Promise<{
           const rawHeadline: string = d.headline || debate.headline || ''
           const headline = cleanHeadline(rawHeadline)
           const id: string = debate.id || d.id
-          const cLine: string = debate.conservative?.previewLine || debate.conservativeFeedHook || ''
-          const lLine: string = debate.liberal?.previewLine || debate.liberalFeedHook || ''
+          // feedHook is purpose-built for social distribution (a strategist on
+          // that side would proudly hand it to a reporter). previewLine is the
+          // ≤120-char punchy fallback. Either gives the side a sharp opening.
+          const cLine: string = debate.conservativeFeedHook || debate.conservative?.previewLine || ''
+          const lLine: string = debate.liberalFeedHook || debate.liberal?.previewLine || ''
           const hook: string = debate.suggestedHook || ''
           const geoScope: string = d.geographic_scope || debate.geographicScope || 'national'
           const track: string = d.track || debate.track || 'serious'
@@ -152,25 +155,22 @@ export async function sendDailyDigests(): Promise<{
           const imageUrl = `${baseUrl}/debate/${slug}/opengraph-image`
 
           return `
-<div style="padding: 24px 0; border-bottom: 1px solid #F0F0F0;">
+<div style="padding: 28px 0; border-bottom: 1px solid #F0F0F0;">
   <a href="${link}" style="text-decoration: none; color: inherit; display: block;">
-    <img src="${imageUrl}" alt="${escapeHtml(headline)}" style="width: 100%; border-radius: 10px; margin-bottom: 14px; display: block;" />
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+    <img src="${imageUrl}" alt="${escapeHtml(headline)}" style="width: 100%; border-radius: 10px; margin-bottom: 18px; display: block;" />
+    <div style="margin-bottom: 14px;">
       <span style="font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; letter-spacing: 0.06em; text-transform: uppercase;">${badge}</span>
     </div>
-    <div style="font-size: 18px; font-weight: 600; line-height: 1.35; margin-bottom: 8px; color: #0A0A0A;">${escapeHtml(headline)}</div>
-    ${hook ? `<div style="font-size: 14px; color: #666666; margin-bottom: 12px; line-height: 1.55;">${escapeHtml(hook)}</div>` : ''}
-    <div style="display: flex; gap: 8px;">
-      ${cLine ? `<div style="flex: 1; border-left: 3px solid #C1121F; padding: 8px 12px; background: #FAFAFA; border-radius: 0 6px 6px 0;">
-        <div style="font-size: 9px; font-weight: 700; color: #C1121F; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Conservative</div>
-        <div style="font-size: 12px; line-height: 1.45; color: #333333;">${escapeHtml(cLine.length > 100 ? cLine.slice(0, 97) + '...' : cLine)}</div>
-      </div>` : ''}
-      ${lLine ? `<div style="flex: 1; border-left: 3px solid #1B4FBE; padding: 8px 12px; background: #FAFAFA; border-radius: 0 6px 6px 0;">
-        <div style="font-size: 9px; font-weight: 700; color: #1B4FBE; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Liberal</div>
-        <div style="font-size: 12px; line-height: 1.45; color: #333333;">${escapeHtml(lLine.length > 100 ? lLine.slice(0, 97) + '...' : lLine)}</div>
-      </div>` : ''}
-    </div>
-    <div style="margin-top: 12px; font-size: 12px; font-weight: 600; color: #0A0A0A;">Read the debate →</div>
+    ${hook ? `<div style="font-size: 15px; color: #444444; margin-bottom: 18px; line-height: 1.55; font-style: italic;">${escapeHtml(hook)}</div>` : ''}
+    ${cLine ? `<div style="border-left: 4px solid #C1121F; padding: 12px 16px; background: #FBF5F5; border-radius: 0 8px 8px 0; margin-bottom: 10px;">
+      <div style="font-size: 10px; font-weight: 700; color: #C1121F; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px;">Conservative</div>
+      <div style="font-size: 15px; line-height: 1.5; color: #1A1A1A; font-weight: 500;">${escapeHtml(cLine)}</div>
+    </div>` : ''}
+    ${lLine ? `<div style="border-left: 4px solid #1B4FBE; padding: 12px 16px; background: #F4F7FC; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
+      <div style="font-size: 10px; font-weight: 700; color: #1B4FBE; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px;">Liberal</div>
+      <div style="font-size: 15px; line-height: 1.5; color: #1A1A1A; font-weight: 500;">${escapeHtml(lLine)}</div>
+    </div>` : ''}
+    <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #0A0A0A;">Read the debate →</div>
   </a>
 </div>`
         })

@@ -51,7 +51,8 @@ export default async function Image({ params }: { params: { id: string } }) {
   }
 
   const displayHeadline = shortHeadline || (headline.length > 80 ? headline.slice(0, 77) + '…' : headline)
-  const headlineSize = displayHeadline.length > 60 ? 40 : displayHeadline.length > 40 ? 46 : 52
+  // Sized to remain readable when X compresses the card to a timeline thumbnail.
+  const headlineSize = displayHeadline.length > 60 ? 68 : displayHeadline.length > 40 ? 80 : 92
 
   const [frauncesMedium, frauncesBold] = await Promise.all([
     loadFraunces(500, false),
@@ -119,11 +120,11 @@ export default async function Image({ params }: { params: { id: string } }) {
             gap: 8,
           }}
         >
-          <span style={{ fontSize: 20, color: BLUE, opacity: 0.7, display: 'flex' }}>←</span>
+          <span style={{ fontSize: 26, color: BLUE, opacity: 0.7, display: 'flex' }}>←</span>
           <div
             style={{
               display: 'flex',
-              fontSize: 11,
+              fontSize: 16,
               fontWeight: 700,
               letterSpacing: '0.14em',
               color: BLUE,
@@ -153,7 +154,7 @@ export default async function Image({ params }: { params: { id: string } }) {
           <div
             style={{
               display: 'flex',
-              fontSize: 11,
+              fontSize: 16,
               fontWeight: 700,
               letterSpacing: '0.14em',
               color: RED,
@@ -164,7 +165,7 @@ export default async function Image({ params }: { params: { id: string } }) {
           >
             CONSERVATIVE
           </div>
-          <span style={{ fontSize: 20, color: RED, opacity: 0.7, display: 'flex' }}>→</span>
+          <span style={{ fontSize: 26, color: RED, opacity: 0.7, display: 'flex' }}>→</span>
         </div>
 
         {/* Center content */}
@@ -179,12 +180,12 @@ export default async function Image({ params }: { params: { id: string } }) {
           }}
         >
           {/* Brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: RED, display: 'flex' }} />
-            <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.03em', color: '#F5F5F0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: RED, display: 'flex' }} />
+            <span style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: '#F5F5F0' }}>
               bilateral
             </span>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: BLUE, display: 'flex' }} />
+            <div style={{ width: 14, height: 14, borderRadius: '50%', background: BLUE, display: 'flex' }} />
           </div>
 
           {/* Headline */}
@@ -193,11 +194,11 @@ export default async function Image({ params }: { params: { id: string } }) {
               fontSize: headlineSize,
               fontWeight: 700,
               color: '#FFFFFF',
-              lineHeight: 1.15,
+              lineHeight: 1.1,
               letterSpacing: '-0.025em',
               textAlign: 'center',
-              maxWidth: 800,
-              marginBottom: context ? 16 : 24,
+              maxWidth: 920,
+              marginBottom: context ? 28 : 36,
               display: 'flex',
             }}
           >
@@ -208,12 +209,12 @@ export default async function Image({ params }: { params: { id: string } }) {
           {context && (
             <div
               style={{
-                fontSize: 16,
-                color: 'rgba(255,255,255,0.5)',
-                lineHeight: 1.5,
+                fontSize: 26,
+                color: 'rgba(255,255,255,0.55)',
+                lineHeight: 1.4,
                 textAlign: 'center',
-                maxWidth: 600,
-                marginBottom: 24,
+                maxWidth: 800,
+                marginBottom: 36,
                 display: 'flex',
               }}
             >
@@ -224,10 +225,10 @@ export default async function Image({ params }: { params: { id: string } }) {
           {/* Swipe instruction */}
           <div
             style={{
-              fontSize: 12,
+              fontSize: 18,
               fontWeight: 600,
-              color: 'rgba(255,255,255,0.3)',
-              letterSpacing: '0.08em',
+              color: 'rgba(255,255,255,0.35)',
+              letterSpacing: '0.1em',
               display: 'flex',
             }}
           >
@@ -245,7 +246,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             display: 'flex',
             borderTop: '1px solid #2A2A2A',
             background: '#141414',
-            height: 44,
+            height: 60,
           }}
         >
           <div
@@ -254,10 +255,10 @@ export default async function Image({ params }: { params: { id: string } }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 11,
+              fontSize: 16,
               fontWeight: 700,
-              letterSpacing: '0.1em',
-              color: 'rgba(27,79,190,0.4)',
+              letterSpacing: '0.12em',
+              color: 'rgba(27,79,190,0.5)',
             }}
           >
             LIBERAL
@@ -268,11 +269,11 @@ export default async function Image({ params }: { params: { id: string } }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 11,
+              fontSize: 16,
               fontWeight: 700,
-              letterSpacing: '0.1em',
+              letterSpacing: '0.12em',
               color: '#FFFFFF',
-              borderBottom: '2px solid #FFFFFF',
+              borderBottom: '3px solid #FFFFFF',
             }}
           >
             NEUTRAL
@@ -283,10 +284,10 @@ export default async function Image({ params }: { params: { id: string } }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 11,
+              fontSize: 16,
               fontWeight: 700,
-              letterSpacing: '0.1em',
-              color: 'rgba(193,18,31,0.4)',
+              letterSpacing: '0.12em',
+              color: 'rgba(193,18,31,0.5)',
             }}
           >
             CONSERVATIVE

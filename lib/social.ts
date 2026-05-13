@@ -42,6 +42,42 @@ function generateOAuthHeader(
   )
 }
 
+function trimToFit(s: string, max: number): string {
+  if (s.length <= max) return s
+  const cut = s.slice(0, max - 1)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).replace(/[.,;:!?\s]+$/, '') + '…'
+}
+
+function buildDebateTweet(
+  cHook: string,
+  lHook: string,
+  url: string
+): string {
+  // X counts every URL as 23 chars regardless of actual length.
+  const urlBudget = 23
+  const separator = '\n\nvs.\n\n'
+  const tail = '\n\n'
+  const overhead = separator.length + tail.length + urlBudget
+  const available = 280 - overhead
+
+  const c = cHook.trim()
+  const l = lHook.trim()
+
+  if (!c && !l) return url
+  if (!c) return `${trimToFit(l, 280 - urlBudget - tail.length)}${tail}${url}`
+  if (!l) return `${trimToFit(c, 280 - urlBudget - tail.length)}${tail}${url}`
+
+  // Both hooks present — split the available budget proportionally
+  const total = c.length + l.length
+  if (total <= available) {
+    return `${c}${separator}${l}${tail}${url}`
+  }
+  const cMax = Math.max(60, Math.floor(available * (c.length / total)))
+  const lMax = available - cMax
+  return `${trimToFit(c, cMax)}${separator}${trimToFit(l, lMax)}${tail}${url}`
+}
+
 export async function postToX(
   debate: {
     id: string
@@ -63,9 +99,12 @@ export async function postToX(
   const baseUrl = 'https://bilateral.news'
   const debateUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
 
-  // Tweet text = just the URL. The OG card renders headline + stage design,
-  // so additional text creates duplication when X unfurls it.
-  const tweetText = debateUrl
+  // Surface the debate in the tweet body. feedHook is purpose-built for social;
+  // previewLine is the ≤120-char punchy version. Either makes the timeline
+  // readable even when X fails to unfurl the OG card.
+  const cHook = debate.conservativeFeedHook || debate.conservative?.previewLine || ''
+  const lHook = debate.liberalFeedHook || debate.liberal?.previewLine || ''
+  const tweetText = buildDebateTweet(cHook, lHook, debateUrl)
 
   if (mockMode) {
     console.log('MOCK X POST:\n', tweetText)

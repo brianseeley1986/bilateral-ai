@@ -278,7 +278,7 @@ export async function runDebatePipeline(
   const suggestedHook = classification.suggestedHook as string
   console.log(`[pipeline] search returned ${searchResults.length} chars`)
 
-  // 3. Researcher (SONNET — quality matters, grounds the whole debate)
+  // 3. Researcher (HAIKU — restructures search results into briefing format)
   const researcherRaw = await runAgent(
     RESEARCHER_PROMPT,
     `Headline: ${headline}
@@ -287,7 +287,7 @@ WEB SEARCH RESULTS (use these as primary source material — this is what is act
 ${searchResults}
 
 Build the full verified briefing based on these search results. If the search results contain specific facts, names, quotes, and events use them. Do not invent details not found in the search results.`,
-    SONNET,
+    HAIKU,
     8000
   )
   let research: any
@@ -424,7 +424,7 @@ INSTRUCTION: Argue this position — the politically real one that actual libera
   const hooksInput = `Conservative position:\n${conservative.argument}\n\nLiberal position:\n${liberal.argument}`
 
   const [lblResult, hooksResult, shortHeadlineResult, chainResult] = await Promise.allSettled([
-    runAgent(LINE_BY_LINE_PROMPT, lblInput, SONNET),
+    runAgent(LINE_BY_LINE_PROMPT, lblInput, HAIKU),
     runAgent(FEED_HOOKS_PROMPT, hooksInput, HAIKU, 400),
     headline.length > 60
       ? runAgent(SHORT_HEADLINE_PROMPT, headline, HAIKU, 100)
