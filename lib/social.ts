@@ -56,26 +56,28 @@ function buildDebateTweet(
 ): string {
   // X counts every URL as 23 chars regardless of actual length.
   const urlBudget = 23
-  const separator = '\n\nvs.\n\n'
+  const cAttr = '\n— Conservative'
+  const lAttr = '\n— Liberal'
+  const gap = '\n\n'
   const tail = '\n\n'
-  const overhead = separator.length + tail.length + urlBudget
+  const overhead = cAttr.length + lAttr.length + gap.length + tail.length + urlBudget
   const available = 280 - overhead
 
   const c = cHook.trim()
   const l = lHook.trim()
 
   if (!c && !l) return url
-  if (!c) return `${trimToFit(l, 280 - urlBudget - tail.length)}${tail}${url}`
-  if (!l) return `${trimToFit(c, 280 - urlBudget - tail.length)}${tail}${url}`
+  if (!c) return `${trimToFit(l, 280 - urlBudget - tail.length - lAttr.length)}${lAttr}${tail}${url}`
+  if (!l) return `${trimToFit(c, 280 - urlBudget - tail.length - cAttr.length)}${cAttr}${tail}${url}`
 
-  // Both hooks present — split the available budget proportionally
+  // Both sides — attributed quotes stacked with breathing room.
   const total = c.length + l.length
   if (total <= available) {
-    return `${c}${separator}${l}${tail}${url}`
+    return `${c}${cAttr}${gap}${l}${lAttr}${tail}${url}`
   }
   const cMax = Math.max(60, Math.floor(available * (c.length / total)))
   const lMax = available - cMax
-  return `${trimToFit(c, cMax)}${separator}${trimToFit(l, lMax)}${tail}${url}`
+  return `${trimToFit(c, cMax)}${cAttr}${gap}${trimToFit(l, lMax)}${lAttr}${tail}${url}`
 }
 
 export async function postToX(
@@ -99,11 +101,17 @@ export async function postToX(
   const baseUrl = 'https://bilateral.news'
   const debateUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
 
-  // Surface the debate in the tweet body. feedHook is purpose-built for social;
-  // previewLine is the ≤120-char punchy version. Either makes the timeline
-  // readable even when X fails to unfurl the OG card.
-  const cHook = debate.conservativeFeedHook || debate.conservative?.previewLine || ''
-  const lHook = debate.liberalFeedHook || debate.liberal?.previewLine || ''
+  // previewLine is constrained to ≤120 chars and written as a scroll-stopping
+  // hook — purpose-built for this exact use. feedHook runs 250-350 chars and
+  // gets truncated mid-thought, so it's only the fallback.
+  const cHook =
+    debate.conservative?.previewLine?.trim() ||
+    debate.conservativeFeedHook?.trim() ||
+    ''
+  const lHook =
+    debate.liberal?.previewLine?.trim() ||
+    debate.liberalFeedHook?.trim() ||
+    ''
   const tweetText = buildDebateTweet(cHook, lHook, debateUrl)
 
   if (mockMode) {
