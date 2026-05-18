@@ -10,29 +10,34 @@ export const contentType = 'image/png'
 function smartTrim(text: string, max: number): string {
   const clean = text.trim()
   if (clean.length <= max) return clean
-  const SENTINEL = '\uE000'
-  const safe = clean.replace(/(\d)\.(\d)/g, `$1${SENTINEL}$2`)
-  const restore = (s: string) => s.replace(new RegExp(SENTINEL, 'g'), '.')
-  const sentences = safe.match(/[^.!?]+[.!?]+/g) || []
-  let built = ''
-  for (const s of sentences) {
-    const next = built + s
-    if (next.length > max) break
-    built = next
-  }
-  if (built.length >= 40) return restore(built).trim()
-  const cut = safe.slice(0, max)
-  const clause = Math.max(cut.lastIndexOf(';'), cut.lastIndexOf(' — '), cut.lastIndexOf(', '))
-  if (clause > 60) return restore(safe.slice(0, clause)).trim() + '…'
-  const space = cut.lastIndexOf(' ')
-  return restore(space > 0 ? cut.slice(0, space) : cut).trim() + '…'
+  const cut = clean.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).replace(/[.,;:!?\s]+$/, '') + '…'
 }
 
+// Many news outlets return a generic site-logo image when a story has no
+// dedicated photo. Detect the common patterns so we don't ship a logo as
+// our "photo" — the no-photo fallback (plain dark banner) is preferable.
+function isGenericShareImage(url: string): boolean {
+  const lower = url.toLowerCase()
+  return (
+    lower.includes('site_logo') ||
+    lower.includes('site-logo') ||
+    lower.includes('default-wide') ||
+    lower.includes('facebook-default') ||
+    lower.includes('twitter-default') ||
+    lower.includes('og-default') ||
+    /\/(logo|default-share|share-default)\.(png|jpe?g|svg|webp)/.test(lower)
+  )
+}
 
 export default async function Image({ params }: { params: { id: string } }) {
   let headline = 'The debate behind every headline.'
   let shortHeadline: string | undefined
-  let context = ''
+  let cQuote = ''
+  let lQuote = ''
+  let imageUrl: string | null = null
+  let imageSource: string | null = null
 
   try {
     const sql = neon(process.env.DATABASE_URL!)
@@ -44,15 +49,26 @@ export default async function Image({ params }: { params: { id: string } }) {
     if (debate) {
       headline = debate.headline || headline
       shortHeadline = debate.shortHeadline || undefined
-      context = smartTrim(debate.suggestedHook || debate.context?.whatHappened || '', 120)
+      cQuote = (debate.conservative?.previewLine || debate.conservativeFeedHook || '').trim()
+      lQuote = (debate.liberal?.previewLine || debate.liberalFeedHook || '').trim()
+      imageUrl = debate.imageUrl || null
+      imageSource = debate.imageSource || null
     }
   } catch (err) {
     console.error('OG image DB query failed for', params.id, err)
   }
 
-  const displayHeadline = shortHeadline || (headline.length > 80 ? headline.slice(0, 77) + '…' : headline)
-  // Sized to remain readable when X compresses the card to a timeline thumbnail.
-  const headlineSize = displayHeadline.length > 60 ? 68 : displayHeadline.length > 40 ? 80 : 92
+  const headerHeadline =
+    shortHeadline || (headline.length > 80 ? headline.slice(0, 77) + '…' : headline)
+  const lText = smartTrim(lQuote, 130) || 'See the liberal case'
+  const cText = smartTrim(cQuote, 130) || 'See the conservative case'
+
+  // Unified font size based on the LONGER of the two quotes. Taller photo
+  // banner needs slightly smaller quotes so 4-5 wrapped lines fit cleanly.
+  const maxLen = Math.max(lText.length, cText.length)
+  const quoteSize = maxLen > 120 ? 28 : maxLen > 90 ? 34 : maxLen > 60 ? 40 : 46
+
+  const usePhoto = imageUrl && !isGenericShareImage(imageUrl)
 
   const [frauncesMedium, frauncesBold] = await Promise.all([
     loadFraunces(500, false),
@@ -75,223 +91,235 @@ export default async function Image({ params }: { params: { id: string } }) {
           height: '100%',
           background: '#0A0A0A',
           display: 'flex',
-          position: 'relative',
+          flexDirection: 'column',
           fontFamily: 'Fraunces, Georgia, serif',
-          overflow: 'hidden',
         }}
       >
-        {/* Blue glow — left edge */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 300,
-            display: 'flex',
-            background: 'linear-gradient(to right, rgba(27,79,190,0.25), rgba(27,79,190,0.06) 60%, transparent)',
-          }}
-        />
-
-        {/* Red glow — right edge */}
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: 300,
-            display: 'flex',
-            background: 'linear-gradient(to left, rgba(193,18,31,0.25), rgba(193,18,31,0.06) 60%, transparent)',
-          }}
-        />
-
-        {/* Left side label */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 32,
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          <span style={{ fontSize: 26, color: BLUE, opacity: 0.7, display: 'flex' }}>←</span>
-          <div
-            style={{
-              display: 'flex',
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              color: BLUE,
-              opacity: 0.7,
-              transform: 'rotate(-90deg)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            LIBERAL
-          </div>
-        </div>
-
-        {/* Right side label */}
-        <div
-          style={{
-            position: 'absolute',
-            right: 32,
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              color: RED,
-              opacity: 0.7,
-              transform: 'rotate(90deg)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            CONSERVATIVE
-          </div>
-          <span style={{ fontSize: 26, color: RED, opacity: 0.7, display: 'flex' }}>→</span>
-        </div>
-
-        {/* Center content */}
+        {/* Photo banner with brand + headline overlay */}
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            position: 'relative',
+            height: 260,
             width: '100%',
-            padding: '40px 120px',
+            background: '#0A0A0A',
+            borderBottom: '1px solid #2A2A2A',
+            overflow: 'hidden',
           }}
         >
-          {/* Brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
-            <div style={{ width: 14, height: 14, borderRadius: '50%', background: RED, display: 'flex' }} />
-            <span style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: '#F5F5F0' }}>
-              bilateral
-            </span>
-            <div style={{ width: 14, height: 14, borderRadius: '50%', background: BLUE, display: 'flex' }} />
-          </div>
-
-          {/* Headline */}
+          {usePhoto && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl as string}
+              alt=""
+              width={1200}
+              height={260}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'brightness(0.55)',
+              }}
+            />
+          )}
+          {/* Dark gradient overlay so text stays readable on any photo */}
           <div
             style={{
-              fontSize: headlineSize,
-              fontWeight: 700,
-              color: '#FFFFFF',
-              lineHeight: 1.1,
-              letterSpacing: '-0.025em',
-              textAlign: 'center',
-              maxWidth: 920,
-              marginBottom: context ? 28 : 36,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background:
+                'linear-gradient(to bottom, rgba(10,10,10,0.6) 0%, rgba(10,10,10,0.4) 50%, rgba(10,10,10,0.85) 100%)',
               display: 'flex',
             }}
+          />
+          {/* Brand + headline on top */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: '22px 40px',
+              width: '100%',
+              position: 'relative',
+              zIndex: 1,
+            }}
           >
-            {displayHeadline}
-          </div>
-
-          {/* Context line */}
-          {context && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 14, height: 14, borderRadius: '50%', background: RED, display: 'flex' }} />
+              <span style={{ fontSize: 30, fontWeight: 700, color: '#F5F5F0', letterSpacing: '-0.03em' }}>
+                bilateral
+              </span>
+              <div style={{ width: 14, height: 14, borderRadius: '50%', background: BLUE, display: 'flex' }} />
+            </div>
             <div
               style={{
-                fontSize: 26,
-                color: 'rgba(255,255,255,0.55)',
-                lineHeight: 1.4,
-                textAlign: 'center',
-                maxWidth: 800,
-                marginBottom: 36,
+                fontSize: 36,
+                fontWeight: 700,
+                color: '#FFFFFF',
+                lineHeight: 1.15,
+                letterSpacing: '-0.02em',
+                maxWidth: 1080,
+                display: 'flex',
+                textShadow: '0 2px 12px rgba(0,0,0,0.6)',
+              }}
+            >
+              {headerHeadline}
+            </div>
+          </div>
+          {/* Photo source attribution */}
+          {usePhoto && imageSource && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 6,
+                right: 12,
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.5)',
+                letterSpacing: '0.05em',
+                display: 'flex',
+                zIndex: 1,
+              }}
+            >
+              Photo: {imageSource}
+            </div>
+          )}
+        </div>
+
+        {/* Split debate panels */}
+        <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+          {/* Liberal panel */}
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: '22px 48px',
+              background: 'linear-gradient(135deg, #1A3478 0%, #0A1430 100%)',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                letterSpacing: '0.24em',
+                color: '#9DB7E8',
                 display: 'flex',
               }}
             >
-              {context}
+              LIBERAL
             </div>
-          )}
+            <div
+              style={{
+                fontSize: quoteSize,
+                fontWeight: 700,
+                color: '#FFFFFF',
+                lineHeight: 1.18,
+                letterSpacing: '-0.015em',
+                display: 'flex',
+                maxWidth: 504,
+              }}
+            >
+              {lText}
+            </div>
+            <div style={{ display: 'flex', height: 12 }} />
+          </div>
 
-          {/* Swipe instruction */}
+          {/* Conservative panel */}
           <div
             style={{
-              fontSize: 18,
-              fontWeight: 600,
-              color: 'rgba(255,255,255,0.35)',
-              letterSpacing: '0.1em',
+              flex: 1,
               display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: '22px 48px',
+              background: 'linear-gradient(135deg, #1A0606 0%, #5A1218 100%)',
             }}
           >
-            SWIPE TO SEE BOTH SIDES
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                letterSpacing: '0.24em',
+                color: '#E89DA5',
+                alignSelf: 'flex-end',
+                display: 'flex',
+              }}
+            >
+              CONSERVATIVE
+            </div>
+            <div
+              style={{
+                fontSize: quoteSize,
+                fontWeight: 700,
+                color: '#FFFFFF',
+                lineHeight: 1.18,
+                letterSpacing: '-0.015em',
+                alignSelf: 'flex-end',
+                textAlign: 'right',
+                display: 'flex',
+                maxWidth: 504,
+              }}
+            >
+              {cText}
+            </div>
+            <div style={{ display: 'flex', height: 12 }} />
           </div>
+
+          {/* Center divider */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: '50%',
+              width: 2,
+              background: 'rgba(255,255,255,0.18)',
+              transform: 'translateX(-1px)',
+              display: 'flex',
+            }}
+          />
         </div>
 
-        {/* Tab bar at bottom */}
+        {/* CTA strip */}
         <div
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
             display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#0A0A0A',
             borderTop: '1px solid #2A2A2A',
-            background: '#141414',
-            height: 60,
+            height: 96,
+            gap: 28,
           }}
         >
-          <div
+          <span
             style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'rgba(27,79,190,0.5)',
-            }}
-          >
-            LIBERAL
-          </div>
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 16,
+              fontSize: 36,
               fontWeight: 700,
               letterSpacing: '0.12em',
               color: '#FFFFFF',
-              borderBottom: '3px solid #FFFFFF',
-            }}
-          >
-            NEUTRAL
-          </div>
-          <div
-            style={{
-              flex: 1,
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'rgba(193,18,31,0.5)',
             }}
           >
-            CONSERVATIVE
-          </div>
+            {`WHO'S RIGHT?`}
+          </span>
+          <span
+            style={{
+              fontSize: 28,
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.65)',
+              display: 'flex',
+            }}
+          >
+            Read the full debate →
+          </span>
         </div>
       </div>
     ),

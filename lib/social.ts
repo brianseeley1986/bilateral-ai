@@ -49,35 +49,36 @@ function trimToFit(s: string, max: number): string {
   return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).replace(/[.,;:!?\s]+$/, '') + '…'
 }
 
-function buildDebateTweet(
-  cHook: string,
-  lHook: string,
-  url: string
-): string {
-  // X counts every URL as 23 chars regardless of actual length.
+// Rotating curiosity-gap hooks. Question-format clickbait drives clicks by
+// creating uncertainty the image then resolves. Rotated so the feed doesn't
+// look identical every day.
+const CURIOSITY_HOOKS = [
+  "Who's actually right on this?",
+  "Two completely opposite reads of the same story.",
+  "Which side has the stronger argument?",
+  "One story. Two completely different conclusions.",
+  "The strongest case from each side — side by side.",
+  "Smart people disagree on this. Here's why.",
+]
+
+function pickHook(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
+  return CURIOSITY_HOOKS[Math.abs(hash) % CURIOSITY_HOOKS.length]
+}
+
+function buildDebateTweet(headline: string, url: string, seed: string): string {
+  // The OG image carries both sides verbatim. The tweet body's job is the
+  // curiosity gap: headline for keyword discoverability, hook for the click.
   const urlBudget = 23
-  const cAttr = '\n— Conservative'
-  const lAttr = '\n— Liberal'
-  const gap = '\n\n'
-  const tail = '\n\n'
-  const overhead = cAttr.length + lAttr.length + gap.length + tail.length + urlBudget
-  const available = 280 - overhead
-
-  const c = cHook.trim()
-  const l = lHook.trim()
-
-  if (!c && !l) return url
-  if (!c) return `${trimToFit(l, 280 - urlBudget - tail.length - lAttr.length)}${lAttr}${tail}${url}`
-  if (!l) return `${trimToFit(c, 280 - urlBudget - tail.length - cAttr.length)}${cAttr}${tail}${url}`
-
-  // Both sides — attributed quotes stacked with breathing room.
-  const total = c.length + l.length
-  if (total <= available) {
-    return `${c}${cAttr}${gap}${l}${lAttr}${tail}${url}`
-  }
-  const cMax = Math.max(60, Math.floor(available * (c.length / total)))
-  const lMax = available - cMax
-  return `${trimToFit(c, cMax)}${cAttr}${gap}${trimToFit(l, lMax)}${lAttr}${tail}${url}`
+  const hook = pickHook(seed)
+  // Available chars for the headline line: 280 - hook - "\n\n" - "\n\nSee both sides ↓\n\n" - url
+  const cta = '\n\nSee both sides ↓\n\n'
+  const headlineGap = '\n\n'
+  const overhead = hook.length + headlineGap.length + cta.length + urlBudget
+  const headlineMax = Math.max(20, 280 - overhead)
+  const headlineLine = trimToFit(headline.trim(), headlineMax)
+  return `${headlineLine}${headlineGap}${hook}${cta}${url}`
 }
 
 export async function postToX(
@@ -85,6 +86,7 @@ export async function postToX(
     id: string
     slug?: string
     headline: string
+    shortHeadline?: string
     conservativeFeedHook?: string
     liberalFeedHook?: string
     conservative?: { previewLine?: string }
@@ -101,18 +103,11 @@ export async function postToX(
   const baseUrl = 'https://bilateral.news'
   const debateUrl = `${baseUrl}/debate/${debate.slug || debate.id}`
 
-  // previewLine is constrained to ≤120 chars and written as a scroll-stopping
-  // hook — purpose-built for this exact use. feedHook runs 250-350 chars and
-  // gets truncated mid-thought, so it's only the fallback.
-  const cHook =
-    debate.conservative?.previewLine?.trim() ||
-    debate.conservativeFeedHook?.trim() ||
-    ''
-  const lHook =
-    debate.liberal?.previewLine?.trim() ||
-    debate.liberalFeedHook?.trim() ||
-    ''
-  const tweetText = buildDebateTweet(cHook, lHook, debateUrl)
+  // Tweet copy now hosts the curiosity hook; the new OG image carries both
+  // sides' hooks visually. Prefer shortHeadline (8-12 words, punchy) over
+  // the full wire headline.
+  const headlineForTweet = debate.shortHeadline?.trim() || debate.headline.trim()
+  const tweetText = buildDebateTweet(headlineForTweet, debateUrl, debate.id)
 
   if (mockMode) {
     console.log('MOCK X POST:\n', tweetText)

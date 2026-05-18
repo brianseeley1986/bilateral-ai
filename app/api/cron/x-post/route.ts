@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
         id: debate.id,
         slug: debate.slug,
         headline: debate.headline || debateData.headline,
+        shortHeadline: debateData.shortHeadline,
         conservativeFeedHook: debateData.conservativeFeedHook,
         liberalFeedHook: debateData.liberalFeedHook,
         conservative: debateData.conservative,
