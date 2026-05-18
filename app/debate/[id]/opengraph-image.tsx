@@ -113,13 +113,18 @@ export default async function Image({ params }: { params: { id: string } }) {
               src={imageUrl as string}
               alt=""
               width={1200}
-              height={260}
+              height={520}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                width: '100%',
-                height: '100%',
+                width: 1200,
+                // Render the img TALLER than the 260px container. The container's
+                // overflow:hidden clips the bottom, which anchors the visible crop
+                // to the TOP of the photo — where news photos almost always frame
+                // their subjects' faces. Satori ignores `objectPosition` so this is
+                // the workaround.
+                height: 520,
                 objectFit: 'cover',
                 filter: 'brightness(0.55)',
               }}
